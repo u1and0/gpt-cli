@@ -4,15 +4,15 @@
  */
 import Spinner from "https://deno.land/x/cli_spinners@v0.0.2/mod.ts";
 
-const spinner = Spinner.getInstance();
-spinner.interval = 100;
-const frames = spinner.frames || [".", "..", "..."];
-// ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
 const url = "https://api.openai.com/v1/chat/completions";
 const apiKey = Deno.env.get("CHATGPT_API_KEY");
 if (!apiKey) {
   throw new Error(`No token ${apiKey}`);
 }
+const spinner = Spinner.getInstance();
+spinner.interval = 100;
+const frames = spinner.frames || [".", "..", "..."];
+// ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
 
 enum Role {
   System = "system",
@@ -88,7 +88,7 @@ async function ask(messages: Message[] = []) {
         // assistantの回答をmessagesに追加
         messages.push({ role: Role.Assistant, content: content });
         // console.debug(messages);
-        return content;
+        return `\nChatGPT: ${content}`;
       }
     })
     .then(print_one_by_one)
