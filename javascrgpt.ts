@@ -2,6 +2,12 @@
  * Usage:
  *  deno run --allow-net --allow-env javascrgpt.ts
  */
+import Spinner from "https://deno.land/x/cli_spinners@v0.0.2/mod.ts";
+
+const spinner = Spinner.getInstance();
+spinner.interval = 100;
+const frames = spinner.frames || [".", "..", "..."];
+// ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
 const url = "https://api.openai.com/v1/chat/completions";
 const apiKey = Deno.env.get("CHATGPT_API_KEY");
 if (!apiKey) {
@@ -58,10 +64,17 @@ async function ask(messages: Message[] = []) {
       messages: messages,
     }),
   };
+  // Load spinner
+  let i = 0;
+  const timer = setInterval(() => {
+    i = ++i % frames.length;
+    Deno.stdout.writeSync(new TextEncoder().encode("\r" + frames[i]));
+  }, spinner.interval);
 
   // POST data to OpenAI API
   await fetch(url, data)
     .then((response) => {
+      clearInterval(timer);
       if (!response.ok) {
         console.error(response);
       }
@@ -74,7 +87,7 @@ async function ask(messages: Message[] = []) {
         const content = data.choices[0].message.content;
         // assistantの回答をmessagesに追加
         messages.push({ role: Role.Assistant, content: content });
-        console.debug(messages);
+        // console.debug(messages);
         return content;
       }
     })
