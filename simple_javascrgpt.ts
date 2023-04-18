@@ -1,3 +1,8 @@
+/* ChatGPT API client for just one shot
+ * Usage:
+ *  deno run --allow-net --allow-env simple_javascrgpt.ts hello!
+ */
+
 const apiKey = Deno.env.get("CHATGPT_API_KEY");
 const url = "https://api.openai.com/v1/chat/completions";
 await chatgpt(Deno.args[0]);

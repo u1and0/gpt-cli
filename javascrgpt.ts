@@ -14,7 +14,6 @@ enum Role {
   Assistant = "assistant",
 }
 type Message = { role: Role; content: string };
-type Messages = Message[];
 
 function print_one_by_one(str: string): Promise<void> {
   return new Promise((resolve) => {
@@ -31,7 +30,7 @@ function print_one_by_one(str: string): Promise<void> {
   });
 }
 
-async function ask() {
+async function ask(messages: Message[] = []) {
   let input: string | null;
   while (true) { // inputがなければ再度要求
     input = prompt("あなた:");
@@ -83,8 +82,8 @@ async function ask() {
     .catch((error) => {
       throw new Error(`Fetch request failed: ${error}`);
     });
+  ask(messages);
 }
 
-let messages: Message[] = [];
 console.log("qまたはexitで終了します。");
-while (true) await ask();
+ask();
