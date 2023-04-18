@@ -1,7 +1,7 @@
-/* Deno でChatGPTと会話
-Usage:
-  deno run --allow-net --allow-env javasrgpt.ts
-*/
+/* ChatGPT API client for chat on console
+ * Usage:
+ *  deno run --allow-net --allow-env javascrgpt.ts
+ */
 const url = "https://api.openai.com/v1/chat/completions";
 const apiKey = Deno.env.get("CHATGPT_API_KEY");
 if (!apiKey) {
@@ -70,7 +70,7 @@ async function ask() {
     })
     .then((data) => {
       if (data.error) {
-        throw new Error(data);
+        console.error(data);
       } else {
         const content = data.choices[0].message.content;
         // assistantの回答をmessagesに追加
