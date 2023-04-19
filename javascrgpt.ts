@@ -11,7 +11,7 @@ if (!apiKey) {
 }
 const spinner = Spinner.getInstance();
 spinner.interval = 100;
-const frames = spinner.frames || [".", "..", "..."];
+const frames = [".", "..", "..."];
 // ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
 
 enum Role {
@@ -36,11 +36,21 @@ function print_one_by_one(str: string): Promise<void> {
   });
 }
 
+function multiInput(ps: str) {
+  let inputs = "";
+  let line = prompt(ps);
+  while (line) {
+    inputs += line;
+    line = prompt("");
+  }
+  return inputs;
+}
+
 async function ask(messages: Message[] = []) {
   let input: string | null;
   while (true) { // inputがなければ再度要求
-    input = prompt("あなた:");
-    if (input === null) continue;
+    input = multiInput("あなた:");
+    if (input.trim() === null) continue;
     if (input.trim() === "q" || input.trim() === "exit") {
       Deno.exit(0);
     } else if (input) {
@@ -98,5 +108,5 @@ async function ask(messages: Message[] = []) {
   ask(messages);
 }
 
-console.log("qまたはexitで終了します。");
+console.log("空行で入力確定, qまたはexitで会話終了");
 ask();
