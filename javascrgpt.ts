@@ -3,12 +3,28 @@
  *  deno run --allow-net --allow-env javascrgpt.ts
  */
 import Spinner from "https://deno.land/x/cli_spinners@v0.0.2/mod.ts";
+import { parse } from "https://deno.land/std/flags/mod.ts";
 
-const url = "https://api.openai.com/v1/chat/completions";
 const apiKey = Deno.env.get("OPENAI_API_KEY");
 if (!apiKey) {
   throw new Error(`No token ${apiKey}`);
 }
+// Parse arg
+type Params = {
+  model: string;
+  max_tokens: number;
+  temperature: number;
+  system_prompt: string;
+};
+const args = parse(Deno.args);
+const params: Params = {
+  model: args.m || args.model || "gpt-3.5-turbo",
+  temperature: parseFloat(args.t || args.temperature) || 1.0,
+  max_tokens: parseInt(args.x || args.max_tokens) || 1000,
+  system_prompt: args.s || args.system_prompt,
+};
+// console.debug(params);
+// Load spinner setting
 const spinner = Spinner.getInstance();
 spinner.interval = 100;
 const frames = [".", "..", "..."];
@@ -72,6 +88,13 @@ async function ask(messages: Message[] = []) {
 
   // userの質問をmessagesに追加
   messages.push({ role: Role.User, content: input });
+  // system promptをmessagesの最初に追加
+  const hasSystemRole = messages.some(
+    (message) => message.role === Role.System,
+  );
+  if (!hasSystemRole && params.system_prompt) {
+    messages.unshift({ role: Role.System, content: params.system_prompt });
+  }
   // POSTするデータを作成
   const data = {
     method: "POST",
@@ -80,12 +103,14 @@ async function ask(messages: Message[] = []) {
       "Authorization": `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: "gpt-3.5-turbo",
-      max_tokens: 1000,
-      temperature: 1.0,
+      model: params.model,
+      max_tokens: params.max_tokens,
+      temperature: params.temperature,
       messages: messages,
     }),
   };
+  // console.debug(data);
+
   // Load spinner
   let i = 0;
   const timer = setInterval(() => {
@@ -94,9 +119,10 @@ async function ask(messages: Message[] = []) {
   }, spinner.interval);
 
   // POST data to OpenAI API
+  const url = "https://api.openai.com/v1/chat/completions";
   await fetch(url, data)
     .then((response) => {
-      clearInterval(timer);
+      clearInterval(timer); // Stop spinner
       if (!response.ok) {
         console.error(response);
       }
@@ -120,5 +146,6 @@ async function ask(messages: Message[] = []) {
   ask(messages);
 }
 
+/* MAIN */
 console.log("Ctrl+Dで入力確定, qまたはexitで会話終了");
 ask();
