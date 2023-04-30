@@ -5,14 +5,13 @@
 import Spinner from "https://deno.land/x/cli_spinners@v0.0.2/mod.ts";
 
 const url = "https://api.openai.com/v1/chat/completions";
-const apiKey = Deno.env.get("CHATGPT_API_KEY");
+const apiKey = Deno.env.get("OPENAI_API_KEY");
 if (!apiKey) {
   throw new Error(`No token ${apiKey}`);
 }
 const spinner = Spinner.getInstance();
 spinner.interval = 100;
 const frames = [".", "..", "..."];
-// ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
 
 enum Role {
   System = "system",
@@ -36,20 +35,33 @@ function print_one_by_one(str: string): Promise<void> {
   });
 }
 
-function multiInput(ps: str) {
-  let inputs = "";
-  let line = prompt(ps);
-  while (line) {
-    inputs += line;
-    line = prompt("");
+async function multiInput(): string {
+  const ps = "あなた: ";
+  const inputs: string[] = [];
+  const decoder = new TextDecoder();
+  const stdin = Deno.stdin;
+  const buffer = new Uint8Array(100);
+  // 同じ行にプロンプト表示
+  Deno.stdout.writeSync(new TextEncoder().encode(ps));
+
+  while (true) {
+    const n = await stdin.read(buffer);
+    if (n === null) {
+      break;
+    }
+    const input = decoder.decode(buffer.subarray(0, n)).trim();
+    if (input === "") {
+      continue;
+    }
+    inputs.push(input);
   }
-  return inputs;
+  return inputs.join("\n");
 }
 
 async function ask(messages: Message[] = []) {
   let input: string | null;
   while (true) { // inputがなければ再度要求
-    input = multiInput("あなた:");
+    input = await multiInput();
     if (input.trim() === null) continue;
     if (input.trim() === "q" || input.trim() === "exit") {
       Deno.exit(0);
@@ -108,5 +120,5 @@ async function ask(messages: Message[] = []) {
   ask(messages);
 }
 
-console.log("空行で入力確定, qまたはexitで会話終了");
+console.log("Ctrl+Dで入力確定, qまたはexitで会話終了");
 ask();
