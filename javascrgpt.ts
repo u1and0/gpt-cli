@@ -51,6 +51,7 @@ function loadSpinner(frames: string[], interval: number): number {
 
 // 渡された文字列を1文字ずつ20msecごとにターミナルに表示する
 function print1by1(str: string): Promise<void> {
+  str += "\n";
   return new Promise((resolve) => {
     let i = 0;
     const intervalId = setInterval(() => {
@@ -58,7 +59,6 @@ function print1by1(str: string): Promise<void> {
       i++;
       if (i === str.length) {
         clearInterval(intervalId);
-        Deno.stdout.writeSync(new TextEncoder().encode("\n"));
         resolve();
       }
     }, 20);
