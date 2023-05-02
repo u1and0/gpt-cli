@@ -2,7 +2,6 @@
  * Usage:
  *  deno run --allow-net --allow-env javascrgpt.ts
  */
-import Spinner from "https://deno.land/x/cli_spinners@v0.0.2/mod.ts";
 import { parse } from "https://deno.land/std/flags/mod.ts";
 
 const apiKey = Deno.env.get("OPENAI_API_KEY");
@@ -24,10 +23,6 @@ const params: Params = {
   system_prompt: args.s || args.system_prompt,
 };
 // console.debug(params);
-// Load spinner setting
-const spinner = Spinner.getInstance();
-spinner.interval = 100;
-const frames = [".", "..", "..."];
 
 enum Role {
   System = "system",
@@ -36,7 +31,26 @@ enum Role {
 }
 type Message = { role: Role; content: string };
 
-function print_one_by_one(str: string): Promise<void> {
+// 戻り値のIDがclearInterval()によって削除されるまで
+// ., .., ...を繰り返しターミナルに表示するロードスピナー
+// usage:
+//   const spinner = loadSpinner();
+//   // 処理
+//   await fetch(url, data)
+//     .then((response) => {
+//       clearInterval(spinner); // Stop spinner
+//       return response.json();
+//     })
+function loadSpinner(frames: string[], interval: number): number {
+  let i = 0;
+  return setInterval(() => {
+    i = ++i % frames.length;
+    Deno.stdout.writeSync(new TextEncoder().encode("\r" + frames[i]));
+  }, interval);
+}
+
+// 渡された文字列を1文字ずつ20msecごとにターミナルに表示する
+function print1by1(str: string): Promise<void> {
   return new Promise((resolve) => {
     let i = 0;
     const intervalId = setInterval(() => {
@@ -51,8 +65,9 @@ function print_one_by_one(str: string): Promise<void> {
   });
 }
 
-async function multiInput(): string {
-  const ps = "あなた: ";
+// Ctrl+Dが押されるまでユーザーの入力を求める。
+// Ctrl+Dで入力が確定されたらこれまでの入力を結合して文字列として返す。
+async function multiInput(ps: string): Promise<string> {
   const inputs: string[] = [];
   const decoder = new TextDecoder();
   const stdin = Deno.stdin;
@@ -77,7 +92,7 @@ async function multiInput(): string {
 async function ask(messages: Message[] = []) {
   let input: string | null;
   while (true) { // inputがなければ再度要求
-    input = await multiInput();
+    input = await multiInput("あなた:");
     if (input.trim() === null) continue;
     if (input.trim() === "q" || input.trim() === "exit") {
       Deno.exit(0);
@@ -85,6 +100,9 @@ async function ask(messages: Message[] = []) {
       break;
     }
   }
+
+  // Load spinner start
+  const spinner = loadSpinner([".", "..", "..."], 100);
 
   // userの質問をmessagesに追加
   messages.push({ role: Role.User, content: input });
@@ -111,18 +129,11 @@ async function ask(messages: Message[] = []) {
   };
   // console.debug(data);
 
-  // Load spinner
-  let i = 0;
-  const timer = setInterval(() => {
-    i = ++i % frames.length;
-    Deno.stdout.writeSync(new TextEncoder().encode("\r" + frames[i]));
-  }, spinner.interval);
-
   // POST data to OpenAI API
   const url = "https://api.openai.com/v1/chat/completions";
   await fetch(url, data)
     .then((response) => {
-      clearInterval(timer); // Stop spinner
+      clearInterval(spinner); // Load spinner stop
       if (!response.ok) {
         console.error(response);
       }
@@ -139,7 +150,7 @@ async function ask(messages: Message[] = []) {
         return `\nChatGPT: ${content}`;
       }
     })
-    .then(print_one_by_one)
+    .then(print1by1)
     .catch((error) => {
       throw new Error(`Fetch request failed: ${error}`);
     });
