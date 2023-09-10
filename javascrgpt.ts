@@ -1,26 +1,49 @@
 /* ChatGPT API client for chat on console
  * Usage:
- *  deno run --allow-net --allow-env javascrgpt.ts
+ *   $ javascgpt -h
+ * Install:
+ *  $ deno install --allow-net --allow-env javascrgpt.ts
  */
 import { parse } from "https://deno.land/std/flags/mod.ts";
 
-const you = "あなた: ";
+const VERSION = "v0.1.0";
+const helpMessage = `ChatGPT API client for chat on console
+    Usage:
+      $ javascgpt [OPTION]
+
+    Options:
+      -v, --version: boolean   Show version
+      -h, --help: boolean   Show this message
+      -m, --model: string   OpenAIモデル (default gpt-3.5-turbo)
+      -x, --max_tokens: number    AIの回答トークン数 (default 1000)
+      -t, --temperature: number   数字が大きいほど創造的な答えになり、小さいほど厳密な答えになる (default 1.0)
+      --system_prompt: string   AIモデルの反応を導くために与えられる最初の指示`;
+
+const prompt = "あなた: ";
 const apiKey = Deno.env.get("OPENAI_API_KEY");
 if (!apiKey) {
-  throw new Error(`No token ${apiKey}`);
+  throw new Error(`No token ${apiKey}
+
+Set the OPENAI_API_KEY to environment args.
+
+$ export OPENAI_API_KEY="sk-******"`);
 }
 // Parse arg
 type Params = {
+  version: boolean;
+  help: boolean;
   model: string;
-  max_tokens: number;
   temperature: number;
+  max_tokens: number;
   system_prompt: string;
 };
 const args = parse(Deno.args);
 const params: Params = {
+  version: args.v || args.version || false,
+  help: args.h || args.help || false,
   model: args.m || args.model || "gpt-3.5-turbo",
-  temperature: parseFloat(args.t || args.temperature) || 1.0,
   max_tokens: parseInt(args.x || args.max_tokens) || 1000,
+  temperature: parseFloat(args.t || args.temperature) || 1.0,
   system_prompt: args.s || args.system_prompt,
 };
 // console.debug(params);
@@ -51,7 +74,7 @@ function loadSpinner(frames: string[], interval: number): number {
 }
 
 // 渡された文字列を1文字ずつ20msecごとにターミナルに表示する
-function print1by1(str: string): Promise<void> {
+async function print1by1(str: string): Promise<void> {
   str += "\n";
   return new Promise((resolve) => {
     let i = 0;
@@ -90,11 +113,13 @@ async function multiInput(ps: string): Promise<string> {
   return inputs.join("\n");
 }
 
+// ChatGPT へ対話形式に質問し、回答を得る
 async function ask(messages: Message[] = []) {
   let input: string | null;
   while (true) { // inputがなければ再度要求
-    input = await multiInput(you);
+    input = await multiInput(prompt);
     if (input.trim() === null) continue;
+    // q か exitが入力されたら正常終了
     if (input.trim() === "q" || input.trim() === "exit") {
       Deno.exit(0);
     } else if (input) {
@@ -140,7 +165,9 @@ async function ask(messages: Message[] = []) {
       }
       return response.json();
     })
-    .then((data) => {
+    // print1by1() の完了を待つために
+    // async (data)として、print1by1()をawaitする
+    .then(async (data) => {
       if (data.error) {
         console.error(data);
       } else {
@@ -148,15 +175,26 @@ async function ask(messages: Message[] = []) {
         // assistantの回答をmessagesに追加
         messages.push({ role: Role.Assistant, content: content });
         // console.debug(messages);
-        print1by1(`\nChatGPT: ${content}\n${you}`);
+        await print1by1(`\nChatGPT: ${content}`);
       }
     })
     .catch((error) => {
-      throw new Error(`Fetch request failed: ${error}`);
+      throw new Error(`Fetch request failed: ${error.messages}`);
     });
-  ask(messages);
+  await ask(messages);
 }
 
-/* MAIN */
-console.log("Ctrl+Dで入力確定, qまたはexitで会話終了");
-ask();
+function main() {
+  if (params.version) {
+    console.error(`javascgpt ${VERSION}`);
+    Deno.exit(0);
+  }
+  if (params.help) {
+    console.error(helpMessage);
+    Deno.exit(0);
+  }
+  console.log("Ctrl+Dで入力確定, qまたはexitで会話終了");
+  ask();
+}
+
+main();
