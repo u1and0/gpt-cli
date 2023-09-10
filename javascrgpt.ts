@@ -4,6 +4,7 @@
  */
 import { parse } from "https://deno.land/std/flags/mod.ts";
 
+const you = "あなた: ";
 const apiKey = Deno.env.get("OPENAI_API_KEY");
 if (!apiKey) {
   throw new Error(`No token ${apiKey}`);
@@ -92,7 +93,7 @@ async function multiInput(ps: string): Promise<string> {
 async function ask(messages: Message[] = []) {
   let input: string | null;
   while (true) { // inputがなければ再度要求
-    input = await multiInput("あなた:");
+    input = await multiInput(you);
     if (input.trim() === null) continue;
     if (input.trim() === "q" || input.trim() === "exit") {
       Deno.exit(0);
@@ -147,10 +148,9 @@ async function ask(messages: Message[] = []) {
         // assistantの回答をmessagesに追加
         messages.push({ role: Role.Assistant, content: content });
         // console.debug(messages);
-        return `\nChatGPT: ${content}`;
+        print1by1(`\nChatGPT: ${content}\n${you}`);
       }
     })
-    .then(print1by1)
     .catch((error) => {
       throw new Error(`Fetch request failed: ${error}`);
     });
