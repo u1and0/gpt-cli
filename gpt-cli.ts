@@ -1,25 +1,25 @@
 /* ChatGPT API client for chat on console
  * Usage:
- *   $ javascgpt -h
+ *   $ gpt -h
  * Install:
- *  $ deno install --allow-net --allow-env javascrgpt.ts
+ *  $ deno install --allow-net --allow-env gpt-cli.ts
  */
 import { parse } from "https://deno.land/std/flags/mod.ts";
 
 const VERSION = "v0.1.0";
 const helpMessage = `ChatGPT API client for chat on console
     Usage:
-      $ javascgpt [OPTION]
+      $ gpt [OPTION]
 
     Options:
       -v, --version: boolean   Show version
       -h, --help: boolean   Show this message
-      -m, --model: string   OpenAIモデル (default gpt-3.5-turbo)
-      -x, --max_tokens: number    AIの回答トークン数 (default 1000)
-      -t, --temperature: number   数字が大きいほど創造的な答えになり、小さいほど厳密な答えになる (default 1.0)
-      --system_prompt: string   AIモデルの反応を導くために与えられる最初の指示`;
+      -m, --model: string OpenAI model (default gpt-3.5-turbo)
+      -x, --max_tokens: number Number of AI answer tokens (default 1000)
+      -t, --temperature: number Higher number means more creative answers, lower number means more exact answers (default 1.0)
+      --system_prompt: string The first instruction given to guide the AI model's response`;
 
-const prompt = "あなた: ";
+const prompt = "You: ";
 const apiKey = Deno.env.get("OPENAI_API_KEY");
 if (!apiKey) {
   throw new Error(`No token ${apiKey}
@@ -186,14 +186,14 @@ async function ask(messages: Message[] = []) {
 
 function main() {
   if (params.version) {
-    console.error(`javascgpt ${VERSION}`);
+    console.error(`gpt-cli ${VERSION}`);
     Deno.exit(0);
   }
   if (params.help) {
     console.error(helpMessage);
     Deno.exit(0);
   }
-  console.log("Ctrl+Dで入力確定, qまたはexitで会話終了");
+  console.log("Ctrl D to confirm input, q or exit to end conversation");
   ask();
 }
 
