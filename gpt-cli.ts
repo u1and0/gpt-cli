@@ -9,7 +9,7 @@ import { parse } from "https://deno.land/std/flags/mod.ts";
 const VERSION = "v0.1.0";
 const helpMessage = `ChatGPT API client for chat on console
     Usage:
-      $ gpt [OPTION]
+      $ gpt -m gpt-3.5-turbo -x 1000 -t 1.0 [OPTION] PROMPT
 
     Options:
       -v, --version: boolean   Show version
@@ -17,7 +17,9 @@ const helpMessage = `ChatGPT API client for chat on console
       -m, --model: string OpenAI model (default gpt-3.5-turbo)
       -x, --max_tokens: number Number of AI answer tokens (default 1000)
       -t, --temperature: number Higher number means more creative answers, lower number means more exact answers (default 1.0)
-      --system_prompt: string The first instruction given to guide the AI model's response`;
+      -s, --system_prompt: string The first instruction given to guide the AI model's response
+    PROMPT:
+      string A Questions for Model`;
 
 const prompt = "You: ";
 const apiKey = Deno.env.get("OPENAI_API_KEY");
@@ -193,7 +195,7 @@ function main() {
     console.error(helpMessage);
     Deno.exit(0);
   }
-  console.log("Ctrl D to confirm input, q or exit to end conversation");
+  console.log("Ctrl-D to confirm input, q or exit to end conversation");
   ask();
 }
 
