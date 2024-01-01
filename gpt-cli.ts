@@ -71,7 +71,7 @@ type Message = { role: Role; content: string };
 //       clearInterval(spinner); // Stop spinner
 //       return response.json();
 //     })
-function loadSpinner(frames: string[], interval: number): number {
+export function loadSpinner(frames: string[], interval: number): number {
   let i = 0;
   return setInterval(() => {
     i = ++i % frames.length;
@@ -80,7 +80,7 @@ function loadSpinner(frames: string[], interval: number): number {
 }
 
 // 渡された文字列を1文字ずつ20msecごとにターミナルに表示する
-async function print1by1(str: string): Promise<void> {
+export async function print1by1(str: string): Promise<void> {
   str += "\n";
   return new Promise((resolve) => {
     let i = 0;
@@ -97,7 +97,7 @@ async function print1by1(str: string): Promise<void> {
 
 // Ctrl+Dが押されるまでユーザーの入力を求める。
 // Ctrl+Dで入力が確定されたらこれまでの入力を結合して文字列として返す。
-async function multiInput(ps: string): Promise<string> {
+export async function multiInput(ps: string): Promise<string> {
   const inputs: string[] = [];
   const decoder = new TextDecoder();
   const stdin = Deno.stdin;

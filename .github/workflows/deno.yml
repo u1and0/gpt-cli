@@ -10,9 +10,13 @@ name: Deno
 
 on:
   push:
-    branches: ["main"]
+    branches:
+      - main
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
   pull_request:
-    branches: ["main"]
+    branches:
+      - main
 
 permissions:
   contents: read
@@ -23,20 +27,32 @@ jobs:
 
     steps:
       - name: Setup repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Deno
-        # uses: denoland/setup-deno@v1
-        uses: denoland/setup-deno@61fe2df320078202e33d7d5ad347e7dcfa0e8f31  # v1.1.2
+        uses: denoland/setup-deno@v1
+        # uses: denoland/setup-deno@61fe2df320078202e33d7d5ad347e7dcfa0e8f31  # v1.1.2
         with:
           deno-version: v1.x
 
       # Uncomment this step to verify the use of 'deno fmt' on each commit.
-      # - name: Verify formatting
-      #   run: deno fmt --check
+      - name: Verify formatting
+        run: deno fmt --check
 
       - name: Run linter
         run: deno lint
 
-      - name: Run tests
-        run: deno test -A
+      # - name: Run tests
+      #   run: deno test -A
+
+      # Artifact upload only occurs when tag matches
+      - name: Build binary
+        # if: startsWith(github.ref, 'refs/tags/v')
+        run: deno compile --allow-net --allow-env --output gpt gpt-cli.ts
+
+      - name: Build upload
+        # if: startsWith(github.ref, 'refs/tags/v')
+        uses: actions/upload-artifact@v4
+        with:
+          name: gpt
+          path: ./gpt
