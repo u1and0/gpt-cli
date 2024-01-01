@@ -82,7 +82,7 @@ export function loadSpinner(frames: string[], interval: number): number {
 // 渡された文字列を1文字ずつ20msecごとにターミナルに表示する
 export async function print1by1(str: string): Promise<void> {
   str += "\n";
-  return new Promise((resolve) => {
+  return await new Promise((resolve) => {
     let i = 0;
     const intervalId = setInterval(() => {
       Deno.stdout.writeSync(new TextEncoder().encode(str[i]));
