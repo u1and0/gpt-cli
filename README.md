@@ -1,6 +1,6 @@
-https://img.shields.io/badge/version-v0.1.1-FF7777.svg
-https://img.shields.io/badge/LICENSE-MIT-44EE77.svg
-https://shield.deno.dev/deno/%5E1.39
+<img src="https://img.shields.io/badge/version-v0.1.1-FF7777.svg"></img>
+<img src="https://img.shields.io/badge/LICENSE-MIT-44EE77.svg"></img>
+<img src="https://shield.deno.dev/deno/%5E1.39"></img>
 
 ChatGPT API client for chat on console
 
