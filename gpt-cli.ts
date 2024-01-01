@@ -2,14 +2,18 @@
  * Usage:
  *   $ gpt -h
  * Install:
- *  $ deno install --allow-net --allow-env gpt-cli.ts
+ *  $ deno install --allow-net --allow-env --name gpt gpt-cli.ts
+ *  # then `source PATH=~/.deno/bin/gpt:$PATH`
+ *  #
+ *  # As a binary
+ *  # deno compile --allow-net --allow-env --output gpt gpt-cli.ts
  */
 import { parse } from "https://deno.land/std/flags/mod.ts";
 
-const VERSION = "v0.1.0";
+const VERSION = "v0.1.1";
 const helpMessage = `ChatGPT API client for chat on console
     Usage:
-      $ gpt -m gpt-3.5-turbo -x 1000 -t 1.0 [OPTION] PROMPT
+      $ gpt -m gpt-3.5-turbo -x 1000 -t 1.0 [OPTIONS] PROMPT
 
     Options:
       -v, --version: boolean   Show version
@@ -25,7 +29,7 @@ const prompt = "You: ";
 const apiKey = Deno.env.get("OPENAI_API_KEY");
 if (!apiKey) {
   throw new Error(`No token ${apiKey}
-
+-cli
 Set the OPENAI_API_KEY to environment args.
 
 $ export OPENAI_API_KEY="sk-******"`);
@@ -188,7 +192,7 @@ async function ask(messages: Message[] = []) {
 
 function main() {
   if (params.version) {
-    console.error(`gpt-cli ${VERSION}`);
+    console.error(`gpt ${VERSION}`);
     Deno.exit(0);
   }
   if (params.help) {
