@@ -1,15 +1,16 @@
+https://img.shields.io/badge/version-v0.1.1-FF7777.svg
+https://img.shields.io/badge/LICENSE-MIT-44EE77.svg
+https://shield.deno.dev/deno/%5E1.39
+
 ChatGPT API client for chat on console
 
 # Install
 
 ```
-$ git clone https://github.com/u1and0/gpt-cli.git
-$ cd gpt-cli
-$ deno install --allow-net --allow-env --name gpt gpt-cli.ts
-# then `source PATH=~/.deno/bin/gpt:$PATH`
-#
-# As a binary
-# deno compile --allow-net --allow-env --output gpt gpt-cli.ts
+$ curl -LO https://github.com/u1and0/gpt-cli/releases/download/v0.1.1/gpt-cli.zip
+$ unzip gpt-cli.zip
+$ chmod 755 gpt
+$ ./gpt -v
 ```
 
 # Usage
@@ -23,7 +24,7 @@ $ gpt -m gpt-3.5-turbo -x 1000 -t 1.0 [OPTIONS] PROMPT
 * -v, --version: boolean   Show version
 * -h, --help: boolean   Show this message
 * -m, --model: string OpenAI model (default gpt-3.5-turbo)
-* -x, --max_tokens: number Number of AI answer tokens (default 1000)
+* -x, --max\_tokens: number Number of AI answer tokens (default 1000)
 * -t, --temperature: number Higher number means more creative answers, lower number means more exact answers (default 1.0)
 * -s, --system-prompt: string The first instruction given to guide the AI model's response`;
 

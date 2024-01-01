@@ -47,11 +47,6 @@ jobs:
       #   run: deno test -A
 
       # Artifact upload only occurs when tag matches
-      - name: Get the version
-        if: startsWith(github.ref, 'refs/tags/v')
-        id: get_version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
-
       - name: Build binary
         if: startsWith(github.ref, 'refs/tags/v')
         run: deno compile --allow-net --allow-env --output gpt gpt-cli.ts
@@ -60,5 +55,5 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v')
         uses: actions/upload-artifact@v4
         with:
-          name: gpt-${{ steps.get_version.outputs.VERSION }}
+          name: gpt-cli
           path: ./gpt
