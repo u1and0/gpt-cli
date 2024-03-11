@@ -9,8 +9,11 @@
  *  # deno compile --allow-net --allow-env --output gpt gpt-cli.ts
  */
 import { parse } from "https://deno.land/std/flags/mod.ts";
+import OpenAI from "https://deno.land/x/openai/mod.ts";
 
-const VERSION = "v0.1.1";
+// import Anthropic from "npm:@anthropic-ai/sdk";
+
+const VERSION = "v0.1.2";
 const helpMessage = `ChatGPT API client for chat on console
     Usage:
       $ gpt -m gpt-3.5-turbo -x 1000 -t 1.0 [OPTIONS] PROMPT
@@ -26,14 +29,6 @@ const helpMessage = `ChatGPT API client for chat on console
       string A Questions for Model`;
 
 const prompt = "You: ";
-const apiKey = Deno.env.get("OPENAI_API_KEY");
-if (!apiKey) {
-  throw new Error(`No token ${apiKey}
--cli
-Set the OPENAI_API_KEY to environment args.
-
-$ export OPENAI_API_KEY="sk-******"`);
-}
 // Parse arg
 type Params = {
   version: boolean;
@@ -145,47 +140,38 @@ async function ask(messages: Message[] = []) {
   if (!hasSystemRole && params.system_prompt) {
     messages.unshift({ role: Role.System, content: params.system_prompt });
   }
-  // POSTするデータを作成
-  const data = {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: params.model,
-      max_tokens: params.max_tokens,
-      temperature: params.temperature,
-      messages: messages,
-    }),
-  };
-  // console.debug(data);
 
   // POST data to OpenAI API
-  const url = "https://api.openai.com/v1/chat/completions";
-  await fetch(url, data)
+  const apiKey = Deno.env.get("OPENAI_API_KEY");
+  if (!apiKey) {
+    throw new Error("OPENAI_API_KEY environment variable is not set.");
+  }
+  const openai = new OpenAI({ apiKey: apiKey });
+  await openai.chat.completions.create({
+    model: params.model,
+    temperature: params.temperature,
+    max_tokens: params.max_tokens,
+    messages,
+  })
     .then((response) => {
       clearInterval(spinner); // Load spinner stop
-      if (!response.ok) {
-        console.error(response);
-      }
-      return response.json();
+      return response;
     })
     // print1by1() の完了を待つために
     // async (data)として、print1by1()をawaitする
     .then(async (data) => {
       if (data.error) {
         console.error(data);
-      } else {
-        const content = data.choices[0].message.content;
-        // assistantの回答をmessagesに追加
-        messages.push({ role: Role.Assistant, content: content });
-        // console.debug(messages);
-        await print1by1(`\nChatGPT: ${content}`);
+        throw new Error(data.error);
       }
+      const content = data.choices[0].message.content;
+      // assistantの回答をmessagesに追加
+      messages.push({ role: Role.Assistant, content: content });
+      // console.debug(messages);
+      await print1by1(`\nAI: ${content}`);
     })
     .catch((error) => {
-      throw new Error(`Fetch request failed: ${error.messages}`);
+      throw new Error(`Fetch request failed: ${error}`);
     });
   await ask(messages);
 }
