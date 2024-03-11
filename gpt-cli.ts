@@ -13,7 +13,7 @@ import OpenAI from "https://deno.land/x/openai/mod.ts";
 
 // import Anthropic from "npm:@anthropic-ai/sdk";
 
-const VERSION = "v0.1.2";
+const VERSION = "v0.2.0";
 const helpMessage = `ChatGPT API client for chat on console
     Usage:
       $ gpt -m gpt-3.5-turbo -x 1000 -t 1.0 [OPTIONS] PROMPT
@@ -114,8 +114,10 @@ export async function multiInput(ps: string): Promise<string> {
   return inputs.join("\n");
 }
 
-// ChatGPT へ対話形式に質問し、回答を得る
-async function ask(messages: Message[] = []) {
+/** inputがなければ再度要求
+ * q か exitが入力されたら正常終了
+ */
+async function endlessInput(): string {
   let input: string | null;
   while (true) { // inputがなければ再度要求
     input = await multiInput(prompt);
@@ -124,9 +126,14 @@ async function ask(messages: Message[] = []) {
     if (input.trim() === "q" || input.trim() === "exit") {
       Deno.exit(0);
     } else if (input) {
-      break;
+      return input;
     }
   }
+}
+
+// ChatGPT へ対話形式に質問し、回答を得る
+async function ask(messages: Message[] = []) {
+  const input = await endlessInput();
 
   // Load spinner start
   const spinner = loadSpinner([".", "..", "..."], 100);
