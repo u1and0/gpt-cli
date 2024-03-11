@@ -43,7 +43,7 @@ const prompt = "You: ";
 type Params = {
   version: boolean;
   help: boolean;
-  model: string;
+  model: Model;
   temperature: number;
   max_tokens: number;
   system_prompt: string;
@@ -97,22 +97,22 @@ interface LLMInterface {
 }
 
 class LLM {
-  private prompt: string;
-  private completions: unknown;
+  public readonly prompt: string;
+  public readonly completions: unknown;
   constructor(private model: Model) {
-    this.prompt = `${model.toUpperCase()}: `;
+    this.prompt = `${String(model).toUpperCase()}: `;
     this.completions = getLLMModel(model);
   }
 }
 
 class GPT extends LLM implements LLMInterface {
-  getContent(data: Response): string {
+  public getContent(data: Response): string {
     return data.choices[0].message.content;
   }
 }
 
 class Claude extends LLM implements LLMInterface {
-  getContent(data: Response): string {
+  public getContent(data: Response): string {
     return data.content[0].text;
   }
 }
@@ -228,7 +228,7 @@ async function ask(messages: Message[] = []) {
   }
 
   // POST data to OpenAI API
-  let llm: LLM;
+  let llm: GPT | Claude;
   if (params.model.includes("gpt")) {
     llm = new GPT(params.model);
   } else if (params.model.includes("claude")) {
@@ -240,7 +240,7 @@ async function ask(messages: Message[] = []) {
     max_tokens: params.max_tokens,
     messages,
   })
-    .then((response) => {
+    .then((response: Response) => {
       clearInterval(spinner); // Load spinner stop
       return response;
     })
@@ -257,7 +257,7 @@ async function ask(messages: Message[] = []) {
       // console.debug(messages);
       await print1by1(`\n${llm.prompt}: ${content}`);
     })
-    .catch((error) => {
+    .catch((error: Response) => {
       throw new Error(`Fetch request failed: ${error}`);
     });
   await ask(messages);
