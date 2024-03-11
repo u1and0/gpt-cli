@@ -10,7 +10,7 @@
  */
 import { parse } from "https://deno.land/std/flags/mod.ts";
 import OpenAI from "https://deno.land/x/openai/mod.ts";
-// import Anthropic from "npm:@anthropic-ai/sdk";
+import Anthropic from "npm:@anthropic-ai/sdk";
 
 const VERSION = "v0.2.0";
 const helpMessage = `ChatGPT API client for chat on console
@@ -129,6 +129,25 @@ async function endlessInput(): string {
   }
 }
 
+/** LLM instance */
+function getLLMModel(model: string) {
+  if (model.includes("gpt")) {
+    const apiKey = Deno.env.get("OPENAI_API_KEY");
+    if (!apiKey) {
+      throw new Error("OPENAI_API_KEY environment variable is not set.");
+    }
+    const openai = new OpenAI({ apiKey: apiKey });
+    return openai.chat.completions;
+  } else if (model.includes("claude")) {
+    const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
+    if (!apiKey) {
+      throw new Error("ANTHROPIC_API_KEY environment variable is not set.");
+    }
+    const anthropic = new Anthropic({ apiKey: apiKey });
+    return anthropic.messages;
+  }
+}
+
 // ChatGPT へ対話形式に質問し、回答を得る
 async function ask(messages: Message[] = []) {
   const input = await endlessInput();
@@ -147,12 +166,8 @@ async function ask(messages: Message[] = []) {
   }
 
   // POST data to OpenAI API
-  const apiKey = Deno.env.get("OPENAI_API_KEY");
-  if (!apiKey) {
-    throw new Error("OPENAI_API_KEY environment variable is not set.");
-  }
-  const openai = new OpenAI({ apiKey: apiKey });
-  await openai.chat.completions.create({
+  const llm = getLLMModel(params.model);
+  await llm.create({
     model: params.model,
     temperature: params.temperature,
     max_tokens: params.max_tokens,
@@ -169,7 +184,12 @@ async function ask(messages: Message[] = []) {
         console.error(data);
         throw new Error(data.error);
       }
-      const content = data.choices[0].message.content;
+      let content: string;
+      if (params.model.includes("gpt")) {
+        content = data.choices[0].message.content;
+      } else if (params.model.includes("claude")) {
+        content = data.content[0].text;
+      }
       // assistantの回答をmessagesに追加
       messages.push({ role: Role.Assistant, content: content });
       // console.debug(messages);
