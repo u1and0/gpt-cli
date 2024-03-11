@@ -12,6 +12,15 @@ import { parse } from "https://deno.land/std/flags/mod.ts";
 import OpenAI from "https://deno.land/x/openai/mod.ts";
 import Anthropic from "npm:@anthropic-ai/sdk";
 
+const models = [
+  "gpt-3.5-turbo",
+  "gpt-4",
+  "claude-3-sonnet-20240229",
+  "claude-3-opus-20240229",
+];
+
+type Model = typeof models;
+
 const VERSION = "v0.2.0";
 const helpMessage = `ChatGPT API client for chat on console
     Usage:
@@ -25,7 +34,9 @@ const helpMessage = `ChatGPT API client for chat on console
       -t, --temperature: number Higher number means more creative answers, lower number means more exact answers (default 1.0)
       -s, --system_prompt: string The first instruction given to guide the AI model's response
     PROMPT:
-      string A Questions for Model`;
+      string A Questions for Model
+    MODELS:
+      You can use model: ${models}, see OpenAI or Anthropic website for detail.`;
 
 const prompt = "You: ";
 // Parse arg
@@ -76,7 +87,7 @@ type Response = {
   role: Role;
   content: Array<Content>;
   choices: Array<Choices>;
-  model: string;
+  model: Model;
   usage: Usage;
   error?: string;
 };
@@ -88,7 +99,7 @@ interface LLMInterface {
 class LLM {
   private prompt: string;
   private completions: unknown;
-  constructor(private model: string) {
+  constructor(private model: Model) {
     this.prompt = `${model.toUpperCase()}: `;
     this.completions = getLLMModel(model);
   }
@@ -181,7 +192,7 @@ async function endlessInput(): string {
 }
 
 /** LLM instance */
-function getLLMModel(model: string) {
+function getLLMModel(model: Model) {
   if (model.includes("gpt")) {
     const apiKey = Deno.env.get("OPENAI_API_KEY");
     if (!apiKey) {
