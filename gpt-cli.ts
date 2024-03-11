@@ -87,7 +87,6 @@ interface LLMInterface {
 
 class LLM {
   private prompt: string;
-  private content: string;
   private completions: unknown;
   constructor(private model: string) {
     this.prompt = `${model.toUpperCase()}: `;
@@ -95,13 +94,13 @@ class LLM {
   }
 }
 
-class GPT extends LLM {
+class GPT extends LLM implements LLMInterface {
   getContent(data: Response): string {
     return data.choices[0].message.content;
   }
 }
 
-class Claude extends LLM {
+class Claude extends LLM implements LLMInterface {
   getContent(data: Response): string {
     return data.content[0].text;
   }
