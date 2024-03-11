@@ -55,6 +55,58 @@ enum Role {
 }
 type Message = { role: Role; content: string };
 
+type Content = {
+  type: string;
+  text: string;
+};
+
+type Choices = {
+  index: number;
+  message: Content;
+};
+
+type Usage = {
+  input_tokens: number;
+  output_tokens: number;
+};
+
+type Response = {
+  id: string;
+  type: string;
+  role: Role;
+  content: Array<Content>;
+  choices: Array<Choices>;
+  model: string;
+  usage: Usage;
+  error?: string;
+};
+
+interface LLMInterface {
+  getContent(Response): string;
+}
+
+class LLM {
+  private prompt: string;
+  private content: string;
+  private completions: unknown;
+  constructor(private model: string) {
+    this.prompt = `${model.toUpperCase()}: `;
+    this.completions = getLLMModel(model);
+  }
+}
+
+class GPT extends LLM {
+  getContent(data: Response): string {
+    return data.choices[0].message.content;
+  }
+}
+
+class Claude extends LLM {
+  getContent(data: Response): string {
+    return data.content[0].text;
+  }
+}
+
 // 戻り値のIDがclearInterval()によって削除されるまで
 // ., .., ...を繰り返しターミナルに表示するロードスピナー
 // usage:
@@ -166,8 +218,13 @@ async function ask(messages: Message[] = []) {
   }
 
   // POST data to OpenAI API
-  const llm = getLLMModel(params.model);
-  await llm.create({
+  let llm: LLM;
+  if (params.model.includes("gpt")) {
+    llm = new GPT(params.model);
+  } else if (params.model.includes("claude")) {
+    llm = new Claude(params.model);
+  }
+  await llm.completions.create({
     model: params.model,
     temperature: params.temperature,
     max_tokens: params.max_tokens,
@@ -179,21 +236,16 @@ async function ask(messages: Message[] = []) {
     })
     // print1by1() の完了を待つために
     // async (data)として、print1by1()をawaitする
-    .then(async (data) => {
+    .then(async (data: Response) => {
       if (data.error) {
         console.error(data);
         throw new Error(data.error);
       }
-      let content: string;
-      if (params.model.includes("gpt")) {
-        content = data.choices[0].message.content;
-      } else if (params.model.includes("claude")) {
-        content = data.content[0].text;
-      }
+      const content = llm.getContent(data);
       // assistantの回答をmessagesに追加
       messages.push({ role: Role.Assistant, content: content });
       // console.debug(messages);
-      await print1by1(`\nAI: ${content}`);
+      await print1by1(`\n${llm.prompt}: ${content}`);
     })
     .catch((error) => {
       throw new Error(`Fetch request failed: ${error}`);
