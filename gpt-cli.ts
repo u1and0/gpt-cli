@@ -10,7 +10,6 @@
  */
 import { parse } from "https://deno.land/std/flags/mod.ts";
 import OpenAI from "https://deno.land/x/openai/mod.ts";
-
 // import Anthropic from "npm:@anthropic-ai/sdk";
 
 const VERSION = "v0.2.0";
@@ -121,13 +120,12 @@ async function endlessInput(): string {
   let input: string | null;
   while (true) { // inputがなければ再度要求
     input = await multiInput(prompt);
-    if (input.trim() === null) continue;
+    input = input.trim();
+    if (input === null) continue;
     // q か exitが入力されたら正常終了
-    if (input.trim() === "q" || input.trim() === "exit") {
-      Deno.exit(0);
-    } else if (input) {
-      return input;
-    }
+    if (input === "q" || input === "exit") Deno.exit(0);
+    // 入力があったらその文字列を返す
+    if (input) return input;
   }
 }
 
