@@ -80,6 +80,24 @@ interface LLMInterface {
   getContent(data: Response): string;
 }
 
+/** ユーザーの入力とシステムプロンプトをmessages内にセットする */
+async function setUserInputInMessage(
+  messages: Message[],
+  systemPrompt?: string,
+): Message[] {
+  const input = await endlessInput();
+  // userの質問をmessagesに追加
+  messages.push({ role: Role.User, content: input });
+  // system promptをmessagesの最初に追加
+  const hasSystemRole = messages.some(
+    (message) => message.role === Role.System,
+  );
+  if (!hasSystemRole && systemPrompt) {
+    messages.unshift({ role: Role.System, content: systemPrompt });
+  }
+  return messages;
+}
+
 class LLM {
   // public readonly ps: string;
   // public readonly completions: OpenAI.Completions | Anthropic.Messages;
@@ -96,20 +114,9 @@ class LLM {
 
   /** ChatGPT へ対話形式に質問し、回答を得る */
   public async ask(messages: Message[] = []) {
-    const input = await endlessInput();
-
+    messages = await setUserInputInMessage(messages, this.systemPrompt);
     // Load spinner start
     const spinner = loadSpinner([".", "..", "..."], 100);
-
-    // userの質問をmessagesに追加
-    messages.push({ role: Role.User, content: input });
-    // system promptをmessagesの最初に追加
-    const hasSystemRole = messages.some(
-      (message) => message.role === Role.System,
-    );
-    if (!hasSystemRole && this.systemPrompt) {
-      messages.unshift({ role: Role.System, content: this.systemPrompt });
-    }
 
     // POST data to OpenAI API
     const completions = this.getCompletions();
