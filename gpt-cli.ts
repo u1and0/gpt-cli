@@ -97,7 +97,7 @@ async function setUserInputInMessage(
   return messages;
 }
 
-class LLM {
+abstract class LLM {
   // public readonly ps: string;
   // public readonly completions: OpenAI.Completions | Anthropic.Messages;
   constructor(
@@ -117,7 +117,7 @@ class LLM {
 
     // POST data to OpenAI API
     const completions = this.getCompletions();
-    await completions.create({
+    await completions?.create({
       model: this.model,
       temperature: this.temperature,
       max_tokens: this.maxTokens,
@@ -147,14 +147,19 @@ class LLM {
 class GPT extends LLM implements LLMInterface {
   private completions: OpenAI.Completions;
 
-  constructor(...args) {
-    super(...args);
+  constructor(
+    private readonly model: string,
+    private readonly temperature: number,
+    private readonly maxTokens: number,
+    private readonly systemPrompt?: string,
+  ) {
+    super(model, temperature, maxTokens, systemPrompt);
     const apiKey = Deno.env.get("OPENAI_API_KEY");
     if (!apiKey) {
       throw new Error("OPENAI_API_KEY environment variable is not set.");
     }
     const openai = new OpenAI({ apiKey });
-    this.completions = openai.chat.completions;
+    this.completions = openai.chat.completions as OpenAI.Completions;
   }
 
   private getCompletions(): OpenAI.Completions {
@@ -169,8 +174,13 @@ class GPT extends LLM implements LLMInterface {
 class Claude extends LLM implements LLMInterface {
   private completions: Anthropic.Messages;
 
-  constructor(...args) {
-    super(...args);
+  constructor(
+    private readonly model: string,
+    private readonly temperature: number,
+    private readonly maxTokens: number,
+    private readonly systemPrompt?: string,
+  ) {
+    super(model, temperature, maxTokens, systemPrompt);
     const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
     if (!apiKey) {
       throw new Error("ANTHROPIC_API_KEY environment variable is not set.");
@@ -310,7 +320,7 @@ function main() {
     } else {
       throw new Error(`invalid model: ${params.model}`);
     }
-  } catch (error: Error) {
+  } catch (error) {
     console.error(error.message);
     Deno.exit(1);
   }
