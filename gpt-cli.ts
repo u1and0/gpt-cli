@@ -75,8 +75,7 @@ type Response = {
 };
 
 interface LLMInterface {
-  ask(messages: Message[]): void;
-  getCompletions(): OpenAI.Completions | Anthropic.Messages;
+  ask(messages: Message[]): Promise<void>;
   getContent(data: Response): string;
 }
 
@@ -84,7 +83,7 @@ interface LLMInterface {
 async function setUserInputInMessage(
   messages: Message[],
   systemPrompt?: string,
-): Message[] {
+): Promise<Message[]> {
   const input = await endlessInput();
   // userの質問をmessagesに追加
   messages.push({ role: Role.User, content: input });
@@ -106,11 +105,9 @@ class LLM {
     private readonly temperature: number,
     private readonly maxTokens: number,
     private readonly systemPrompt?: string,
-  ) {
-    // this.completions = this.getCompletions();
-  }
+  ) {}
 
-  private getCompletions(): OpenAI.Completions | Anthropic.Messages {}
+  abstract getContent(data: Response): string;
 
   /** ChatGPT へ対話形式に質問し、回答を得る */
   public async ask(messages: Message[] = []) {
@@ -148,14 +145,20 @@ class LLM {
 }
 
 class GPT extends LLM implements LLMInterface {
-  /** LLM instance */
-  private getCompletions(): OpenAI.Completions {
+  private completions: OpenAI.Completions;
+
+  constructor(...args) {
+    super(...args);
     const apiKey = Deno.env.get("OPENAI_API_KEY");
     if (!apiKey) {
       throw new Error("OPENAI_API_KEY environment variable is not set.");
     }
     const openai = new OpenAI({ apiKey });
-    return openai.chat.completions;
+    this.completions = openai.chat.completions;
+  }
+
+  private getCompletions(): OpenAI.Completions {
+    return this.completions;
   }
 
   public getContent(data: Response): string {
@@ -164,13 +167,20 @@ class GPT extends LLM implements LLMInterface {
 }
 
 class Claude extends LLM implements LLMInterface {
-  private getCompletions(): Anthropic.Messages {
+  private completions: Anthropic.Messages;
+
+  constructor(...args) {
+    super(...args);
     const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
     if (!apiKey) {
       throw new Error("ANTHROPIC_API_KEY environment variable is not set.");
     }
     const anthropic = new Anthropic({ apiKey });
-    return anthropic.messages;
+    this.completions = anthropic.messages;
+  }
+
+  private getCompletions(): Anthropic.Messages {
+    return this.completions;
   }
 
   public getContent(data: Response): string {
