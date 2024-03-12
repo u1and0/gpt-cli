@@ -12,15 +12,6 @@ import { parse } from "https://deno.land/std/flags/mod.ts";
 import OpenAI from "https://deno.land/x/openai/mod.ts";
 import Anthropic from "npm:@anthropic-ai/sdk";
 
-const models = [
-  "gpt-3.5-turbo",
-  "gpt-4",
-  "claude-3-sonnet-20240229",
-  "claude-3-opus-20240229",
-];
-
-type Model = typeof models;
-
 const VERSION = "v0.2.0";
 const helpMessage = `ChatGPT API client for chat on console
     Usage:
@@ -34,30 +25,19 @@ const helpMessage = `ChatGPT API client for chat on console
       -t, --temperature: number Higher number means more creative answers, lower number means more exact answers (default 1.0)
       -s, --system_prompt: string The first instruction given to guide the AI model's response
     PROMPT:
-      string A Questions for Model
-    MODELS:
-      You can use model: ${models}, see OpenAI or Anthropic website for detail.`;
+      string A Questions for Model`;
+// MODELS:
+//   You can use model: ${models}, see OpenAI or Anthropic website for detail.`;
 
-const prompt = "You: ";
 // Parse arg
 type Params = {
   version: boolean;
   help: boolean;
-  model: Model;
+  model: string;
   temperature: number;
   max_tokens: number;
   system_prompt: string;
 };
-const args = parse(Deno.args);
-const params: Params = {
-  version: args.v || args.version || false,
-  help: args.h || args.help || false,
-  model: args.m || args.model || "gpt-3.5-turbo",
-  max_tokens: parseInt(args.x || args.max_tokens) || 1000,
-  temperature: parseFloat(args.t || args.temperature) || 1.0,
-  system_prompt: args.s || args.system_prompt,
-};
-// console.debug(params);
 
 enum Role {
   System = "system",
@@ -69,6 +49,8 @@ type Message = { role: Role; content: string };
 type Content = {
   type: string;
   text: string;
+  role: Role;
+  content: string;
 };
 
 type Choices = {
@@ -87,31 +69,103 @@ type Response = {
   role: Role;
   content: Array<Content>;
   choices: Array<Choices>;
-  model: Model;
+  model: string;
   usage: Usage;
   error?: string;
 };
 
 interface LLMInterface {
-  getContent(Response): string;
+  ask(messages: Message[]): void;
+  getCompletions(): OpenAI.Completions | Anthropic.Messages;
+  getContent(data: Response): string;
 }
 
 class LLM {
-  public readonly prompt: string;
-  public readonly completions: unknown;
-  constructor(private model: Model) {
-    this.prompt = `${String(model).toUpperCase()}: `;
-    this.completions = getLLMModel(model);
+  // public readonly ps: string;
+  // public readonly completions: OpenAI.Completions | Anthropic.Messages;
+  constructor(
+    private readonly model: string,
+    private readonly temperature: number,
+    private readonly maxTokens: number,
+    private readonly systemPrompt?: string,
+  ) {
+    // this.completions = this.getCompletions();
+  }
+
+  private getCompletions(): OpenAI.Completions | Anthropic.Messages {}
+
+  /** ChatGPT へ対話形式に質問し、回答を得る */
+  public async ask(messages: Message[] = []) {
+    const input = await endlessInput();
+
+    // Load spinner start
+    const spinner = loadSpinner([".", "..", "..."], 100);
+
+    // userの質問をmessagesに追加
+    messages.push({ role: Role.User, content: input });
+    // system promptをmessagesの最初に追加
+    const hasSystemRole = messages.some(
+      (message) => message.role === Role.System,
+    );
+    if (!hasSystemRole && this.systemPrompt) {
+      messages.unshift({ role: Role.System, content: this.systemPrompt });
+    }
+
+    // POST data to OpenAI API
+    const completions = this.getCompletions();
+    await completions.create({
+      model: this.model,
+      temperature: this.temperature,
+      max_tokens: this.maxTokens,
+      messages,
+    })
+      // print1by1() の完了を待つために
+      // async (data)として、print1by1()をawaitする
+      .then(async (response: Response) => {
+        clearInterval(spinner); // Load spinner stop
+        if (response.error) {
+          console.error(response);
+          throw new Error(response.error);
+        }
+        const content = this.getContent(response);
+        // assistantの回答をmessagesに追加
+        messages.push({ role: Role.Assistant, content: content });
+        // console.debug(messages);
+        await print1by1(`\n${this.model}: ${content}`);
+      })
+      .catch((error: Response) => {
+        throw new Error(`Fetch request failed: ${error}`);
+      });
+    await this.ask(messages);
   }
 }
 
 class GPT extends LLM implements LLMInterface {
+  /** LLM instance */
+  private getCompletions(): OpenAI.Completions {
+    const apiKey = Deno.env.get("OPENAI_API_KEY");
+    if (!apiKey) {
+      throw new Error("OPENAI_API_KEY environment variable is not set.");
+    }
+    const openai = new OpenAI({ apiKey });
+    return openai.chat.completions;
+  }
+
   public getContent(data: Response): string {
     return data.choices[0].message.content;
   }
 }
 
 class Claude extends LLM implements LLMInterface {
+  private getCompletions(): Anthropic.Messages {
+    const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
+    if (!apiKey) {
+      throw new Error("ANTHROPIC_API_KEY environment variable is not set.");
+    }
+    const anthropic = new Anthropic({ apiKey });
+    return anthropic.messages;
+  }
+
   public getContent(data: Response): string {
     return data.content[0].text;
   }
@@ -153,12 +207,13 @@ export async function print1by1(str: string): Promise<void> {
 
 // Ctrl+Dが押されるまでユーザーの入力を求める。
 // Ctrl+Dで入力が確定されたらこれまでの入力を結合して文字列として返す。
-export async function multiInput(ps: string): Promise<string> {
+export async function multiInput(): Promise<string> {
   const inputs: string[] = [];
   const decoder = new TextDecoder();
   const stdin = Deno.stdin;
   const buffer = new Uint8Array(100);
   // 同じ行にプロンプト表示
+  const ps = "You: ";
   Deno.stdout.writeSync(new TextEncoder().encode(ps));
 
   while (true) {
@@ -178,10 +233,10 @@ export async function multiInput(ps: string): Promise<string> {
 /** inputがなければ再度要求
  * q か exitが入力されたら正常終了
  */
-async function endlessInput(): string {
+async function endlessInput(): Promise<string> {
   let input: string | null;
   while (true) { // inputがなければ再度要求
-    input = await multiInput(prompt);
+    input = await multiInput();
     input = input.trim();
     if (input === null) continue;
     // q か exitが入力されたら正常終了
@@ -191,79 +246,22 @@ async function endlessInput(): string {
   }
 }
 
-/** LLM instance */
-function getLLMModel(model: Model) {
-  if (model.includes("gpt")) {
-    const apiKey = Deno.env.get("OPENAI_API_KEY");
-    if (!apiKey) {
-      throw new Error("OPENAI_API_KEY environment variable is not set.");
-    }
-    const openai = new OpenAI({ apiKey: apiKey });
-    return openai.chat.completions;
-  } else if (model.includes("claude")) {
-    const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
-    if (!apiKey) {
-      throw new Error("ANTHROPIC_API_KEY environment variable is not set.");
-    }
-    const anthropic = new Anthropic({ apiKey: apiKey });
-    return anthropic.messages;
-  }
-}
-
-// ChatGPT へ対話形式に質問し、回答を得る
-async function ask(messages: Message[] = []) {
-  const input = await endlessInput();
-
-  // Load spinner start
-  const spinner = loadSpinner([".", "..", "..."], 100);
-
-  // userの質問をmessagesに追加
-  messages.push({ role: Role.User, content: input });
-  // system promptをmessagesの最初に追加
-  const hasSystemRole = messages.some(
-    (message) => message.role === Role.System,
-  );
-  if (!hasSystemRole && params.system_prompt) {
-    messages.unshift({ role: Role.System, content: params.system_prompt });
-  }
-
-  // POST data to OpenAI API
-  let llm: GPT | Claude;
-  if (params.model.includes("gpt")) {
-    llm = new GPT(params.model);
-  } else if (params.model.includes("claude")) {
-    llm = new Claude(params.model);
-  }
-  await llm.completions.create({
-    model: params.model,
-    temperature: params.temperature,
-    max_tokens: params.max_tokens,
-    messages,
-  })
-    .then((response: Response) => {
-      clearInterval(spinner); // Load spinner stop
-      return response;
-    })
-    // print1by1() の完了を待つために
-    // async (data)として、print1by1()をawaitする
-    .then(async (data: Response) => {
-      if (data.error) {
-        console.error(data);
-        throw new Error(data.error);
-      }
-      const content = llm.getContent(data);
-      // assistantの回答をmessagesに追加
-      messages.push({ role: Role.Assistant, content: content });
-      // console.debug(messages);
-      await print1by1(`\n${llm.prompt}: ${content}`);
-    })
-    .catch((error: Response) => {
-      throw new Error(`Fetch request failed: ${error}`);
-    });
-  await ask(messages);
+/** Parse console argument */
+function parseArgs(): Params {
+  const args = parse(Deno.args);
+  return {
+    version: args.v || args.version || false,
+    help: args.h || args.help || false,
+    model: args.m || args.model || "gpt-3.5-turbo",
+    max_tokens: parseInt(args.x || args.max_tokens) || 1000,
+    temperature: parseFloat(args.t || args.temperature) || 1.0,
+    system_prompt: args.s || args.system_prompt,
+  };
 }
 
 function main() {
+  const params = parseArgs();
+  // console.debug(params);
   if (params.version) {
     console.error(`gpt ${VERSION}`);
     Deno.exit(0);
@@ -273,7 +271,32 @@ function main() {
     Deno.exit(0);
   }
   console.log("Ctrl-D to confirm input, q or exit to end conversation");
-  ask();
+
+  // LLM ask
+  try {
+    if (params.model.includes("gpt")) {
+      const gpt = new GPT(
+        params.model,
+        params.temperature,
+        params.max_tokens,
+        params.system_prompt,
+      );
+      gpt.ask();
+    } else if (params.model.includes("claude")) {
+      const claude = new Claude(
+        params.model,
+        params.temperature,
+        params.max_tokens,
+        params.system_prompt,
+      );
+      claude.ask();
+    } else {
+      throw new Error(`invalid model: ${params.model}`);
+    }
+  } catch (error: Error) {
+    console.error(error.message);
+    Deno.exit(1);
+  }
 }
 
 main();
