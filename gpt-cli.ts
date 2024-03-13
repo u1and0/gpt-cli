@@ -74,7 +74,7 @@ type Response = {
   error?: string;
 };
 
-interface LLMInterface {
+interface LLM {
   ask(messages: Message[]): Promise<void>;
   getContent(data: Response): string;
 }
@@ -97,15 +97,27 @@ async function setUserInputInMessage(
   return messages;
 }
 
-abstract class LLM {
-  // public readonly ps: string;
-  // public readonly completions: OpenAI.Completions | Anthropic.Messages;
+class GPT implements LLM {
+  protected completions: OpenAI.Completions | Anthropic.Messages;
+
   constructor(
     protected readonly model: string,
     protected readonly temperature: number,
     protected readonly maxTokens: number,
     protected readonly systemPrompt?: string,
-  ) {}
+  ) {
+    const apiKey = Deno.env.get("OPENAI_API_KEY");
+    if (!apiKey) {
+      throw new Error("OPENAI_API_KEY environment variable is not set.");
+    }
+    const openai = new OpenAI({ apiKey });
+    // const chatCompletion: OpenAI.Chat.ChatCompletion = await openai.chat.completions.create(params);
+    this.completions = openai.chat.completions;
+  }
+
+  public getContent(data: Response): string {
+    return data.choices[0].message.content;
+  }
 
   /** ChatGPT へ対話形式に質問し、回答を得る */
   public async ask(messages: Message[] = []) {
@@ -114,8 +126,7 @@ abstract class LLM {
     const spinner = loadSpinner([".", "..", "..."], 100);
 
     // POST data to OpenAI API
-    const completions = this.getCompletions();
-    await completions?.create({
+    await this.completions.create({
       model: this.model,
       temperature: this.temperature,
       max_tokens: this.maxTokens,
@@ -142,37 +153,7 @@ abstract class LLM {
   }
 }
 
-class GPT extends LLM implements LLMInterface {
-  private completions: OpenAI.Completions;
-
-  constructor(
-    model: string,
-    temperature: number,
-    maxTokens: number,
-    systemPrompt?: string,
-  ) {
-    super(model, temperature, maxTokens, systemPrompt);
-    const apiKey = Deno.env.get("OPENAI_API_KEY");
-    if (!apiKey) {
-      throw new Error("OPENAI_API_KEY environment variable is not set.");
-    }
-    const openai = new OpenAI({ apiKey });
-    // const chatCompletion: OpenAI.Chat.ChatCompletion = await openai.chat.completions.create(params);
-    this.completions = openai.chat.completions;
-  }
-
-  private getCompletions(): OpenAI.Completions {
-    return this.completions;
-  }
-
-  public getContent(data: Response): string {
-    return data.choices[0].message.content;
-  }
-}
-
-class Claude extends LLM implements LLMInterface {
-  private completions: Anthropic.Messages;
-
+class Claude extends GPT implements LLM {
   constructor(
     model: string,
     temperature: number,
@@ -186,10 +167,6 @@ class Claude extends LLM implements LLMInterface {
     }
     const anthropic = new Anthropic({ apiKey });
     this.completions = anthropic.messages;
-  }
-
-  private getCompletions(): Anthropic.Messages {
-    return this.completions;
   }
 
   public getContent(data: Response): string {
@@ -299,26 +276,26 @@ function main() {
   console.log("Ctrl-D to confirm input, q or exit to end conversation");
 
   // LLM ask
+  let llm: LLM;
   try {
     if (params.model.includes("gpt")) {
-      const gpt = new GPT(
+      llm = new GPT(
         params.model,
         params.temperature,
         params.max_tokens,
         params.system_prompt,
       );
-      gpt.ask();
     } else if (params.model.includes("claude")) {
-      const claude = new Claude(
+      llm = new Claude(
         params.model,
         params.temperature,
         params.max_tokens,
         params.system_prompt,
       );
-      claude.ask();
     } else {
       throw new Error(`invalid model: ${params.model}`);
     }
+    llm.ask();
   } catch (error) {
     console.error(error.message);
     Deno.exit(1);
