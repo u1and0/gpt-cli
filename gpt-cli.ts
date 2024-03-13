@@ -101,13 +101,11 @@ abstract class LLM {
   // public readonly ps: string;
   // public readonly completions: OpenAI.Completions | Anthropic.Messages;
   constructor(
-    private readonly model: string,
-    private readonly temperature: number,
-    private readonly maxTokens: number,
-    private readonly systemPrompt?: string,
+    protected readonly model: string,
+    protected readonly temperature: number,
+    protected readonly maxTokens: number,
+    protected readonly systemPrompt?: string,
   ) {}
-
-  abstract getContent(data: Response): string;
 
   /** ChatGPT へ対話形式に質問し、回答を得る */
   public async ask(messages: Message[] = []) {
@@ -148,10 +146,10 @@ class GPT extends LLM implements LLMInterface {
   private completions: OpenAI.Completions;
 
   constructor(
-    private readonly model: string,
-    private readonly temperature: number,
-    private readonly maxTokens: number,
-    private readonly systemPrompt?: string,
+    model: string,
+    temperature: number,
+    maxTokens: number,
+    systemPrompt?: string,
   ) {
     super(model, temperature, maxTokens, systemPrompt);
     const apiKey = Deno.env.get("OPENAI_API_KEY");
@@ -159,7 +157,8 @@ class GPT extends LLM implements LLMInterface {
       throw new Error("OPENAI_API_KEY environment variable is not set.");
     }
     const openai = new OpenAI({ apiKey });
-    this.completions = openai.chat.completions as OpenAI.Completions;
+    // const chatCompletion: OpenAI.Chat.ChatCompletion = await openai.chat.completions.create(params);
+    this.completions = openai.chat.completions;
   }
 
   private getCompletions(): OpenAI.Completions {
@@ -175,10 +174,10 @@ class Claude extends LLM implements LLMInterface {
   private completions: Anthropic.Messages;
 
   constructor(
-    private readonly model: string,
-    private readonly temperature: number,
-    private readonly maxTokens: number,
-    private readonly systemPrompt?: string,
+    model: string,
+    temperature: number,
+    maxTokens: number,
+    systemPrompt?: string,
   ) {
     super(model, temperature, maxTokens, systemPrompt);
     const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
