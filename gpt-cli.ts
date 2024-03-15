@@ -39,6 +39,7 @@ type Params = {
   system_prompt: string;
 };
 
+// Input Object
 enum Role {
   System = "system",
   User = "user",
@@ -46,6 +47,7 @@ enum Role {
 }
 type Message = { role: Role; content: string };
 
+// Output Object
 type Content = {
   type: string;
   text: string;
@@ -75,7 +77,7 @@ type Response = {
 };
 
 interface LLM {
-  ask(messages: Message[]): Promise<void>;
+  ask(messages?: Message[]): Promise<void>;
   getContent(data: Response): string;
 }
 
@@ -98,21 +100,21 @@ async function setUserInputInMessage(
 }
 
 class GPT implements LLM {
-  protected completions: OpenAI.Completions | Anthropic.Messages;
+  private agent: OpenAI;
 
   constructor(
-    protected readonly model: string,
-    protected readonly temperature: number,
-    protected readonly maxTokens: number,
-    protected readonly systemPrompt?: string,
+    private readonly model: string,
+    private readonly temperature: number,
+    private readonly maxTokens: number,
+    private readonly systemPrompt?: string,
   ) {
     const apiKey = Deno.env.get("OPENAI_API_KEY");
     if (!apiKey) {
       throw new Error("OPENAI_API_KEY environment variable is not set.");
     }
-    const openai = new OpenAI({ apiKey });
+    this.agent = new OpenAI({ apiKey });
     // const chatCompletion: OpenAI.Chat.ChatCompletion = await openai.chat.completions.create(params);
-    this.completions = openai.chat.completions;
+    // this.completions = openai.chat.completions;
   }
 
   public getContent(data: Response): string {
@@ -120,13 +122,13 @@ class GPT implements LLM {
   }
 
   /** ChatGPT へ対話形式に質問し、回答を得る */
-  public async ask(messages: Message[] = []) {
+  public async ask(messages?: Message[] = []) {
     messages = await setUserInputInMessage(messages, this.systemPrompt);
     // Load spinner start
     const spinner = loadSpinner([".", "..", "..."], 100);
 
     // POST data to OpenAI API
-    await this.completions.create({
+    await this.agent.chat.completions.create({
       model: this.model,
       temperature: this.temperature,
       max_tokens: this.maxTokens,
@@ -153,24 +155,58 @@ class GPT implements LLM {
   }
 }
 
-class Claude extends GPT implements LLM {
+class Claude implements LLM {
+  private agent: Anthropic;
+
   constructor(
-    model: string,
-    temperature: number,
-    maxTokens: number,
-    systemPrompt?: string,
+    private readonly model: string,
+    private readonly temperature: number,
+    private readonly maxTokens: number,
+    private readonly systemPrompt?: string,
   ) {
-    super(model, temperature, maxTokens, systemPrompt);
     const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
     if (!apiKey) {
       throw new Error("ANTHROPIC_API_KEY environment variable is not set.");
     }
-    const anthropic = new Anthropic({ apiKey });
-    this.completions = anthropic.messages;
+    this.agent = new Anthropic({ apiKey });
   }
 
   public getContent(data: Response): string {
     return data.content[0].text;
+  }
+
+  /** ChatGPT へ対話形式に質問し、回答を得る */
+  public async ask(messages?: Message[] = []) {
+    messages = await setUserInputInMessage(messages); // GPTと違ってsystem promptはmessagesにいれない
+    // Load spinner start
+    const spinner = loadSpinner([".", "..", "..."], 100);
+
+    // POST data to Anthropic API
+    await this.agent.messages.create({
+      model: this.model,
+      temperature: this.temperature,
+      max_tokens: this.maxTokens,
+      system: this.systemPrompt, // GPTと違ってsystem promptはsystemに入れる
+      messages,
+    })
+      // print1by1() の完了を待つために
+      // async (data)として、print1by1()をawaitする
+      .then(async (response: Response) => {
+        clearInterval(spinner); // Load spinner stop
+        if (response.error) {
+          console.error(response);
+          throw new Error(response.error);
+        }
+        const content = this.getContent(response);
+        // assistantの回答をmessagesに追加
+        messages.push({ role: Role.Assistant, content: content });
+        // console.debug(messages);
+        await print1by1(`\n${this.model}: ${content}`);
+      })
+      .catch((error: Response) => {
+        throw new Error(`Fetch request failed: ${error}`);
+      });
+    await this.ask(messages);
   }
 }
 
