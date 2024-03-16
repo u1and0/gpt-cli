@@ -316,7 +316,7 @@ function parseArgs(): Params {
 
 function main() {
   const params = parseArgs();
-  console.debug(params);
+  // console.debug(params);
   if (params.version) {
     console.error(`gpt ${VERSION}`);
     Deno.exit(0);
