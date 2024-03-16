@@ -11,6 +11,7 @@
 import { parse } from "https://deno.land/std/flags/mod.ts";
 import OpenAI from "https://deno.land/x/openai/mod.ts";
 import Anthropic from "npm:@anthropic-ai/sdk";
+import { getJson } from "https://deno.land/x/serpapi/mod.ts";
 
 const VERSION = "v0.3.0";
 const helpMessage = `ChatGPT API client for chat on console
@@ -360,4 +361,17 @@ function main() {
   }
 }
 
-main();
+async function google() {
+  const apiKey = Deno.env.get("SERP_API_KEY");
+  const response = await getJson({
+    engine: "google",
+    api_key: apiKey,
+    q: "coffee",
+    location: "Austin, Texas",
+  });
+  console.log(response);
+  Deno.exit(0);
+}
+
+await google();
+// main();
