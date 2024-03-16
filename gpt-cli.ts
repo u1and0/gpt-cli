@@ -36,7 +36,8 @@ type Params = {
   model: string;
   temperature: number;
   max_tokens: number;
-  system_prompt: string;
+  system_prompt?: string;
+  content?: string;
 };
 
 // Input Object
@@ -73,28 +74,25 @@ type Response = {
   choices: Array<Choices>;
   model: string;
   usage: Usage;
-  error?: string;
+  error: string;
 };
 
 interface LLM {
-  ask(messages?: Message[]): Promise<void>;
+  ask(messages: Message[]): Promise<void>;
   getContent(data: Response): string;
 }
 
 /** ユーザーの入力とシステムプロンプトをmessages内にセットする */
-async function setUserInputInMessage(
-  messages: Message[],
-  systemPrompt?: string,
-): Promise<Message[]> {
-  const input = await endlessInput();
-  // userの質問をmessagesに追加
-  messages.push({ role: Role.User, content: input });
-  // system promptをmessagesの最初に追加
-  const hasSystemRole = messages.some(
-    (message) => message.role === Role.System,
-  );
-  if (!hasSystemRole && systemPrompt) {
-    messages.unshift({ role: Role.System, content: systemPrompt });
+async function setUserInputInMessage(messages: Message[]): Promise<Message[]> {
+  // console.debug(messages);
+  // messagesの中身が空の場合 または role: "user"が最後ではない場合、
+  // endlessInput()でユーザーからの質問を待ち受ける
+  const lastMessage: Message | undefined = messages.at(-1);
+  // console.debug(lastMessage);
+  if (lastMessage?.role !== Role.User) {
+    const input = await endlessInput();
+    // userの質問をmessagesに追加
+    messages.push({ role: Role.User, content: input });
   }
   return messages;
 }
@@ -121,9 +119,26 @@ class GPT implements LLM {
     return data.choices[0].message.content;
   }
 
+  /** system promptが与えられており
+   * messagesの中にsystem promptがなければ
+   */
+  public pushSustemPrompt(messages: Message[]): Message[] {
+    const hasSystemRole = messages.some(
+      (message) => message.role === Role.System,
+    );
+    // messagesの最初に追加
+    if (!hasSystemRole && this.systemPrompt) {
+      messages.unshift({ role: Role.System, content: this.systemPrompt });
+    }
+    return messages;
+  }
+
   /** ChatGPT へ対話形式に質問し、回答を得る */
-  public async ask(messages?: Message[] = []) {
-    messages = await setUserInputInMessage(messages, this.systemPrompt);
+  public async ask(messages: Message[]) {
+    messages = await setUserInputInMessage(messages);
+    if (this.systemPrompt) {
+      messages = this.pushSustemPrompt(messages);
+    }
     // Load spinner start
     const spinner = loadSpinner([".", "..", "..."], 100);
 
@@ -175,8 +190,8 @@ class Claude implements LLM {
     return data.content[0].text;
   }
 
-  /** ChatGPT へ対話形式に質問し、回答を得る */
-  public async ask(messages?: Message[] = []) {
+  /** Claude へ対話形式に質問し、回答を得る */
+  public async ask(messages: Message[]) {
     messages = await setUserInputInMessage(messages); // GPTと違ってsystem promptはmessagesにいれない
     // Load spinner start
     const spinner = loadSpinner([".", "..", "..."], 100);
@@ -295,12 +310,13 @@ function parseArgs(): Params {
     max_tokens: parseInt(args.x || args.max_tokens) || 1000,
     temperature: parseFloat(args.t || args.temperature) || 1.0,
     system_prompt: args.s || args.system_prompt,
+    content: args._.length > 0 ? args._.join(" ") : undefined, // 残りの引数をすべてスペースで結合
   };
 }
 
 function main() {
   const params = parseArgs();
-  // console.debug(params);
+  console.debug(params);
   if (params.version) {
     console.error(`gpt ${VERSION}`);
     Deno.exit(0);
@@ -331,7 +347,10 @@ function main() {
     } else {
       throw new Error(`invalid model: ${params.model}`);
     }
-    llm.ask();
+    const messages: Message[] = params.content !== undefined
+      ? [{ role: Role.User, content: params.content }]
+      : [];
+    llm.ask(messages);
   } catch (error) {
     console.error(error.message);
     Deno.exit(1);
