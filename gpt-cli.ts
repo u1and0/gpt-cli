@@ -78,6 +78,7 @@ type Response = {
 };
 
 interface LLM {
+  agent: (messages: Message[]) => Promise<void>;
   ask(messages: Message[]): Promise<void>;
   getContent(data: Response): string;
 }
@@ -98,7 +99,7 @@ async function setUserInputInMessage(messages: Message[]): Promise<Message[]> {
 }
 
 class GPT implements LLM {
-  private agent: OpenAI;
+  agent: (messages: Message[]) => Promise<void>;
 
   constructor(
     private readonly model: string,
@@ -110,9 +111,15 @@ class GPT implements LLM {
     if (!apiKey) {
       throw new Error("OPENAI_API_KEY environment variable is not set.");
     }
-    this.agent = new OpenAI({ apiKey });
-    // const chatCompletion: OpenAI.Chat.ChatCompletion = await openai.chat.completions.create(params);
-    // this.completions = openai.chat.completions;
+    const openai = new OpenAI({ apiKey });
+    this.agent = async (messages: Message[]) => {
+      return openai.chat.completions.create({
+        model: this.model,
+        temperature: this.temperature,
+        max_tokens: this.maxTokens,
+        messages,
+      });
+    };
   }
 
   public getContent(data: Response): string {
@@ -143,13 +150,7 @@ class GPT implements LLM {
     const spinner = loadSpinner([".", "..", "..."], 100);
 
     // POST data to OpenAI API
-    await this.agent.chat.completions.create({
-      model: this.model,
-      temperature: this.temperature,
-      max_tokens: this.maxTokens,
-      messages,
-    })
-      // print1by1() の完了を待つために
+    await this.agent(messages) // print1by1() の完了を待つために
       // async (data)として、print1by1()をawaitする
       .then(async (response: Response) => {
         clearInterval(spinner); // Load spinner stop
@@ -171,7 +172,7 @@ class GPT implements LLM {
 }
 
 class Claude implements LLM {
-  private agent: Anthropic;
+  agent: (messages: Message[]) => Promise<void>;
 
   constructor(
     private readonly model: string,
@@ -183,7 +184,16 @@ class Claude implements LLM {
     if (!apiKey) {
       throw new Error("ANTHROPIC_API_KEY environment variable is not set.");
     }
-    this.agent = new Anthropic({ apiKey });
+    const anthropic = new Anthropic({ apiKey });
+    this.agent = async (messages: Message[]) => {
+      return anthropic.messages.create({
+        model: this.model,
+        temperature: this.temperature,
+        max_tokens: this.maxTokens,
+        system: this.systemPrompt, // GPTと違ってsystem promptはsystemに入れる
+        messages,
+      });
+    };
   }
 
   public getContent(data: Response): string {
@@ -197,13 +207,7 @@ class Claude implements LLM {
     const spinner = loadSpinner([".", "..", "..."], 100);
 
     // POST data to Anthropic API
-    await this.agent.messages.create({
-      model: this.model,
-      temperature: this.temperature,
-      max_tokens: this.maxTokens,
-      system: this.systemPrompt, // GPTと違ってsystem promptはsystemに入れる
-      messages,
-    })
+    await this.agent(messages)
       // print1by1() の完了を待つために
       // async (data)として、print1by1()をawaitする
       .then(async (response: Response) => {
