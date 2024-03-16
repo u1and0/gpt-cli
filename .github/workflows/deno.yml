@@ -22,8 +22,8 @@ permissions:
   contents: read
 
 jobs:
-  test:
-    name: test
+  builder:
+    name: gpt builder
     runs-on: ubuntu-latest
 
     steps:
