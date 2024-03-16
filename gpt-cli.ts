@@ -13,7 +13,7 @@ import OpenAI from "https://deno.land/x/openai/mod.ts";
 import Anthropic from "npm:@anthropic-ai/sdk";
 import { getJson } from "https://deno.land/x/serpapi/mod.ts";
 
-const VERSION = "v0.3.0";
+const VERSION = "v0.3.1";
 const helpMessage = `ChatGPT API client for chat on console
     Usage:
       $ gpt -m gpt-3.5-turbo -x 1000 -t 1.0 [OPTIONS] PROMPT
@@ -113,7 +113,7 @@ class GPT implements LLM {
       throw new Error("OPENAI_API_KEY environment variable is not set.");
     }
     const openai = new OpenAI({ apiKey });
-    this.agent = async (messages: Message[]) => {
+    this.agent = (messages: Message[]) => {
       return openai.chat.completions.create({
         model: this.model,
         temperature: this.temperature,
@@ -186,7 +186,7 @@ class Claude implements LLM {
       throw new Error("ANTHROPIC_API_KEY environment variable is not set.");
     }
     const anthropic = new Anthropic({ apiKey });
-    this.agent = async (messages: Message[]) => {
+    this.agent = (messages: Message[]) => {
       return anthropic.messages.create({
         model: this.model,
         temperature: this.temperature,
