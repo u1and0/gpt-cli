@@ -20,7 +20,7 @@ const helpMessage = `ChatGPT API client for chat on console
     Options:
       -v, --version: boolean   Show version
       -h, --help: boolean   Show this message
-      -m, --model: string OpenAI model (default gpt-3.5-turbo)
+      -m, --model: string OpenAI or Anthropic model (gpt-4, claude-instant-1.2, claude-3-opus-20240229, claude-3-haiku-20240307, default gpt-3.5-turbo)
       -x, --max_tokens: number Number of AI answer tokens (default 1000)
       -t, --temperature: number Higher number means more creative answers, lower number means more exact answers (default 1.0)
       -s, --system_prompt: string The first instruction given to guide the AI model's response
