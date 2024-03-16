@@ -18,14 +18,15 @@ on:
     branches:
       - main
     paths:
-      - "./**/*.ts"
+      - "**/*.ts"
+      - ".github/workflows/deno.yml"
 
 permissions:
   contents: read
 
 jobs:
-  builder:
-    name: gpt builder
+  formatter:
+    name: format & test
     runs-on: ubuntu-latest
 
     steps:
@@ -48,13 +49,46 @@ jobs:
       # - name: Run tests
       #   run: deno test -A
 
-      # Artifact upload only occurs when tag matches
+  builder:
+    name: compile & publish artifact
+    runs-on: ${{ matrix.vm }}
+    needs: formatter
+    strategy:
+      matrix:
+        include:
+          - name: linux
+            vm: ubuntu-latest
+          - name: macosx
+            vm: macos-latest
+          - name: windows
+            vm: windows-latest
+
+    steps:
+      - name: Setup repo
+        uses: actions/checkout@v4
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v1
+        # uses: denoland/setup-deno@61fe2df320078202e33d7d5ad347e7dcfa0e8f31  # v1.1.2
+        with:
+          deno-version: v1.x
+
       - name: Build binary
         run: deno compile --allow-net --allow-env --no-check --output gpt gpt-cli.ts
 
-      - name: Build upload
+      - name: Binary upload (Unix, MacOS)
+        # Artifact upload only occurs when tag matches
+        if: runner.os != 'Windows'
         if: startsWith(github.ref, 'refs/tags/v')
         uses: actions/upload-artifact@v4
         with:
-          name: gpt-cli
-          path: ./gpt
+          name: gpt-cli-${{ matrix.name }}
+          path: gpt
+
+      - name: Binary upload (Windows)
+        if: runner.os == 'Windows'
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: actions/upload-artifact@v4
+        with:
+          name: gpt-cli-${{ matrix.name }}
+          path: gpt.exe
