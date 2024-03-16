@@ -112,7 +112,7 @@ class GPT implements LLM {
       throw new Error("OPENAI_API_KEY environment variable is not set.");
     }
     const openai = new OpenAI({ apiKey });
-    this.agent = async (messages: Message[]) => {
+    this.agent = (messages: Message[]) => {
       return openai.chat.completions.create({
         model: this.model,
         temperature: this.temperature,
@@ -185,7 +185,7 @@ class Claude implements LLM {
       throw new Error("ANTHROPIC_API_KEY environment variable is not set.");
     }
     const anthropic = new Anthropic({ apiKey });
-    this.agent = async (messages: Message[]) => {
+    this.agent = (messages: Message[]) => {
       return anthropic.messages.create({
         model: this.model,
         temperature: this.temperature,
