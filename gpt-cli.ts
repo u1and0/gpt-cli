@@ -150,24 +150,24 @@ class GPT implements LLM {
     const spinner = loadSpinner([".", "..", "..."], 100);
 
     // POST data to OpenAI API
-    await this.agent(messages) // print1by1() の完了を待つために
-      // async (data)として、print1by1()をawaitする
-      .then(async (response: Response) => {
-        clearInterval(spinner); // Load spinner stop
-        if (response.error) {
-          console.error(response);
-          throw new Error(response.error);
-        }
-        const content = this.getContent(response);
-        // assistantの回答をmessagesに追加
-        messages.push({ role: Role.Assistant, content: content });
-        // console.debug(messages);
-        await print1by1(`\n${this.model}: ${content}`);
-      })
-      .catch((error: Response) => {
-        throw new Error(`Fetch request failed: ${error}`);
-      });
+    const resp = await this.agent(messages);
+    clearInterval(spinner); // Load spinner stop
+    messages = await this.print(resp, messages);
     await this.ask(messages);
+  }
+
+  // print1by1() の完了を待つために
+  // async (data)として、print1by1()をawaitする
+  public async print(response: Response, messages: Message[]) {
+    if (response.error) {
+      throw new Error(`Fetch request failed: ${response.error}`);
+    }
+    const content = this.getContent(response);
+    // assistantの回答をmessagesに追加
+    messages.push({ role: Role.Assistant, content: content });
+    // console.debug(messages);
+    await print1by1(`\n${this.model}: ${content}`);
+    return messages;
   }
 }
 
@@ -207,25 +207,24 @@ class Claude implements LLM {
     const spinner = loadSpinner([".", "..", "..."], 100);
 
     // POST data to Anthropic API
-    await this.agent(messages)
-      // print1by1() の完了を待つために
-      // async (data)として、print1by1()をawaitする
-      .then(async (response: Response) => {
-        clearInterval(spinner); // Load spinner stop
-        if (response.error) {
-          console.error(response);
-          throw new Error(response.error);
-        }
-        const content = this.getContent(response);
-        // assistantの回答をmessagesに追加
-        messages.push({ role: Role.Assistant, content: content });
-        // console.debug(messages);
-        await print1by1(`\n${this.model}: ${content}`);
-      })
-      .catch((error: Response) => {
-        throw new Error(`Fetch request failed: ${error}`);
-      });
+    const resp = await this.agent(messages);
+    clearInterval(spinner); // Load spinner stop
+    messages = await this.print(resp, messages);
     await this.ask(messages);
+  }
+
+  // print1by1() の完了を待つために
+  // async (data)として、print1by1()をawaitする
+  public async print(response: Response, messages: Message[]) {
+    if (response.error) {
+      throw new Error(`Fetch request failed: ${response.error}`);
+    }
+    const content = this.getContent(response);
+    // assistantの回答をmessagesに追加
+    messages.push({ role: Role.Assistant, content: content });
+    // console.debug(messages);
+    await print1by1(`\n${this.model}: ${content}`);
+    return messages;
   }
 }
 
