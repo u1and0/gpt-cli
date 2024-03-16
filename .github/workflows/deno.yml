@@ -6,7 +6,7 @@
 # This workflow will install Deno then run `deno lint` and `deno test`.
 # For more information see: https://github.com/denoland/setup-deno
 
-name: Deno
+name: gpt-cli publisher
 
 on:
   push:
@@ -17,6 +17,8 @@ on:
   pull_request:
     branches:
       - main
+    paths:
+      - "./**/*.ts"
 
 permissions:
   contents: read
