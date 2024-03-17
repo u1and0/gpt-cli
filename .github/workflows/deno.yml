@@ -12,8 +12,12 @@ on:
   push:
     branches:
       - main
+      - 'release/**'
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+'
+    paths:
+      - "**/*.ts"
+      - ".github/workflows/deno.yml"
   pull_request:
     branches:
       - main
