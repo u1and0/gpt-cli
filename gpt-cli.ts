@@ -13,7 +13,7 @@ import OpenAI from "https://deno.land/x/openai/mod.ts";
 import Anthropic from "npm:@anthropic-ai/sdk";
 import { getJson } from "https://deno.land/x/serpapi/mod.ts";
 
-const VERSION = "v0.3.1";
+const VERSION = "v0.3.1r";
 const helpMessage = `ChatGPT API client for chat on console
     Usage:
       $ gpt -m gpt-3.5-turbo -x 1000 -t 1.0 [OPTIONS] PROMPT
@@ -77,6 +77,34 @@ type Response = {
   usage: Usage;
   error: string;
 };
+
+/** 戻り値のIDがclearInterval()によって削除されるまで
+ * ., .., ...を繰り返しターミナルに表示するロードスピナー
+ * usage:
+ *  const spinner = new Spinner([".", "..", "..."], 100);
+ *  const spinnerID = spinner.start();
+ *  // processing...
+ *  spinner.stop(spinnerID);
+ */
+class Spinner {
+  constructor(
+    private readonly texts: string[],
+    private readonly interval: number,
+  ) {}
+
+  start(): number {
+    let i = 0;
+    return setInterval(() => {
+      i = ++i % this.texts.length;
+      Deno.stdout.writeSync(new TextEncoder().encode("\r" + this.texts[i]));
+    }, this.interval);
+  }
+
+  /** Load spinner stop */
+  stop(id: number) {
+    clearInterval(id);
+  }
+}
 
 interface LLM {
   agent: (messages: Message[]) => Promise<void>;
@@ -147,12 +175,11 @@ class GPT implements LLM {
     if (this.systemPrompt) {
       messages = this.pushSustemPrompt(messages);
     }
-    // Load spinner start
-    const spinner = loadSpinner([".", "..", "..."], 100);
-
+    const spinner = new Spinner([".", "..", "..."], 100);
+    const spinnerID = spinner.start();
     // POST data to OpenAI API
     const resp = await this.agent(messages);
-    clearInterval(spinner); // Load spinner stop
+    spinner.stop(spinnerID);
     messages = await this.print(resp, messages);
     await this.ask(messages);
   }
@@ -204,12 +231,11 @@ class Claude implements LLM {
   /** Claude へ対話形式に質問し、回答を得る */
   public async ask(messages: Message[]) {
     messages = await setUserInputInMessage(messages); // GPTと違ってsystem promptはmessagesにいれない
-    // Load spinner start
-    const spinner = loadSpinner([".", "..", "..."], 100);
-
+    const spinner = new Spinner([".", "..", "..."], 100);
+    const spinnerID = spinner.start();
     // POST data to Anthropic API
     const resp = await this.agent(messages);
-    clearInterval(spinner); // Load spinner stop
+    spinner.stop(spinnerID);
     messages = await this.print(resp, messages);
     await this.ask(messages);
   }
@@ -227,24 +253,6 @@ class Claude implements LLM {
     await print1by1(`\n${this.model}: ${content}`);
     return messages;
   }
-}
-
-// 戻り値のIDがclearInterval()によって削除されるまで
-// ., .., ...を繰り返しターミナルに表示するロードスピナー
-// usage:
-//   const spinner = loadSpinner();
-//   // 処理
-//   await fetch(url, data)
-//     .then((response) => {
-//       clearInterval(spinner); // Stop spinner
-//       return response.json();
-//     })
-export function loadSpinner(frames: string[], interval: number): number {
-  let i = 0;
-  return setInterval(() => {
-    i = ++i % frames.length;
-    Deno.stdout.writeSync(new TextEncoder().encode("\r" + frames[i]));
-  }, interval);
 }
 
 // 渡された文字列を1文字ずつ20msecごとにターミナルに表示する
@@ -373,5 +381,5 @@ async function google() {
   Deno.exit(0);
 }
 
-await google();
-// main();
+// await google();
+main();
