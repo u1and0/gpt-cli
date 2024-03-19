@@ -21,9 +21,9 @@ const helpMessage = `ChatGPT API client for chat on console
       -v, --version: boolean   Show version
       -h, --help: boolean   Show this message
       -m, --model: string OpenAI or Anthropic model (gpt-4, claude-instant-1.2, claude-3-opus-20240229, claude-3-haiku-20240307, default gpt-3.5-turbo)
-      -x, --max_tokens: number Number of AI answer tokens (default 1000)
+      -x, --max-tokens: number Number of AI answer tokens (default 1000)
       -t, --temperature: number Higher number means more creative answers, lower number means more exact answers (default 1.0)
-      -s, --system_prompt: string The first instruction given to guide the AI model's response
+      -s, --system-prompt: string The first instruction given to guide the AI model's response
       -n, --no-conversation: No conversation mode. Just one time question and answer.
     PROMPT:
       string A Questions for Model`;
@@ -135,8 +135,8 @@ class GPT implements LLM {
   constructor(
     private readonly model: string,
     private readonly temperature: number,
-    private readonly maxTokens: number,
-    private readonly systemPrompt?: string,
+    private readonly max_tokens: number,
+    private readonly system_prompt?: string,
   ) {
     const apiKey = Deno.env.get("OPENAI_API_KEY");
     if (!apiKey) {
@@ -147,7 +147,7 @@ class GPT implements LLM {
       return openai.chat.completions.create({
         model: this.model,
         temperature: this.temperature,
-        max_tokens: this.maxTokens,
+        max_tokens: this.max_tokens,
         messages,
       });
     };
@@ -165,15 +165,15 @@ class GPT implements LLM {
       (message) => message.role === Role.System,
     );
     // messagesの最初に追加
-    if (!hasSystemRole && this.systemPrompt) {
-      messages.unshift({ role: Role.System, content: this.systemPrompt });
+    if (!hasSystemRole && this.system_prompt) {
+      messages.unshift({ role: Role.System, content: this.system_prompt });
     }
     return messages;
   }
 
   /** ChatGPT へ一回限りの質問をし、回答を出力して終了する */
   public async query(messages: Message[]): Promise<string> {
-    if (this.systemPrompt) {
+    if (this.system_prompt) {
       messages = this.pushSustemPrompt(messages);
     }
     const resp = await this.agent(messages);
@@ -184,7 +184,7 @@ class GPT implements LLM {
   /** ChatGPT へ対話形式に質問し、回答を得る */
   public async ask(messages: Message[]) {
     messages = await setUserInputInMessage(messages);
-    if (this.systemPrompt) {
+    if (this.system_prompt) {
       messages = this.pushSustemPrompt(messages);
     }
     const spinner = new Spinner([".", "..", "..."], 100);
@@ -217,8 +217,8 @@ class Claude implements LLM {
   constructor(
     private readonly model: string,
     private readonly temperature: number,
-    private readonly maxTokens: number,
-    private readonly systemPrompt?: string,
+    private readonly max_tokens: number,
+    private readonly system_prompt?: string,
   ) {
     const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
     if (!apiKey) {
@@ -229,8 +229,8 @@ class Claude implements LLM {
       return anthropic.messages.create({
         model: this.model,
         temperature: this.temperature,
-        max_tokens: this.maxTokens,
-        system: this.systemPrompt, // GPTと違ってsystem promptはsystemに入れる
+        max_tokens: this.max_tokens,
+        system: this.system_prompt, // GPTと違ってsystem promptはsystemに入れる
         messages,
       });
     };
@@ -333,17 +333,27 @@ async function endlessInput(): Promise<string> {
 
 /** Parse console argument */
 function parseArgs(): Params {
-  const args = parse(Deno.args);
-  return {
+  const args = parse(Deno.args, {
+    boolean: ["v", "version", "h", "help", "n", "no-conversation"],
+    string: ["m", "model", "s", "system-prompt", "content"],
+    number: ["v", "temperature", "x", "max-tokens"],
+    default: {
+      temperature: 1.0,
+      "max-tokens": 1000,
+    },
+  });
+  // args.content = args._.length > 0 ? args._.join(" ") : undefined; // 残りの引数をすべてスペースで結合
+  const params = {
     version: args.v || args.version || false,
     help: args.h || args.help || false,
-    no_conversation: args.n || args.no_conversation || false,
+    no_conversation: args.n || args["no-conversation"] || false,
     model: args.m || args.model || "gpt-3.5-turbo",
-    max_tokens: parseInt(args.x || args.max_tokens) || 1000,
+    max_tokens: parseInt(args.x || args["max-tokens"]) || 1000,
     temperature: parseFloat(args.t || args.temperature) || 1.0,
-    system_prompt: args.s || args.system_prompt,
+    system_prompt: args.s || args["systemPrompt"],
     content: args._.length > 0 ? args._.join(" ") : undefined, // 残りの引数をすべてスペースで結合
   };
+  return params;
 }
 
 function createLLM(params: Params): LLM {
