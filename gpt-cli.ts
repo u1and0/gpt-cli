@@ -11,7 +11,6 @@
 import { parse } from "https://deno.land/std/flags/mod.ts";
 import OpenAI from "https://deno.land/x/openai/mod.ts";
 import Anthropic from "npm:@anthropic-ai/sdk";
-import { getJson } from "https://deno.land/x/serpapi/mod.ts";
 
 const VERSION = "v0.3.1r";
 const helpMessage = `ChatGPT API client for chat on console
@@ -25,6 +24,7 @@ const helpMessage = `ChatGPT API client for chat on console
       -x, --max_tokens: number Number of AI answer tokens (default 1000)
       -t, --temperature: number Higher number means more creative answers, lower number means more exact answers (default 1.0)
       -s, --system_prompt: string The first instruction given to guide the AI model's response
+      -n, --no-conversation: No conversation mode. Just one time question and answer.
     PROMPT:
       string A Questions for Model`;
 // MODELS:
@@ -34,6 +34,7 @@ const helpMessage = `ChatGPT API client for chat on console
 type Params = {
   version: boolean;
   help: boolean;
+  no_conversation: boolean;
   model: string;
   temperature: number;
   max_tokens: number;
@@ -96,7 +97,7 @@ class Spinner {
     let i = 0;
     return setInterval(() => {
       i = ++i % this.texts.length;
-      Deno.stdout.writeSync(new TextEncoder().encode("\r" + this.texts[i]));
+      Deno.stderr.writeSync(new TextEncoder().encode("\r" + this.texts[i]));
     }, this.interval);
   }
 
@@ -109,6 +110,7 @@ class Spinner {
 interface LLM {
   agent: (messages: Message[]) => Promise<void>;
   ask(messages: Message[]): Promise<void>;
+  query(messages: Message[]): Promise<string>;
   getContent(data: Response): string;
 }
 
@@ -169,6 +171,16 @@ class GPT implements LLM {
     return messages;
   }
 
+  /** ChatGPT へ一回限りの質問をし、回答を出力して終了する */
+  public async query(messages: Message[]): Promise<string> {
+    if (this.systemPrompt) {
+      messages = this.pushSustemPrompt(messages);
+    }
+    const resp = await this.agent(messages);
+    const content = this.getContent(resp);
+    return content;
+  }
+
   /** ChatGPT へ対話形式に質問し、回答を得る */
   public async ask(messages: Message[]) {
     messages = await setUserInputInMessage(messages);
@@ -226,6 +238,13 @@ class Claude implements LLM {
 
   public getContent(data: Response): string {
     return data.content[0].text;
+  }
+
+  /** Claude へ一回限りの質問をし、回答を出力して終了する */
+  public async query(messages: Message[]): Promise<string> {
+    const resp = await this.agent(messages);
+    const content = this.getContent(resp);
+    return content;
   }
 
   /** Claude へ対話形式に質問し、回答を得る */
@@ -318,6 +337,7 @@ function parseArgs(): Params {
   return {
     version: args.v || args.version || false,
     help: args.h || args.help || false,
+    no_conversation: args.n || args.no_conversation || false,
     model: args.m || args.model || "gpt-3.5-turbo",
     max_tokens: parseInt(args.x || args.max_tokens) || 1000,
     temperature: parseFloat(args.t || args.temperature) || 1.0,
@@ -326,7 +346,28 @@ function parseArgs(): Params {
   };
 }
 
-function main() {
+function createLLM(params: Params): LLM {
+  if (params.model.startsWith("gpt")) {
+    return new GPT(
+      params.model,
+      params.temperature,
+      params.max_tokens,
+      params.system_prompt,
+    );
+  } else if (params.model.startsWith("claude")) {
+    return new Claude(
+      params.model,
+      params.temperature,
+      params.max_tokens,
+      params.system_prompt,
+    );
+  } else {
+    throw new Error(`invalid model: ${params.model}`);
+  }
+}
+
+async function main() {
+  // Parse command argument
   const params = parseArgs();
   // console.debug(params);
   if (params.version) {
@@ -337,49 +378,25 @@ function main() {
     console.error(helpMessage);
     Deno.exit(0);
   }
-  console.log("Ctrl-D to confirm input, q or exit to end conversation");
-
-  // LLM ask
-  let llm: LLM;
-  try {
-    if (params.model.includes("gpt")) {
-      llm = new GPT(
-        params.model,
-        params.temperature,
-        params.max_tokens,
-        params.system_prompt,
-      );
-    } else if (params.model.includes("claude")) {
-      llm = new Claude(
-        params.model,
-        params.temperature,
-        params.max_tokens,
-        params.system_prompt,
-      );
-    } else {
-      throw new Error(`invalid model: ${params.model}`);
-    }
-    const messages: Message[] = params.content !== undefined
-      ? [{ role: Role.User, content: params.content }]
-      : [];
-    llm.ask(messages);
-  } catch (error) {
-    console.error(error.message);
-    Deno.exit(1);
+  // create LLM モデルの作成
+  const llm = createLLM(params);
+  const messages: Message[] = params.content !== undefined
+    ? [{ role: Role.User, content: params.content }]
+    : [];
+  // query LLM 一回限りの応答
+  if (params.no_conversation) {
+    const content = await llm.query(messages);
+    console.log(content);
+    return;
   }
+  // ask LLM 対話的応答
+  console.log("Ctrl-D to confirm input, q or exit to end conversation");
+  llm.ask(messages);
 }
 
-async function google() {
-  const apiKey = Deno.env.get("SERP_API_KEY");
-  const response = await getJson({
-    engine: "google",
-    api_key: apiKey,
-    q: "coffee",
-    location: "Austin, Texas",
-  });
-  console.log(response);
-  Deno.exit(0);
+try {
+  await main();
+} catch (error) {
+  console.error(error.message);
+  Deno.exit(1);
 }
-
-// await google();
-main();
