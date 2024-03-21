@@ -24,11 +24,9 @@ const helpMessage = `ChatGPT API client for chat on console
       -x, --max-tokens: number Number of AI answer tokens (default 1000)
       -t, --temperature: number Higher number means more creative answers, lower number means more exact answers (default 1.0)
       -s, --system-prompt: string The first instruction given to guide the AI model's response
-      -n, --no-conversation: No conversation mode. Just one time question and answer.
+      -n, --no-conversation: boolean   No conversation mode. Just one time question and answer.
     PROMPT:
       string A Questions for Model`;
-// MODELS:
-//   You can use model: ${models}, see OpenAI or Anthropic website for detail.`;
 
 // Parse arg
 type Params = {
@@ -106,6 +104,8 @@ class Spinner {
     clearInterval(id);
   }
 }
+
+const spinner = new Spinner([".", "..", "..."], 100);
 
 interface LLM {
   agent: (messages: Message[]) => Promise<void>;
@@ -187,7 +187,6 @@ class GPT implements LLM {
     if (this.system_prompt) {
       messages = this.pushSustemPrompt(messages);
     }
-    const spinner = new Spinner([".", "..", "..."], 100);
     const spinnerID = spinner.start();
     // POST data to OpenAI API
     const resp = await this.agent(messages);
@@ -250,7 +249,6 @@ class Claude implements LLM {
   /** Claude へ対話形式に質問し、回答を得る */
   public async ask(messages: Message[]) {
     messages = await setUserInputInMessage(messages); // GPTと違ってsystem promptはmessagesにいれない
-    const spinner = new Spinner([".", "..", "..."], 100);
     const spinnerID = spinner.start();
     // POST data to Anthropic API
     const resp = await this.agent(messages);
