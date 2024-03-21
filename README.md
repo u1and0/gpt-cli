@@ -14,6 +14,21 @@ $ chmod 755 gpt
 $ ./gpt -v
 ```
 
+# Setup
+OpenAI API
+
+[Get OpenAI API key](https://platform.openai.com/api-keys), then set environment argument.
+
+```
+export OPENAI_API_KEY='sk-*****'
+```
+
+[Get Anthropic API key](https://console.anthropic.com/login?returnTo=%2F), then set environment argument.
+
+```
+export ANTHROPIC_API_KEY='sk-ant-*****'
+```
+
 # Usage
 
 ```
