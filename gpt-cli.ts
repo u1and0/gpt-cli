@@ -12,7 +12,7 @@ import { parse } from "https://deno.land/std/flags/mod.ts";
 import OpenAI from "https://deno.land/x/openai/mod.ts";
 import Anthropic from "npm:@anthropic-ai/sdk";
 
-const VERSION = "v0.3.1";
+const VERSION = "v0.3.2";
 const helpMessage = `ChatGPT API client for chat on console
     Usage:
       $ gpt -m gpt-3.5-turbo -x 1000 -t 1.0 [OPTIONS] PROMPT
@@ -21,18 +21,18 @@ const helpMessage = `ChatGPT API client for chat on console
       -v, --version: boolean   Show version
       -h, --help: boolean   Show this message
       -m, --model: string OpenAI or Anthropic model (gpt-4, claude-instant-1.2, claude-3-opus-20240229, claude-3-haiku-20240307, default gpt-3.5-turbo)
-      -x, --max_tokens: number Number of AI answer tokens (default 1000)
+      -x, --max-tokens: number Number of AI answer tokens (default 1000)
       -t, --temperature: number Higher number means more creative answers, lower number means more exact answers (default 1.0)
-      -s, --system_prompt: string The first instruction given to guide the AI model's response
+      -s, --system-prompt: string The first instruction given to guide the AI model's response
+      -n, --no-conversation: boolean   No conversation mode. Just one time question and answer.
     PROMPT:
       string A Questions for Model`;
-// MODELS:
-//   You can use model: ${models}, see OpenAI or Anthropic website for detail.`;
 
 // Parse arg
 type Params = {
   version: boolean;
   help: boolean;
+  no_conversation: boolean;
   model: string;
   temperature: number;
   max_tokens: number;
@@ -77,9 +77,40 @@ type Response = {
   error: string;
 };
 
+/** 戻り値のIDがclearInterval()によって削除されるまで
+ * ., .., ...を繰り返しターミナルに表示するロードスピナー
+ * usage:
+ *  const spinner = new Spinner([".", "..", "..."], 100);
+ *  const spinnerID = spinner.start();
+ *  // processing...
+ *  spinner.stop(spinnerID);
+ */
+class Spinner {
+  constructor(
+    private readonly texts: string[],
+    private readonly interval: number,
+  ) {}
+
+  start(): number {
+    let i = 0;
+    return setInterval(() => {
+      i = ++i % this.texts.length;
+      Deno.stderr.writeSync(new TextEncoder().encode("\r" + this.texts[i]));
+    }, this.interval);
+  }
+
+  /** Load spinner stop */
+  stop(id: number) {
+    clearInterval(id);
+  }
+}
+
+const spinner = new Spinner([".", "..", "..."], 100);
+
 interface LLM {
   agent: (messages: Message[]) => Promise<void>;
   ask(messages: Message[]): Promise<void>;
+  query(messages: Message[]): Promise<string>;
   getContent(data: Response): string;
 }
 
@@ -104,8 +135,8 @@ class GPT implements LLM {
   constructor(
     private readonly model: string,
     private readonly temperature: number,
-    private readonly maxTokens: number,
-    private readonly systemPrompt?: string,
+    private readonly max_tokens: number,
+    private readonly system_prompt?: string,
   ) {
     const apiKey = Deno.env.get("OPENAI_API_KEY");
     if (!apiKey) {
@@ -116,7 +147,7 @@ class GPT implements LLM {
       return openai.chat.completions.create({
         model: this.model,
         temperature: this.temperature,
-        max_tokens: this.maxTokens,
+        max_tokens: this.max_tokens,
         messages,
       });
     };
@@ -134,24 +165,32 @@ class GPT implements LLM {
       (message) => message.role === Role.System,
     );
     // messagesの最初に追加
-    if (!hasSystemRole && this.systemPrompt) {
-      messages.unshift({ role: Role.System, content: this.systemPrompt });
+    if (!hasSystemRole && this.system_prompt) {
+      messages.unshift({ role: Role.System, content: this.system_prompt });
     }
     return messages;
+  }
+
+  /** ChatGPT へ一回限りの質問をし、回答を出力して終了する */
+  public async query(messages: Message[]): Promise<string> {
+    if (this.system_prompt) {
+      messages = this.pushSustemPrompt(messages);
+    }
+    const resp = await this.agent(messages);
+    const content = this.getContent(resp);
+    return content;
   }
 
   /** ChatGPT へ対話形式に質問し、回答を得る */
   public async ask(messages: Message[]) {
     messages = await setUserInputInMessage(messages);
-    if (this.systemPrompt) {
+    if (this.system_prompt) {
       messages = this.pushSustemPrompt(messages);
     }
-    // Load spinner start
-    const spinner = loadSpinner([".", "..", "..."], 100);
-
+    const spinnerID = spinner.start();
     // POST data to OpenAI API
     const resp = await this.agent(messages);
-    clearInterval(spinner); // Load spinner stop
+    spinner.stop(spinnerID);
     messages = await this.print(resp, messages);
     await this.ask(messages);
   }
@@ -177,8 +216,8 @@ class Claude implements LLM {
   constructor(
     private readonly model: string,
     private readonly temperature: number,
-    private readonly maxTokens: number,
-    private readonly systemPrompt?: string,
+    private readonly max_tokens: number,
+    private readonly system_prompt?: string,
   ) {
     const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
     if (!apiKey) {
@@ -189,8 +228,8 @@ class Claude implements LLM {
       return anthropic.messages.create({
         model: this.model,
         temperature: this.temperature,
-        max_tokens: this.maxTokens,
-        system: this.systemPrompt, // GPTと違ってsystem promptはsystemに入れる
+        max_tokens: this.max_tokens,
+        system: this.system_prompt, // GPTと違ってsystem promptはsystemに入れる
         messages,
       });
     };
@@ -200,15 +239,20 @@ class Claude implements LLM {
     return data.content[0].text;
   }
 
+  /** Claude へ一回限りの質問をし、回答を出力して終了する */
+  public async query(messages: Message[]): Promise<string> {
+    const resp = await this.agent(messages);
+    const content = this.getContent(resp);
+    return content;
+  }
+
   /** Claude へ対話形式に質問し、回答を得る */
   public async ask(messages: Message[]) {
     messages = await setUserInputInMessage(messages); // GPTと違ってsystem promptはmessagesにいれない
-    // Load spinner start
-    const spinner = loadSpinner([".", "..", "..."], 100);
-
+    const spinnerID = spinner.start();
     // POST data to Anthropic API
     const resp = await this.agent(messages);
-    clearInterval(spinner); // Load spinner stop
+    spinner.stop(spinnerID);
     messages = await this.print(resp, messages);
     await this.ask(messages);
   }
@@ -226,24 +270,6 @@ class Claude implements LLM {
     await print1by1(`\n${this.model}: ${content}`);
     return messages;
   }
-}
-
-// 戻り値のIDがclearInterval()によって削除されるまで
-// ., .., ...を繰り返しターミナルに表示するロードスピナー
-// usage:
-//   const spinner = loadSpinner();
-//   // 処理
-//   await fetch(url, data)
-//     .then((response) => {
-//       clearInterval(spinner); // Stop spinner
-//       return response.json();
-//     })
-export function loadSpinner(frames: string[], interval: number): number {
-  let i = 0;
-  return setInterval(() => {
-    i = ++i % frames.length;
-    Deno.stdout.writeSync(new TextEncoder().encode("\r" + frames[i]));
-  }, interval);
 }
 
 // 渡された文字列を1文字ずつ20msecごとにターミナルに表示する
@@ -305,19 +331,51 @@ async function endlessInput(): Promise<string> {
 
 /** Parse console argument */
 function parseArgs(): Params {
-  const args = parse(Deno.args);
-  return {
+  const args = parse(Deno.args, {
+    boolean: ["v", "version", "h", "help", "n", "no-conversation"],
+    string: ["m", "model", "s", "system-prompt", "content"],
+    number: ["v", "temperature", "x", "max-tokens"],
+    default: {
+      temperature: 1.0,
+      "max-tokens": 1000,
+    },
+  });
+  // args.content = args._.length > 0 ? args._.join(" ") : undefined; // 残りの引数をすべてスペースで結合
+  const params = {
     version: args.v || args.version || false,
     help: args.h || args.help || false,
+    no_conversation: args.n || args["no-conversation"] || false,
     model: args.m || args.model || "gpt-3.5-turbo",
-    max_tokens: parseInt(args.x || args.max_tokens) || 1000,
+    max_tokens: parseInt(args.x || args["max-tokens"]) || 1000,
     temperature: parseFloat(args.t || args.temperature) || 1.0,
-    system_prompt: args.s || args.system_prompt,
+    system_prompt: args.s || args["systemPrompt"],
     content: args._.length > 0 ? args._.join(" ") : undefined, // 残りの引数をすべてスペースで結合
   };
+  return params;
 }
 
-function main() {
+function createLLM(params: Params): LLM {
+  if (params.model.startsWith("gpt")) {
+    return new GPT(
+      params.model,
+      params.temperature,
+      params.max_tokens,
+      params.system_prompt,
+    );
+  } else if (params.model.startsWith("claude")) {
+    return new Claude(
+      params.model,
+      params.temperature,
+      params.max_tokens,
+      params.system_prompt,
+    );
+  } else {
+    throw new Error(`invalid model: ${params.model}`);
+  }
+}
+
+async function main() {
+  // Parse command argument
   const params = parseArgs();
   // console.debug(params);
   if (params.version) {
@@ -328,36 +386,25 @@ function main() {
     console.error(helpMessage);
     Deno.exit(0);
   }
-  console.log("Ctrl-D to confirm input, q or exit to end conversation");
-
-  // LLM ask
-  let llm: LLM;
-  try {
-    if (params.model.includes("gpt")) {
-      llm = new GPT(
-        params.model,
-        params.temperature,
-        params.max_tokens,
-        params.system_prompt,
-      );
-    } else if (params.model.includes("claude")) {
-      llm = new Claude(
-        params.model,
-        params.temperature,
-        params.max_tokens,
-        params.system_prompt,
-      );
-    } else {
-      throw new Error(`invalid model: ${params.model}`);
-    }
-    const messages: Message[] = params.content !== undefined
-      ? [{ role: Role.User, content: params.content }]
-      : [];
-    llm.ask(messages);
-  } catch (error) {
-    console.error(error.message);
-    Deno.exit(1);
+  // create LLM モデルの作成
+  const llm = createLLM(params);
+  const messages: Message[] = params.content !== undefined
+    ? [{ role: Role.User, content: params.content }]
+    : [];
+  // query LLM 一回限りの応答
+  if (params.no_conversation) {
+    const content = await llm.query(messages);
+    console.log(content);
+    return;
   }
+  // ask LLM 対話的応答
+  console.log("Ctrl-D to confirm input, q or exit to end conversation");
+  llm.ask(messages);
 }
 
-main();
+try {
+  await main();
+} catch (error) {
+  console.error(error.message);
+  Deno.exit(1);
+}
