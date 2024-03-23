@@ -33,6 +33,8 @@ if executable("gpt")
     command! -nargs=0 -range GPTGenerateTest <line1>,<line2>call GPT('You are the best code tester. Please write test code that covers all cases to try the given code.', 1000)
     " Any system prompt
     command! -nargs=1 -range GPTComplete <line1>,<line2>call GPT(<q-args>, 1000)
+    " Keybind C-X, C-G
+    inoremap <C-x><C-g> <Esc>:GPTGenerateCode<CR>
 
     " " カスタム補完関数 C-X, C-U
     " fun! CompleteByGPT(findstart, base)
