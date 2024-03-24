@@ -36,25 +36,19 @@ if executable("gpt")
         call append(a:lastline, l:result)
     endfunction
 
-"     function! GPTWindow(system_prompt)
-"         execute("norm", "\"gyy" , "|", "sp", "|", "term", "|", "norm", "\"gp")
-"         echomsg a:system_prompt
-" " execute sp | term gpt -m claude-3-haiku-20240307 -s
-"     endfunction
-
-    function! GPTWindow(system_prompt)
+    function! GPTWindow(system_prompt,
+                \ max_tokens=1000,
+                \ temperature=1.0,
+                \ model="claude-3-haiku-20240307")
         " gptを起動するコマンドを構築する
-        let l:args = ["term", "gpt", "-m", "claude-3-haiku-20240307", "-x", 30]
+        let l:args = ["term", "gpt", 
+                    \ "-x", a:max_tokens,
+                    \ "-t", a:temperature,
+                    \ "-m", a:model]
         " system_promptがあれば追加
         if a:system_prompt != ""
             call extend(l:args, [ "-s", a:system_prompt ])
         endif
-        " user_promptがあれば追加
-        let l:user_prompt = getline(a:firstline, a:lastline)
-        " let l:user_prompt =  "'" . join(lines, "\n") . "'"
-        " if l:user_prompt != ""
-        "     call add(l:args, l:user_prompt)
-        " endif
         let l:cmd = join(args)
         echomsg l:cmd
         " 新しいバッファを開く
