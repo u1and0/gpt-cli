@@ -1,4 +1,4 @@
-<img src="https://img.shields.io/badge/version-v0.3.2-FF7777.svg"></img>
+<img src="https://img.shields.io/badge/version-v0.3.3-FF7777.svg"></img>
 <img src="https://img.shields.io/badge/LICENSE-MIT-3388FF.svg"></img>
 <img src="https://shield.deno.dev/deno/%5E1.39"></img>
 <img src="https://github.com/u1and0/gpt-cli/actions/workflows/deno.yml/badge.svg"></img>
