@@ -17,15 +17,11 @@ if executable("gpt")
         let l:user_prompt =  "'" . join(lines, "\n") . "'"
 
         " Build command
-        let args = ["/usr/bin/gpt",
+        let args = ["/usr/bin/gpt", "-n",
                     \ "-m", a:model,
                     \ "-x", a:max_tokens,
                     \ "-t", a:temperature,
                     \ "-s", l:system_prompt]
-        " no_conversationが指定されていれば "-n" をargsに追加
-        if a:n > 0
-            call add(args, "-n")
-        endif
         " ユーザープロンプトを追加
         call add(args, l:user_prompt)
         let l:cmd = join(args)
@@ -41,20 +37,17 @@ if executable("gpt")
                 \ temperature=1.0,
                 \ model="claude-3-haiku-20240307")
         " gptを起動するコマンドを構築する
-        let l:args = ["term", "gpt", 
-                    \ "-x", a:max_tokens,
-                    \ "-t", a:temperature,
-                    \ "-m", a:model]
+        " 新しいWindowでterminalでgptコマンドを実行する
+        let l:gpt = ["gpt", "-x", a:max_tokens, "-t", a:temperature, "-m", a:model]
         " system_promptがあれば追加
         if a:system_prompt != ""
-            call extend(l:args, [ "-s", a:system_prompt ])
+            call extend(l:gpt, [ "-s", a:system_prompt ])
         endif
-        let l:cmd = join(args)
-        echomsg l:cmd
-        " 新しいバッファを開く
-        execute "new"
-         " ターミナルでGPTを起動
-        execute cmd
+        echomsg join(l:gpt)
+        " gptコマンドを新しいウィンドウで実行する
+        let l:cmd = ["new", "|", "term"]
+        call extend(l:cmd, l:gpt)
+        execute join(l:cmd)
         " call setline(1, l:user_prompt) " システムプロンプトを最初の行に設定
     endfunction
 
