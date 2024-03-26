@@ -33,7 +33,7 @@ function! gptcli#GPT(system_prompt,
     call append(a:lastline, l:result)
 endfunction
 
-function! gptcli#GPTWindow(system_prompt,
+function! gptcli#GPTWindow(system_prompt="",
             \ max_tokens=1000,
             \ temperature=1.0,
             \ model="gpt-3.5-turbo")
