@@ -1,12 +1,16 @@
 " LLM AI Supported C-X Completion
 function! gptcli#GPT(system_prompt,
-            \ model="gpt-3.5-turbo",
             \ max_tokens=1000,
-            \ temperature=1.0) range
+            \ temperature=1.0,
+            \ model="gpt-3.5-turbo") range
     " filetype &ft はGPTの実行先ファイルに応じて取得する
     " シングルクォートで囲まないと特殊文字をshellコマンドとして渡すときにエラー
-    let lang_type = " Use language of " . &ft
-    let l:system_prompt =  "'" . a:system_prompt . lang_type . ".'"
+    if &ft != ""
+        let syntax = " Use syntax of " . &ft
+        let l:system_prompt =  "'" . a:system_prompt . l:syntax .  ".'"
+    else
+        let l:system_prompt =  "'" . a:system_prompt .  ".'"
+    endif
 
     " 範囲指定をuser_promptとして使う。
     " 範囲指定がない場合は、現在のカーソル位置の行を使用する。
@@ -14,7 +18,7 @@ function! gptcli#GPT(system_prompt,
     let l:user_prompt =  "'" . join(lines, "\n") . "'"
 
     " Build command
-    let args = ["/usr/bin/gpt", "-n",
+    let args = ["gpt", "-n",
                 \ "-m", a:model,
                 \ "-x", a:max_tokens,
                 \ "-t", a:temperature,
@@ -30,9 +34,9 @@ function! gptcli#GPT(system_prompt,
 endfunction
 
 function! gptcli#GPTWindow(system_prompt,
-            \ model="gpt-3.5-turbo",
             \ max_tokens=1000,
-            \ temperature=1.0)
+            \ temperature=1.0,
+            \ model="gpt-3.5-turbo")
     " gptを起動するコマンドを構築する
     " 新しいWindowでterminalでgptコマンドを実行する
     let l:gpt = ["gpt", "-x", a:max_tokens, "-t", a:temperature, "-m", a:model]
