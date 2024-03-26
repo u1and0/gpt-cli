@@ -1,15 +1,44 @@
 " LLM AI Supported C-X Completion
-function! gptcli#GPT(system_prompt,
-            \ max_tokens=1000,
-            \ temperature=1.0,
-            \ model="gpt-3.5-turbo") range
+
+" Usage
+" call gptcli#GPT("your system prompt")
+" call gptcli#GPT("your system prompt", {model="gpt-3.5-turbo", max_tokens=1000, temperature=1.0})
+" 上に挙げたkwargsはgptのデフォルト値なので指定しなければこの値でgptが実行される。
+function! gptcli#GPT(system_prompt, kwargs={}) range
+            " \ max_tokens=1000,
+            " \ temperature=1.0,
+            " \ model="gpt-3.5-turbo") range
     " filetype &ft はGPTの実行先ファイルに応じて取得する
     " シングルクォートで囲まないと特殊文字をshellコマンドとして渡すときにエラー
-    if &ft != ""
-        let syntax = " Use syntax of " . &ft
-        let l:system_prompt =  "'" . a:system_prompt . l:syntax .  ".'"
-    else
-        let l:system_prompt =  "'" . a:system_prompt .  ".'"
+    if a:system_prompt != ""
+        if &ft != ""
+            let syntax = " Use syntax of " . &ft
+            let l:system_prompt =  "'" . a:system_prompt . l:syntax .  ".'"
+        else
+            let l:system_prompt = "'" . a:system_prompt .  ".'"
+        endif
+        call add(args, "-s")
+        call add(args, l:system_prompt)
+    endif
+
+    " オプションの追加
+
+    " gptのmodelのデフォルトはgpt-3.5-turbo
+    if has_key(a:kwargs, "model")
+        call add(args, "-m")
+        call add(args, a:kwargs["model"])
+    endif
+
+    " gptのmax_tokensのデフォルトは1000
+    if has_key(a:kwargs, "max_tokens")
+        call add(args, "-x")
+        call add(args, a:kwargs["max_tokens"])
+    endif
+
+    " gptのmax_tokensのデフォルトは1000
+    if has_key(a:kwargs, "temperature")
+        call add(args, "-t")
+        call add(args, a:kwargs["temperature"])
     endif
 
     " 範囲指定をuser_promptとして使う。
