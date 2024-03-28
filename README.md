@@ -5,7 +5,7 @@
 
 OpenAI and Anthropic API client for chat on console
 
-# Install
+# Installation
 
 ## Use runtime
 Require [deno](https://docs.deno.com/runtime/manual/getting_started/installation)
@@ -30,12 +30,14 @@ $ sudo ln -s ./gpt /usr/bin
 ## Use binary
 
 ```
-$ curl -LO https://github.com/u1and0/gpt-cli/releases/download/v0.3.3/gpt-cli.zip
-$ unzip gpt-cli.zip
+$ curl -LO https://github.com/u1and0/gpt-cli/releases/download/v0.3.4/gpt-cli-linux.zip
+$ unzip gpt-cli-linux.zip
 $ chmod 755 gpt
 $ sudo ln -s ./gpt /usr/bin
 $ gpt -v
 ```
+
+gpt-cli-macos.zip and gpt-cli-windows.zip are also available.
 
 
 # Setup
