@@ -5,6 +5,8 @@
 
 A command-line interface (CLI) that enables interactive conversations with AI models.
 
+![Peek 2024-03-30 20-03.gif](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/113494/a15731ab-c7a7-c242-28ed-8abc6252c565.gif)
+
 # Quick start
 
 ```
@@ -82,7 +84,7 @@ export OPENAI_API_KEY='sk-*****'
 
 ### Anthropic API (Claude)
 
-[Get Anthropic API key](https://console.anthropic.com/login?returnTo=%2F), then set environment argument.
+[Get Anthropic API key](https://console.anthropic.com/login), then set environment argument.
 
 ```
 export ANTHROPIC_API_KEY='sk-ant-*****'
@@ -96,13 +98,15 @@ $ gpt -m gpt-3.5-turbo -x 1000 -t 1.0 [OPTIONS] PROMPT
 
 ## Options
 
-* -v, --version: boolean   Show version
-* -h, --help: boolean   Show this message
-* -m, --model: string OpenAI or Anthropic model (gpt-4, claude-instant-1.2, claude-3-opus-20240229, claude-3-haiku-20240307, default gpt-3.5-turbo)
-* -x, --max\_tokens: number Number of AI answer tokens (default 1000)
-* -t, --temperature: number Higher number means more creative answers, lower number means more exact answers (default 1.0)
-* -s, --system-prompt: string The first instruction given to guide the AI model's response`;
-* -n, --no-conversation: boolean   No conversation mode. Just one time question and answer.
+| short option | long option | type | description |
+|--------------|-------------|------|----|
+| -v | --version | boolean | Show version |
+| -h | --help | boolean | Show this message |
+| -m | --model | string | OpenAI or Anthropic model (gpt-4, claude-instant-1.2, claude-3-opus-20240229, claude-3-haiku-20240307, default gpt-3.5-turbo) |
+| -x | --max\_tokens | number | Number of AI answer tokens (default 1000) |
+| -t | --temperature | number | Higher number means more creative answers, lower number means more exact answers (default 1.0) |
+| -s | --system-prompt | string | The first instruction given to guide the AI model's response. |
+| -n | --no-conversation | boolan | No conversation mode. Just one time question and answer. |
 
 ## PROMPT
 A Questions for Model
@@ -111,6 +115,8 @@ A Questions for Model
 # Vim plugin (Optional)
 This is a Vimmer-only option.
 This option brings a Github Copilot-like experience to your Vim.
+
+![Peek 2024-03-30 11-05.gif](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/113494/5c19c1f2-cecf-59df-c6ff-6dc2c364feca.gif)
 
 For example, if you want to manage plug-ins with dein, write a toml file like this.
 
@@ -134,6 +140,22 @@ hook_add = '''
 '''
 ```
 
+![Peek 2024-04-01 03-35.gif](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/113494/f243f19b-ee47-9821-5899-7ed2acc17320.gif)
+
 By setting your own prompt in the GPT() function, the AI will return a one-shot document based on your own document with your own arrangements.
 
+![Peek 2024-04-01 04-43.gif](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/113494/23286593-1418-d2cc-451a-e22efe7f3fa8.gif)
+
 The GPTWindow() function allows you to open a terminal and interact with AI on Vim by putting a case-by-case system prompt in the command line.
+
+| short option | long option | type | description |
+|--------------|-------------|------|----|
+| -v | --version | boolean | Show version |
+| -h | --help | boolean | Show this message |
+| -m | --model | string OpenAI or Anthropic model (gpt-4, claude-instant-1.2, claude-3-opus-20240229, claude-3-haiku-20240307, default gpt-3.5-turbo) |
+| -x | --max\_tokens | number | Number of AI answer tokens (default 1000) |
+| -t | --temperature | number | Higher number means more creative answers, lower number means more exact answers (default 1.0) |
+| -s | --system-prompt | string | The first instruction given to guide the AI model's response. |
+| -n | --no-conversation | boolean | No conversation mode. Just one time question and answer. |
+
+[See more example](https://qiita.com/u1and0/items/88b86528ba5c8f9c3c87#vim-plugin1)
