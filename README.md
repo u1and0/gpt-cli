@@ -106,7 +106,7 @@ $ gpt -m gpt-3.5-turbo -x 1000 -t 1.0 [OPTIONS] PROMPT
 | -x | --max\_tokens | number | Number of AI answer tokens (default 1000) |
 | -t | --temperature | number | Higher number means more creative answers, lower number means more exact answers (default 1.0) |
 | -s | --system-prompt | string | The first instruction given to guide the AI model's response. |
-| -n | --no-conversation | boolan | No conversation mode. Just one time question and answer. |
+| -n | --no-conversation | boolean | No conversation mode. Just one time question and answer. |
 
 ## PROMPT
 A Questions for Model
@@ -147,15 +147,5 @@ By setting your own prompt in the GPT() function, the AI will return a one-shot 
 ![Peek 2024-04-01 04-43.gif](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/113494/23286593-1418-d2cc-451a-e22efe7f3fa8.gif)
 
 The GPTWindow() function allows you to open a terminal and interact with AI on Vim by putting a case-by-case system prompt in the command line.
-
-| short option | long option | type | description |
-|--------------|-------------|------|----|
-| -v | --version | boolean | Show version |
-| -h | --help | boolean | Show this message |
-| -m | --model | string OpenAI or Anthropic model (gpt-4, claude-instant-1.2, claude-3-opus-20240229, claude-3-haiku-20240307, default gpt-3.5-turbo) |
-| -x | --max\_tokens | number | Number of AI answer tokens (default 1000) |
-| -t | --temperature | number | Higher number means more creative answers, lower number means more exact answers (default 1.0) |
-| -s | --system-prompt | string | The first instruction given to guide the AI model's response. |
-| -n | --no-conversation | boolean | No conversation mode. Just one time question and answer. |
 
 [See more example](https://qiita.com/u1and0/items/88b86528ba5c8f9c3c87#vim-plugin1)
