@@ -104,6 +104,7 @@ async function multiInput(): Promise<string> {
   return inputs.join("\n");
 }
 
+/** AIからのメッセージストリームを非同期に標準出力に表示 */
 async function ask(llm: LLM, messages: Message[]): Promise<AIMessage> { // 1 chunkごとに出力
   const stream = await llm.stream(messages);
   const chunks: string[] = [];
@@ -112,6 +113,7 @@ async function ask(llm: LLM, messages: Message[]): Promise<AIMessage> { // 1 chu
     Deno.stdout.writeSync(new TextEncoder().encode(s));
     chunks.push(s);
   }
+  console.log(); // 回答とプロンプトの間の改行
   return new AIMessage(chunks.join(""));
 }
 
@@ -137,7 +139,7 @@ const main = async () => {
       if (humanMessage) {
         messages.push(humanMessage);
       }
-      console.debug(messages);
+      // console.debug(messages);
       // AIからの回答を追加
       const aiMessage = await ask(llm, messages);
       messages.push(aiMessage);
