@@ -21,6 +21,36 @@ type Params = {
   content?: string;
 };
 
+/** 戻り値のIDがclearInterval()によって削除されるまで
+ * ., .., ...を繰り返しターミナルに表示するロードスピナー
+ * usage:
+ *  const spinner = new Spinner([".", "..", "..."], 100);
+ *  const spinnerID = spinner.start();
+ *  // processing...
+ *  spinner.stop(spinnerID);
+ */
+class Spinner {
+  constructor(
+    private readonly texts: string[],
+    private readonly interval: number,
+  ) {}
+
+  start(): number {
+    let i = 0;
+    return setInterval(() => {
+      i = ++i % this.texts.length;
+      Deno.stderr.writeSync(new TextEncoder().encode("\r" + this.texts[i]));
+    }, this.interval);
+  }
+
+  /** Load spinner stop */
+  stop(id: number) {
+    clearInterval(id);
+  }
+}
+
+const spinner = new Spinner([".", "..", "..."], 100);
+
 /** Parse console argument */
 function parseArgs(): Params {
   const args = parse(Deno.args, {
@@ -106,7 +136,10 @@ async function multiInput(): Promise<string> {
 
 /** AIからのメッセージストリームを非同期に標準出力に表示 */
 async function ask(llm: LLM, messages: Message[]): Promise<AIMessage> { // 1 chunkごとに出力
+  const spinnerID = spinner.start();
   const stream = await llm.stream(messages);
+  spinner.stop(spinnerID);
+  console.log(); // スピナーと回答の間の改行
   const chunks: string[] = [];
   for await (const chunk of stream) {
     const s = chunk.content.toString();
