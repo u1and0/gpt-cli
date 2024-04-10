@@ -46,6 +46,9 @@ class Spinner {
   /** Load spinner stop */
   stop(id: number) {
     clearInterval(id);
+    const clearText = " ".repeat(this.texts.length);
+    // Clear spinner texts
+    Deno.stderr.writeSync(new TextEncoder().encode("\r" + clearText));
   }
 }
 
@@ -59,10 +62,9 @@ function parseArgs(): Params {
     number: ["v", "temperature", "x", "max-tokens"],
     default: {
       temperature: 1.0,
-      // "max-tokens": 1000,
+      "max-tokens": 1000,
     },
   });
-  // args.content = args._.length > 0 ? args._.join(" ") : undefined; // 残りの引数をすべてスペースで結合
   const params: Params = {
     version: args.v || args.version || false,
     help: args.h || args.help || false,
@@ -137,10 +139,10 @@ async function multiInput(): Promise<string> {
 /** Chatインスタンスを作成する
  * @param: Params - LLMのパラメータ、モデル */
 class LLM {
-  private readonly model: ChatOpenAI | ChatAnthropic | undefined;
+  private readonly transrator: ChatOpenAI | ChatAnthropic | undefined;
 
-  constructor(params: Params) {
-    this.model = (() => {
+  constructor(private readonly params: Params) {
+    this.transrator = (() => {
       if (params.model.startsWith("gpt")) {
         return new ChatOpenAI({
           modelName: params.model,
@@ -159,18 +161,20 @@ class LLM {
 
   /** AIからのメッセージストリームを非同期に標準出力に表示 */
   async ask(messages: Message[]): Promise<AIMessage | undefined> { // 1 chunkごとに出力
-    if (!this.model) return;
+    if (!this.transrator) return;
     const spinnerID = spinner.start();
-    const stream = await this.model.stream(messages); // 回答を取得
+    const stream = await this.transrator.stream(messages); // 回答を取得
     spinner.stop(spinnerID);
     console.log(); // スピナーと回答の間の改行
     const chunks: string[] = [];
+    const aiPrpompt = String(`${this.params.model}: `);
+    Deno.stdout.writeSync(new TextEncoder().encode(aiPrpompt));
     for await (const chunk of stream) { // 1単語ずつ標準出力へ出力
       const s = chunk.content.toString();
       Deno.stdout.writeSync(new TextEncoder().encode(s));
       chunks.push(s);
     }
-    console.log(); // 回答とプロンプトの間の改行
+    console.log("\n"); // 回答とプロンプトの間の改行
     return new AIMessage(chunks.join(""));
   }
 }
@@ -181,8 +185,9 @@ const main = async () => {
   const params = parseArgs();
   const llm = new LLM(params);
 
-  // コマンドライン引数systemPromptとcontentがあればMessageの生成
-  let messages = [
+  // コマンドライン引数systemPromptとcontentがあれば
+  // システムプロンプトとユーザープロンプトを含めたMessageの生成
+  const messages = [
     params.systemPrompt && new SystemMessage(params.systemPrompt),
     params.content && new HumanMessage(params.content),
   ].filter(Boolean) as Message[];
@@ -191,7 +196,7 @@ const main = async () => {
     while (true) {
       // 最後のメッセージがHumanMessageではない場合
       // ユーザーからの問いを追加
-      const humanMessage = await getUserInputInMessage(messages); // GPTと違ってsystem promptはmessagesにいれない
+      const humanMessage = await getUserInputInMessage(messages);
       if (humanMessage) {
         messages.push(humanMessage);
       }
