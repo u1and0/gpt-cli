@@ -7,7 +7,7 @@ import {
   SystemMessage,
 } from "npm:@langchain/core/messages";
 
-const VERSION = "v0.4.0";
+const VERSION = "v0.4.0r";
 const helpMessage = `ChatGPT API client for chat on console
     Usage:
       $ gpt -m gpt-3.5-turbo -x 1000 -t 1.0 [OPTIONS] PROMPT
@@ -221,9 +221,9 @@ const main = async () => {
     console.error(helpMessage);
     Deno.exit(0);
   }
+
   // 引数に従ったLLMインスタンスを作成
   const llm = new LLM(params);
-
   // コマンドライン引数systemPromptとcontentがあれば
   // システムプロンプトとユーザープロンプトを含めたMessageの生成
   const messages = [
@@ -231,12 +231,14 @@ const main = async () => {
     params.content && new HumanMessage(params.content),
   ].filter(Boolean) as Message[];
 
-  if (params.noConversation) {
-    await llm.query(messages);
-    return;
-  }
-
   try {
+    // 一回限りの回答
+    if (params.noConversation) {
+      await llm.query(messages);
+      return;
+    }
+
+    // 対話的回答
     while (true) {
       // 最後のメッセージがHumanMessageではない場合
       // ユーザーからの問いを追加
