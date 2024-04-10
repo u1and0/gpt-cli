@@ -1,11 +1,27 @@
 import { parse } from "https://deno.land/std/flags/mod.ts";
-import { ChatAnthropic } from "npm:@langchain/anthropic";
 import { ChatOpenAI } from "npm:@langchain/openai";
+import { ChatAnthropic } from "npm:@langchain/anthropic";
 import {
   AIMessage,
   HumanMessage,
   SystemMessage,
 } from "npm:@langchain/core/messages";
+
+const VERSION = "v0.4.0";
+const helpMessage = `ChatGPT API client for chat on console
+    Usage:
+      $ gpt -m gpt-3.5-turbo -x 1000 -t 1.0 [OPTIONS] PROMPT
+
+    Options:
+      -v, --version: boolean   Show version
+      -h, --help: boolean   Show this message
+      -m, --model: string OpenAI or Anthropic model (gpt-4, claude-instant-1.2, claude-3-opus-20240229, claude-3-haiku-20240307, default gpt-3.5-turbo)
+      -x, --max-tokens: number Number of AI answer tokens (default 1000)
+      -t, --temperature: number Higher number means more creative answers, lower number means more exact answers (default 1.0)
+      -s, --system-prompt: string The first instruction given to guide the AI model's response
+      -n, --no-conversation: boolean   No conversation mode. Just one time question and answer.
+    PROMPT:
+      string A Questions for Model`;
 
 type Message = AIMessage | HumanMessage | SystemMessage | never; //{ role: Role; content: string };
 
@@ -139,7 +155,10 @@ async function multiInput(): Promise<string> {
 /** Chatインスタンスを作成する
  * @param: Params - LLMのパラメータ、モデル */
 class LLM {
-  private readonly transrator: ChatOpenAI | ChatAnthropic | undefined;
+  private readonly transrator:
+    | ChatOpenAI
+    | ChatAnthropic
+    | undefined;
 
   constructor(private readonly params: Params) {
     this.transrator = (() => {
@@ -190,9 +209,18 @@ class LLM {
 }
 
 const main = async () => {
-  // コマンドライン引数を取得し、
-  // 引数に従ったLLMインスタンスを作成
+  // Parse command argument
   const params = parseArgs();
+  // console.debug(params);
+  if (params.version) {
+    console.error(`gpt ${VERSION}`);
+    Deno.exit(0);
+  }
+  if (params.help) {
+    console.error(helpMessage);
+    Deno.exit(0);
+  }
+  // 引数に従ったLLMインスタンスを作成
   const llm = new LLM(params);
 
   // コマンドライン引数systemPromptとcontentがあれば
