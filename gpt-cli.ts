@@ -13,7 +13,7 @@ type Message = AIMessage | HumanMessage | SystemMessage | never; //{ role: Role;
 type Params = {
   version: boolean;
   help: boolean;
-  no_conversation: boolean;
+  noConversation: boolean;
   model: string;
   temperature: number;
   maxTokens: number;
@@ -66,7 +66,7 @@ function parseArgs(): Params {
   const params: Params = {
     version: args.v || args.version || false,
     help: args.h || args.help || false,
-    no_conversation: args.n || args["no-conversation"] || false,
+    noConversation: args.n || args["no-conversation"] || false,
     model: args.m || args.model || "gpt-3.5-turbo",
     maxTokens: parseInt(args.x || args["max-tokens"]) || 1000,
     temperature: parseFloat(args.t || args.temperature) || 1.0,
@@ -134,8 +134,10 @@ async function multiInput(): Promise<string> {
   return inputs.join("\n");
 }
 
+/** Chatインスタンスを作成する
+ * @param: Params - LLMのパラメータ、モデル */
 class LLM {
-  private model: ChatOpenAI | ChatAnthropic | undefined;
+  private readonly model: ChatOpenAI | ChatAnthropic | undefined;
 
   constructor(params: Params) {
     this.model = (() => {
@@ -159,7 +161,7 @@ class LLM {
   async ask(messages: Message[]): Promise<AIMessage | undefined> { // 1 chunkごとに出力
     if (!this.model) return;
     const spinnerID = spinner.start();
-    const stream = await this.model.stream(messages);
+    const stream = await this.model.stream(messages); // 回答を取得
     spinner.stop(spinnerID);
     console.log(); // スピナーと回答の間の改行
     const chunks: string[] = [];
@@ -174,8 +176,9 @@ class LLM {
 }
 
 const main = async () => {
+  // コマンドライン引数を取得し、
+  // 引数に従ったLLMインスタンスを作成
   const params = parseArgs();
-
   const llm = new LLM(params);
 
   // コマンドライン引数systemPromptとcontentがあればMessageの生成
@@ -184,7 +187,6 @@ const main = async () => {
     params.content && new HumanMessage(params.content),
   ].filter(Boolean) as Message[];
 
-  // 無限ループ
   try {
     while (true) {
       // 最後のメッセージがHumanMessageではない場合
