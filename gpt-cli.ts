@@ -159,8 +159,18 @@ class LLM {
     })();
   }
 
-  /** AIからのメッセージストリームを非同期に標準出力に表示 */
-  async ask(messages: Message[]): Promise<AIMessage | undefined> { // 1 chunkごとに出力
+  /** AI へ一回限りの質問をし、回答を出力して終了する */
+  async query(messages: Message[]) {
+    if (!this.transrator) return;
+    const stream = await this.transrator.stream(messages); // 回答を取得
+    for await (const chunk of stream) { // 1 chunkごとに出力
+      const s = chunk.content.toString();
+      Deno.stdout.writeSync(new TextEncoder().encode(s));
+    }
+  }
+
+  /** AI へ対話形式に質問し、回答を得る */
+  async ask(messages: Message[]): Promise<AIMessage | undefined> {
     if (!this.transrator) return;
     const spinnerID = spinner.start();
     const stream = await this.transrator.stream(messages); // 回答を取得
@@ -169,7 +179,7 @@ class LLM {
     const chunks: string[] = [];
     const aiPrpompt = String(`${this.params.model}: `);
     Deno.stdout.writeSync(new TextEncoder().encode(aiPrpompt));
-    for await (const chunk of stream) { // 1単語ずつ標準出力へ出力
+    for await (const chunk of stream) { // 1 chunkごとに出力
       const s = chunk.content.toString();
       Deno.stdout.writeSync(new TextEncoder().encode(s));
       chunks.push(s);
@@ -191,6 +201,11 @@ const main = async () => {
     params.systemPrompt && new SystemMessage(params.systemPrompt),
     params.content && new HumanMessage(params.content),
   ].filter(Boolean) as Message[];
+
+  if (params.noConversation) {
+    await llm.query(messages);
+    return;
+  }
 
   try {
     while (true) {
