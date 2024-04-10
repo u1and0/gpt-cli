@@ -1,6 +1,7 @@
 import { parse } from "https://deno.land/std/flags/mod.ts";
 import { ChatOpenAI } from "npm:@langchain/openai";
 import { ChatAnthropic } from "npm:@langchain/anthropic";
+import { Replicate } from "npm:@langchain/community/llms/replicate";
 import {
   AIMessage,
   HumanMessage,
@@ -46,29 +47,48 @@ type Params = {
  *  spinner.stop(spinnerID);
  */
 class Spinner {
-  constructor(
-    private readonly texts: string[],
-    private readonly interval: number,
-  ) {}
+  private readonly texts: string[];
+  private readonly interval: number;
+  private readonly timeout: number | undefined;
+  private readonly timeoutDuration: number;
+  private readonly intervalId: number | undefined;
 
-  start(): number {
-    let i = 0;
-    return setInterval(() => {
-      i = ++i % this.texts.length;
-      Deno.stderr.writeSync(new TextEncoder().encode("\r" + this.texts[i]));
-    }, this.interval);
+  constructor(texts: string[], interval: number, timeoutDuration: number) {
+    this.texts = texts;
+    this.interval = interval;
+    this.timeoutDuration = timeoutDuration;
   }
 
-  /** Load spinner stop */
-  stop(id: number) {
-    clearInterval(id);
-    const clearText = " ".repeat(this.texts.length);
-    // Clear spinner texts
-    Deno.stderr.writeSync(new TextEncoder().encode("\r" + clearText));
+  start(): void {
+    let i = 0;
+    const printSpinner = () => {
+      i = ++i % this.texts.length;
+      Deno.stderr.writeSync(new TextEncoder().encode("\r" + this.texts[i]));
+    };
+
+    printSpinner();
+    this.intervalId = setInterval(printSpinner, this.interval);
+
+    this.timeout = setTimeout(() => {
+      this.stop();
+      console.error("Timeout occurred!");
+    }, this.timeoutDuration);
+  }
+
+  stop(): void {
+    if (this.intervalId !== undefined) {
+      clearInterval(this.intervalId);
+      this.intervalId = undefined;
+    }
+    if (this.timeout !== undefined) {
+      clearTimeout(this.timeout);
+      this.timeout = undefined;
+    }
+    Deno.stderr.writeSync(new TextEncoder().encode("\r"));
   }
 }
 
-const spinner = new Spinner([".", "..", "..."], 100);
+const spinner = new Spinner([".", "..", "..."], 100, 5000);
 
 /** Parse console argument */
 function parseArgs(): Params {
@@ -175,6 +195,15 @@ class LLM {
           temperature: params.temperature,
           maxTokens: params.maxTokens,
         });
+      } else {
+        return new Replicate({
+          model:
+            "a16z-infra/llama13b-v2-chat:df7690f1994d94e96ad9d568eac121aecf50684a0b0963b25a41cc40061269e5",
+          // model_kwargs: {
+          //   temperature: params.temperature,
+          //   maxLength: params.maxTokens,
+          // },
+        });
       }
     })();
   }
@@ -204,7 +233,7 @@ class LLM {
       Deno.stdout.writeSync(new TextEncoder().encode(s));
       chunks.push(s);
     }
-    console.log("\n"); // 回答とプロンプトの間の改行
+    console.log(); // 回答とプロンプトの間の改行
     return new AIMessage(chunks.join(""));
   }
 }
