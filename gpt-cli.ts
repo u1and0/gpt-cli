@@ -1,5 +1,5 @@
 import { parse } from "https://deno.land/std/flags/mod.ts";
-import { ChatAnthropic, Stream } from "npm:@langchain/anthropic";
+import { ChatAnthropic } from "npm:@langchain/anthropic";
 import { ChatOpenAI } from "npm:@langchain/openai";
 import {
   AIMessage,
@@ -7,7 +7,6 @@ import {
   SystemMessage,
 } from "npm:@langchain/core/messages";
 
-type LLM = ChatOpenAI | ChatAnthropic;
 type Message = AIMessage | HumanMessage | SystemMessage | never; //{ role: Role; content: string };
 
 // Parse arg
@@ -17,7 +16,8 @@ type Params = {
   no_conversation: boolean;
   model: string;
   temperature: number;
-  system_prompt?: string;
+  maxTokens: number;
+  systemPrompt?: string;
   content?: string;
 };
 
@@ -56,7 +56,7 @@ function parseArgs(): Params {
   const args = parse(Deno.args, {
     boolean: ["v", "version", "h", "help", "n", "no-conversation"],
     string: ["m", "model", "s", "system-prompt", "content"],
-    number: ["t", "temperature"],
+    number: ["v", "temperature", "x", "max-tokens"],
     default: {
       temperature: 1.0,
       // "max-tokens": 1000,
@@ -68,9 +68,9 @@ function parseArgs(): Params {
     help: args.h || args.help || false,
     no_conversation: args.n || args["no-conversation"] || false,
     model: args.m || args.model || "gpt-3.5-turbo",
-    // max_tokens: parseInt(args.x || args["max-tokens"]) || 1000,
+    maxTokens: parseInt(args.x || args["max-tokens"]) || 1000,
     temperature: parseFloat(args.t || args.temperature) || 1.0,
-    system_prompt: args.s || args["systemPrompt"],
+    systemPrompt: args.s || args["systemPrompt"],
     content: args._.length > 0 ? args._.join(" ") : undefined, // 残りの引数をすべてスペースで結合
   };
   return params;
@@ -134,32 +134,53 @@ async function multiInput(): Promise<string> {
   return inputs.join("\n");
 }
 
-/** AIからのメッセージストリームを非同期に標準出力に表示 */
-async function ask(llm: LLM, messages: Message[]): Promise<AIMessage> { // 1 chunkごとに出力
-  const spinnerID = spinner.start();
-  const stream = await llm.stream(messages);
-  spinner.stop(spinnerID);
-  console.log(); // スピナーと回答の間の改行
-  const chunks: string[] = [];
-  for await (const chunk of stream) {
-    const s = chunk.content.toString();
-    Deno.stdout.writeSync(new TextEncoder().encode(s));
-    chunks.push(s);
+class LLM {
+  private model: ChatOpenAI | ChatAnthropic | undefined;
+
+  constructor(params: Params) {
+    this.model = (() => {
+      if (params.model.startsWith("gpt")) {
+        return new ChatOpenAI({
+          modelName: params.model,
+          temperature: params.temperature,
+          maxTokens: params.maxTokens,
+        });
+      } else if (params.model.startsWith("claude")) {
+        return new ChatAnthropic({
+          modelName: params.model,
+          temperature: params.temperature,
+          maxTokens: params.maxTokens,
+        });
+      }
+    })();
   }
-  console.log(); // 回答とプロンプトの間の改行
-  return new AIMessage(chunks.join(""));
+
+  /** AIからのメッセージストリームを非同期に標準出力に表示 */
+  async ask(messages: Message[]): Promise<AIMessage | undefined> { // 1 chunkごとに出力
+    if (!this.model) return;
+    const spinnerID = spinner.start();
+    const stream = await this.model.stream(messages);
+    spinner.stop(spinnerID);
+    console.log(); // スピナーと回答の間の改行
+    const chunks: string[] = [];
+    for await (const chunk of stream) { // 1単語ずつ標準出力へ出力
+      const s = chunk.content.toString();
+      Deno.stdout.writeSync(new TextEncoder().encode(s));
+      chunks.push(s);
+    }
+    console.log(); // 回答とプロンプトの間の改行
+    return new AIMessage(chunks.join(""));
+  }
 }
 
 const main = async () => {
   const params = parseArgs();
 
-  const llm = new ChatAnthropic({
-    modelName: "claude-3-haiku-20240307",
-  });
+  const llm = new LLM(params);
 
-  // コマンドライン引数system_promptとcontentがあればMessageの生成
+  // コマンドライン引数systemPromptとcontentがあればMessageの生成
   let messages = [
-    params.system_prompt && new SystemMessage(params.system_prompt),
+    params.systemPrompt && new SystemMessage(params.systemPrompt),
     params.content && new HumanMessage(params.content),
   ].filter(Boolean) as Message[];
 
@@ -174,7 +195,10 @@ const main = async () => {
       }
       // console.debug(messages);
       // AIからの回答を追加
-      const aiMessage = await ask(llm, messages);
+      const aiMessage = await llm.ask(messages);
+      if (!aiMessage) {
+        throw new Error("LLM can not answer your question");
+      }
       messages.push(aiMessage);
     }
   } catch (error) {
