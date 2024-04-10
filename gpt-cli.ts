@@ -86,9 +86,10 @@ function parseArgs(): Params {
     help: args.h || args.help || false,
     noConversation: args.n || args["no-conversation"] || false,
     model: args.m || args.model || "gpt-3.5-turbo",
-    maxTokens: parseInt(args.x || args["max-tokens"]) || 1000,
-    temperature: parseFloat(args.t || args.temperature) || 1.0,
-    systemPrompt: args.s || args["systemPrompt"],
+    maxTokens: parseInt(String(args.x || args["max-tokens"])) ||
+      1000,
+    temperature: parseFloat(String(args.t || args.temperature)) || 1.0,
+    systemPrompt: String(args.s || args["systemPrompt"]),
     content: args._.length > 0 ? args._.join(" ") : undefined, // 残りの引数をすべてスペースで結合
   };
   return params;
