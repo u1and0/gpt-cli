@@ -47,16 +47,14 @@ type Params = {
  *  spinner.stop(spinnerID);
  */
 class Spinner {
-  private readonly texts: string[];
-  private readonly interval: number;
-  private readonly timeout: number | undefined;
-  private readonly timeoutDuration: number;
-  private readonly intervalId: number | undefined;
+  private timeout: number | undefined;
+  private intervalId: number | undefined;
 
-  constructor(texts: string[], interval: number, timeoutDuration: number) {
-    this.texts = texts;
-    this.interval = interval;
-    this.timeoutDuration = timeoutDuration;
+  constructor(
+    private readonly texts: string[],
+    private readonly interval: number,
+    private readonly timeup: number,
+  ) {
   }
 
   start(): void {
@@ -71,8 +69,8 @@ class Spinner {
 
     this.timeout = setTimeout(() => {
       this.stop();
-      console.error("Timeout occurred!");
-    }, this.timeoutDuration);
+      throw new Error("Timeout error");
+    }, this.timeup);
   }
 
   stop(): void {
@@ -88,7 +86,7 @@ class Spinner {
   }
 }
 
-const spinner = new Spinner([".", "..", "..."], 100, 5000);
+const spinner = new Spinner([".", "..", "..."], 100, 10000);
 
 /** Parse console argument */
 function parseArgs(): Params {
@@ -179,6 +177,7 @@ class LLM {
   private readonly transrator:
     | ChatOpenAI
     | ChatAnthropic
+    | Replicate
     | undefined;
 
   constructor(private readonly params: Params) {
