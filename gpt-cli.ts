@@ -86,8 +86,6 @@ class Spinner {
   }
 }
 
-const spinner = new Spinner([".", "..", "..."], 100, 10000);
-
 /** Parse console argument */
 function parseArgs(): Params {
   const args = parse(Deno.args, {
@@ -220,9 +218,10 @@ class LLM {
   /** AI へ対話形式に質問し、回答を得る */
   async ask(messages: Message[]): Promise<AIMessage | undefined> {
     if (!this.transrator) return;
-    const spinnerID = spinner.start();
+    const spinner = new Spinner([".", "..", "..."], 100, 10000);
+    spinner.start();
     const stream = await this.transrator.stream(messages); // 回答を取得
-    spinner.stop(spinnerID);
+    spinner.stop();
     console.log(); // スピナーと回答の間の改行
     const chunks: string[] = [];
     const aiPrpompt = String(`${this.params.model}: `);
