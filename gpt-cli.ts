@@ -1,7 +1,7 @@
 import { parse } from "https://deno.land/std/flags/mod.ts";
 import { ChatOpenAI } from "npm:@langchain/openai";
 import { ChatAnthropic } from "npm:@langchain/anthropic";
-import { Replicate } from "npm:@langchain/community/llms/replicate";
+import { ChatOllama } from "npm:@langchain/community/chat_models/ollama";
 import {
   AIMessage,
   HumanMessage,
@@ -193,13 +193,9 @@ class LLM {
           maxTokens: params.maxTokens,
         });
       } else {
-        return new Replicate({
-          model:
-            "a16z-infra/llama13b-v2-chat:df7690f1994d94e96ad9d568eac121aecf50684a0b0963b25a41cc40061269e5",
-          // model_kwargs: {
-          //   temperature: params.temperature,
-          //   maxLength: params.maxTokens,
-          // },
+        return new ChatOllama({
+          baseUrl: "http://192.168.10.107:11434",
+          model: "llama2:7b-chat",
         });
       }
     })();
