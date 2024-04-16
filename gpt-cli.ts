@@ -34,6 +34,7 @@ type Params = {
   model: string;
   temperature: number;
   maxTokens: number;
+  url?: string;
   systemPrompt?: string;
   content?: string;
 };
@@ -90,11 +91,12 @@ class Spinner {
 function parseArgs(): Params {
   const args = parse(Deno.args, {
     boolean: ["v", "version", "h", "help", "n", "no-conversation"],
-    string: ["m", "model", "s", "system-prompt", "content"],
+    string: ["m", "model", "u", "url", "s", "system-prompt", "content"],
     number: ["v", "temperature", "x", "max-tokens"],
     default: {
       temperature: 1.0,
       "max-tokens": 1000,
+      url: "http://localhost:11434",
     },
   });
   const params: Params = {
@@ -102,9 +104,9 @@ function parseArgs(): Params {
     help: args.h || args.help || false,
     noConversation: args.n || args["no-conversation"] || false,
     model: args.m || args.model || "gpt-3.5-turbo",
-    maxTokens: parseInt(String(args.x || args["max-tokens"])) ||
-      1000,
-    temperature: parseFloat(String(args.t || args.temperature)) || 1.0,
+    maxTokens: parseInt(String(args.x || args["max-tokens"])),
+    temperature: parseFloat(String(args.t || args.temperature)),
+    url: args.u || args.url,
     systemPrompt: String(args.s || args["systemPrompt"]),
     content: args._.length > 0 ? args._.join(" ") : undefined, // 残りの引数をすべてスペースで結合
   };
@@ -175,7 +177,7 @@ class LLM {
   private readonly transrator:
     | ChatOpenAI
     | ChatAnthropic
-    | Replicate
+    | ChatOllama
     | undefined;
 
   constructor(private readonly params: Params) {
@@ -193,9 +195,10 @@ class LLM {
           maxTokens: params.maxTokens,
         });
       } else {
+        console.log(params);
         return new ChatOllama({
-          baseUrl: "http://192.168.10.107:11434",
-          model: "llama2:7b-chat",
+          baseUrl: params.url,
+          model: params.model, // "llama2:7b-chat",
         });
       }
     })();
