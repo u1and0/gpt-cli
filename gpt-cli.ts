@@ -195,10 +195,11 @@ class LLM {
           maxTokens: params.maxTokens,
         });
       } else {
-        console.log(params);
         return new ChatOllama({
-          baseUrl: params.url,
-          model: params.model, // "llama2:7b-chat",
+          baseUrl: params.url, // http://yourIP:11434
+          model: params.model, // "llama2:7b-chat", codellama:13b-fast-instruct, elyza:13b-fast-instruct ...
+          maxTokens: params.maxTokens,
+          temperature: params.temperature,
         });
       }
     })();
