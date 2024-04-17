@@ -182,6 +182,24 @@ class LLM {
 
   constructor(private readonly params: Params) {
     this.transrator = (() => {
+      const ollamaModels = [
+        "llama",
+        "mistral",
+        "command-r",
+        "llava",
+        "mixtral",
+        "deepseek",
+        "phi",
+        "hermes",
+        "orca",
+        "falcon",
+        "dolphin",
+        "gemma",
+      ];
+      const customModels = ["elyza"];
+      const modelPatterns = ollamaModels.concat(customModels).map((m: string) =>
+        new RegExp(m)
+      );
       if (params.model.startsWith("gpt")) {
         return new ChatOpenAI({
           modelName: params.model,
@@ -194,13 +212,18 @@ class LLM {
           temperature: params.temperature,
           maxTokens: params.maxTokens,
         });
-      } else {
+      } else if (
+        // params.modelの文字列にollamaModelsのうちの一部が含まれていたらtrue
+        modelPatterns.some((p: RegExp) => p.test(params.model))
+      ) {
         return new ChatOllama({
           baseUrl: params.url, // http://yourIP:11434
           model: params.model, // "llama2:7b-chat", codellama:13b-fast-instruct, elyza:13b-fast-instruct ...
           maxTokens: params.maxTokens,
           temperature: params.temperature,
         });
+      } else {
+        throw new Error(`model not found "${params.model}"`);
       }
     })();
   }
