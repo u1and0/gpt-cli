@@ -19,6 +19,7 @@ const helpMessage = `ChatGPT API client for chat on console
       -m, --model: string OpenAI or Anthropic model (gpt-4, claude-instant-1.2, claude-3-opus-20240229, claude-3-haiku-20240307, default gpt-3.5-turbo)
       -x, --max-tokens: number Number of AI answer tokens (default 1000)
       -t, --temperature: number Higher number means more creative answers, lower number means more exact answers (default 1.0)
+      -u, --url: string URL and port number for ollama server (default http://localhost:11434)
       -s, --system-prompt: string The first instruction given to guide the AI model's response
       -n, --no-conversation: boolean   No conversation mode. Just one time question and answer.
     PROMPT:
