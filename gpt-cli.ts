@@ -8,7 +8,7 @@ import {
   SystemMessage,
 } from "npm:@langchain/core/messages";
 
-const VERSION = "v0.4.0r";
+const VERSION = "v0.5.0";
 const helpMessage = `ChatGPT API client for chat on console
     Usage:
       $ gpt -m gpt-3.5-turbo -x 1000 -t 1.0 [OPTIONS] PROMPT
@@ -16,7 +16,7 @@ const helpMessage = `ChatGPT API client for chat on console
     Options:
       -v, --version: boolean   Show version
       -h, --help: boolean   Show this message
-      -m, --model: string OpenAI or Anthropic model (gpt-4, claude-instant-1.2, claude-3-opus-20240229, claude-3-haiku-20240307, default gpt-3.5-turbo)
+      -m, --model: string OpenAI, Anthropic, Ollama model (gpt-4, claude-instant-1.2, claude-3-opus-20240229, claude-3-haiku-20240307, phi3, llama3:70b, mixtral:8x7b-text-v0.1-q5_K_M, default gpt-3.5-turbo)
       -x, --max-tokens: number Number of AI answer tokens (default 1000)
       -t, --temperature: number Higher number means more creative answers, lower number means more exact answers (default 1.0)
       -u, --url: string URL and port number for ollama server (default http://localhost:11434)
