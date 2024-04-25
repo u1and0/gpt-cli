@@ -24,22 +24,24 @@ function! gptcli#GPT(system_prompt, kwargs={}) range
 
     " オプションの追加
 
-    " gptのmodelのデフォルトはgpt-3.5-turbo
-    if has_key(a:kwargs, "model")
+    if has_key(a:kwargs, "model")  " default gpt-3.5-turbo
         call add(l:args, "-m")
         call add(l:args, a:kwargs["model"])
     endif
 
-    " gptのmax_tokensのデフォルトは1000
-    if has_key(a:kwargs, "max_tokens")
+    if has_key(a:kwargs, "max_tokens")  " default 1000
         call add(l:args, "-x")
         call add(l:args, a:kwargs["max_tokens"])
     endif
 
-    " gptのmax_tokensのデフォルトは1000
-    if has_key(a:kwargs, "temperature")
+    if has_key(a:kwargs, "temperature")  " default 1.0
         call add(l:args, "-t")
         call add(l:args, a:kwargs["temperature"])
+    endif
+
+    if has_key(a:kwargs, "url")  " default http://localhost:11434
+        call add(l:args, "-u")
+        call add(l:args, a:kwargs["url"])
     endif
 
     " 範囲指定をuser_promptとして使う。

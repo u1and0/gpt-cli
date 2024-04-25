@@ -1,13 +1,14 @@
 import { parse } from "https://deno.land/std/flags/mod.ts";
 import { ChatOpenAI } from "npm:@langchain/openai";
 import { ChatAnthropic } from "npm:@langchain/anthropic";
+import { ChatOllama } from "npm:@langchain/community/chat_models/ollama";
 import {
   AIMessage,
   HumanMessage,
   SystemMessage,
 } from "npm:@langchain/core/messages";
 
-const VERSION = "v0.4.0";
+const VERSION = "v0.5.0";
 const helpMessage = `ChatGPT API client for chat on console
     Usage:
       $ gpt -m gpt-3.5-turbo -x 1000 -t 1.0 [OPTIONS] PROMPT
@@ -15,9 +16,10 @@ const helpMessage = `ChatGPT API client for chat on console
     Options:
       -v, --version: boolean   Show version
       -h, --help: boolean   Show this message
-      -m, --model: string OpenAI or Anthropic model (gpt-4, claude-instant-1.2, claude-3-opus-20240229, claude-3-haiku-20240307, default gpt-3.5-turbo)
+      -m, --model: string OpenAI, Anthropic, Ollama model (gpt-4, claude-instant-1.2, claude-3-opus-20240229, claude-3-haiku-20240307, phi3, llama3:70b, mixtral:8x7b-text-v0.1-q5_K_M, default gpt-3.5-turbo)
       -x, --max-tokens: number Number of AI answer tokens (default 1000)
       -t, --temperature: number Higher number means more creative answers, lower number means more exact answers (default 1.0)
+      -u, --url: string URL and port number for ollama server (default http://localhost:11434)
       -s, --system-prompt: string The first instruction given to guide the AI model's response
       -n, --no-conversation: boolean   No conversation mode. Just one time question and answer.
     PROMPT:
@@ -33,6 +35,7 @@ type Params = {
   model: string;
   temperature: number;
   maxTokens: number;
+  url?: string;
   systemPrompt?: string;
   content?: string;
 };
@@ -46,39 +49,55 @@ type Params = {
  *  spinner.stop(spinnerID);
  */
 class Spinner {
+  private timeout: number | undefined;
+  private intervalId: number | undefined;
+
   constructor(
     private readonly texts: string[],
     private readonly interval: number,
-  ) {}
+    private readonly timeup: number,
+  ) {
+  }
 
-  start(): number {
+  start(): void {
     let i = 0;
-    return setInterval(() => {
+    const printSpinner = () => {
       i = ++i % this.texts.length;
       Deno.stderr.writeSync(new TextEncoder().encode("\r" + this.texts[i]));
-    }, this.interval);
+    };
+
+    printSpinner();
+    this.intervalId = setInterval(printSpinner, this.interval);
+
+    this.timeout = setTimeout(() => {
+      this.stop();
+      throw new Error("Timeout error");
+    }, this.timeup);
   }
 
-  /** Load spinner stop */
-  stop(id: number) {
-    clearInterval(id);
-    const clearText = " ".repeat(this.texts.length);
-    // Clear spinner texts
-    Deno.stderr.writeSync(new TextEncoder().encode("\r" + clearText));
+  stop(): void {
+    if (this.intervalId !== undefined) {
+      clearInterval(this.intervalId);
+      this.intervalId = undefined;
+    }
+    if (this.timeout !== undefined) {
+      clearTimeout(this.timeout);
+      this.timeout = undefined;
+    }
+    Deno.stderr.writeSync(new TextEncoder().encode("\r"));
   }
 }
-
-const spinner = new Spinner([".", "..", "..."], 100);
 
 /** Parse console argument */
 function parseArgs(): Params {
   const args = parse(Deno.args, {
     boolean: ["v", "version", "h", "help", "n", "no-conversation"],
-    string: ["m", "model", "s", "system-prompt", "content"],
+    string: ["m", "model", "u", "url", "s", "system-prompt", "content"],
     number: ["v", "temperature", "x", "max-tokens"],
     default: {
       temperature: 1.0,
       "max-tokens": 1000,
+      url: "http://localhost:11434",
     },
   });
   const params: Params = {
@@ -86,9 +105,10 @@ function parseArgs(): Params {
     help: args.h || args.help || false,
     noConversation: args.n || args["no-conversation"] || false,
     model: args.m || args.model || "gpt-3.5-turbo",
-    maxTokens: parseInt(args.x || args["max-tokens"]) || 1000,
-    temperature: parseFloat(args.t || args.temperature) || 1.0,
-    systemPrompt: args.s || args["systemPrompt"],
+    maxTokens: parseInt(String(args.x || args["max-tokens"])),
+    temperature: parseFloat(String(args.t || args.temperature)),
+    url: args.u || args.url,
+    systemPrompt: String(args.s || args["systemPrompt"]),
     content: args._.length > 0 ? args._.join(" ") : undefined, // 残りの引数をすべてスペースで結合
   };
   return params;
@@ -158,10 +178,29 @@ class LLM {
   private readonly transrator:
     | ChatOpenAI
     | ChatAnthropic
+    | ChatOllama
     | undefined;
 
   constructor(private readonly params: Params) {
     this.transrator = (() => {
+      const ollamaModels = [
+        "llama",
+        "mistral",
+        "command-r",
+        "llava",
+        "mixtral",
+        "deepseek",
+        "phi",
+        "hermes",
+        "orca",
+        "falcon",
+        "dolphin",
+        "gemma",
+      ];
+      const customModels = ["elyza"];
+      const modelPatterns = ollamaModels.concat(customModels).map((m: string) =>
+        new RegExp(m)
+      );
       if (params.model.startsWith("gpt")) {
         return new ChatOpenAI({
           modelName: params.model,
@@ -174,6 +213,18 @@ class LLM {
           temperature: params.temperature,
           maxTokens: params.maxTokens,
         });
+      } else if (
+        // params.modelの文字列にollamaModelsのうちの一部が含まれていたらtrue
+        modelPatterns.some((p: RegExp) => p.test(params.model))
+      ) {
+        return new ChatOllama({
+          baseUrl: params.url, // http://yourIP:11434
+          model: params.model, // "llama2:7b-chat", codellama:13b-fast-instruct, elyza:13b-fast-instruct ...
+          maxTokens: params.maxTokens,
+          temperature: params.temperature,
+        });
+      } else {
+        throw new Error(`model not found "${params.model}"`);
       }
     })();
   }
@@ -191,9 +242,10 @@ class LLM {
   /** AI へ対話形式に質問し、回答を得る */
   async ask(messages: Message[]): Promise<AIMessage | undefined> {
     if (!this.transrator) return;
-    const spinnerID = spinner.start();
+    const spinner = new Spinner([".", "..", "..."], 100, 10000);
+    spinner.start();
     const stream = await this.transrator.stream(messages); // 回答を取得
-    spinner.stop(spinnerID);
+    spinner.stop();
     console.log(); // スピナーと回答の間の改行
     const chunks: string[] = [];
     const aiPrpompt = String(`${this.params.model}: `);
@@ -203,7 +255,7 @@ class LLM {
       Deno.stdout.writeSync(new TextEncoder().encode(s));
       chunks.push(s);
     }
-    console.log("\n"); // 回答とプロンプトの間の改行
+    console.log(); // 回答とプロンプトの間の改行
     return new AIMessage(chunks.join(""));
   }
 }
@@ -220,9 +272,9 @@ const main = async () => {
     console.error(helpMessage);
     Deno.exit(0);
   }
+
   // 引数に従ったLLMインスタンスを作成
   const llm = new LLM(params);
-
   // コマンドライン引数systemPromptとcontentがあれば
   // システムプロンプトとユーザープロンプトを含めたMessageの生成
   const messages = [
@@ -230,12 +282,14 @@ const main = async () => {
     params.content && new HumanMessage(params.content),
   ].filter(Boolean) as Message[];
 
-  if (params.noConversation) {
-    await llm.query(messages);
-    return;
-  }
-
   try {
+    // 一回限りの回答
+    if (params.noConversation) {
+      await llm.query(messages);
+      return;
+    }
+
+    // 対話的回答
     while (true) {
       // 最後のメッセージがHumanMessageではない場合
       // ユーザーからの問いを追加
