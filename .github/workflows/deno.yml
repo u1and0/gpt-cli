@@ -50,6 +50,9 @@ jobs:
       - name: Run linter
         run: deno lint main.ts lib/*.ts test/*.ts
 
+      - name: Run checker
+        run: deno check main.ts lib/*.ts test/*.ts
+
       - name: Run tests
         run: deno test --allow-env test/*.ts
 
