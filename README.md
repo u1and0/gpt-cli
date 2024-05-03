@@ -1,4 +1,4 @@
-<img src="https://img.shields.io/badge/version-v0.5.1-FF7777.svg"></img>
+<img src="https://img.shields.io/badge/version-v0.5.2-FF7777.svg"></img>
 <img src="https://img.shields.io/badge/LICENSE-MIT-3388FF.svg"></img>
 <img src="https://shield.deno.dev/deno/%5E1.39"></img>
 <img src="https://github.com/u1and0/gpt-cli/actions/workflows/deno.yml/badge.svg"></img>
@@ -10,7 +10,7 @@ A command-line interface (CLI) that enables interactive conversations with AI mo
 # Quick start
 
 ```
-$ curl -LO https://github.com/u1and0/gpt-cli/releases/download/v0.5.1/gpt-cli-linux.zip
+$ curl -LO https://github.com/u1and0/gpt-cli/releases/download/v0.5.2/gpt-cli-linux.zip
 $ unzip gpt-cli.zip
 $ chmod 755 gpt
 $ sudo ln -s ./gpt /usr/bin
@@ -32,7 +32,7 @@ You have 3 options.
 The simplest way.
 
 ```
-$ curl -LO https://github.com/u1and0/gpt-cli/releases/download/v0.5.1/gpt-cli-linux.zip
+$ curl -LO https://github.com/u1and0/gpt-cli/releases/download/v0.5.2/gpt-cli-linux.zip
 $ unzip gpt-cli-linux.zip
 $ chmod 755 gpt
 $ sudo ln -s ./gpt /usr/bin
