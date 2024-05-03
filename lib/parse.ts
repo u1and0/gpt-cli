@@ -1,5 +1,5 @@
 import { parse } from "https://deno.land/std/flags/mod.ts";
-type Params = {
+export type Params = {
   version: boolean;
   help: boolean;
   noConversation: boolean;
@@ -15,15 +15,26 @@ type Params = {
 export function parseArgs(): Params {
   const args = parse(Deno.args, {
     boolean: ["v", "version", "h", "help", "n", "no-conversation"],
-    string: ["m", "model", "u", "url", "s", "system-prompt", "content"],
-    number: ["v", "temperature", "x", "max-tokens"],
+    string: [
+      "m",
+      "model",
+      "u",
+      "url",
+      "s",
+      "system-prompt",
+      "content",
+      "t",
+      "temperature",
+      "x",
+      "max-tokens",
+    ],
     default: {
       temperature: 1.0,
       "max-tokens": 1000,
       url: "http://localhost:11434",
     },
   });
-  const params: Params = {
+  return {
     version: args.v || args.version || false,
     help: args.h || args.help || false,
     noConversation: args.n || args["no-conversation"] || false,
@@ -31,8 +42,7 @@ export function parseArgs(): Params {
     maxTokens: parseInt(String(args.x || args["max-tokens"])),
     temperature: parseFloat(String(args.t || args.temperature)),
     url: args.u || args.url,
-    systemPrompt: String(args.s || args["systemPrompt"]),
+    systemPrompt: args.s || args["system-prompt"] || undefined,
     content: args._.length > 0 ? args._.join(" ") : undefined, // 残りの引数をすべてスペースで結合
   };
-  return params;
 }
