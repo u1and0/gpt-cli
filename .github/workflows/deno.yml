@@ -78,7 +78,7 @@ jobs:
           deno-version: v1.x
 
       - name: Build binary
-        run: deno compile --allow-net --allow-env --no-check --output gpt gpt-cli.ts
+        run: deno compile --allow-net --allow-env --no-check --output gpt main.ts
 
       - name: Binary upload (Unix, MacOS)
         # Artifact upload only occurs when tag matches
