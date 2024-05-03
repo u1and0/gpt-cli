@@ -6,6 +6,7 @@ import { ChatAnthropic } from "npm:@langchain/anthropic";
 import { ChatOllama } from "npm:@langchain/community/chat_models/ollama";
 
 Deno.test("Should create a ChatOpenAI instance for a GPT model", () => {
+  Deno.env.set("OPENAI_API_KEY", "sk-11111");
   const params = {
     version: false,
     help: false,
@@ -22,6 +23,7 @@ Deno.test("Should create a ChatOpenAI instance for a GPT model", () => {
 });
 
 Deno.test("Should create a ChatAnthropic instance for a Claude model", () => {
+  Deno.env.set("ANTHROPIC_API_KEY", "sk-ant-11111");
   const params = {
     version: false,
     help: false,
