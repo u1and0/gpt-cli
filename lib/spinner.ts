@@ -2,9 +2,10 @@
  * ., .., ...を繰り返しターミナルに表示するロードスピナー
  * usage:
  *  const spinner = new Spinner([".", "..", "..."], 100);
- *  const spinnerID = spinner.start();
+ *  spinner.start();
  *  // processing...
- *  spinner.stop(spinnerID);
+ *  // show spinner ., .., ...
+ *  spinner.stop();
  */
 export class Spinner {
   private timeout: number | undefined;
@@ -15,6 +16,15 @@ export class Spinner {
     private readonly interval: number,
     private readonly timeup: number,
   ) {
+    if (texts.length < 1) {
+      throw new Error("Texts array must not be empty");
+    }
+    if (interval < 0) {
+      throw new Error("Interval must be a positive number");
+    }
+    if (timeup < 0) {
+      throw new Error("Timeup must be a positive number");
+    }
   }
 
   start(): void {

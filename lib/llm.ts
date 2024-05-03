@@ -8,13 +8,14 @@ import {
 } from "npm:@langchain/core/messages";
 
 import { Spinner } from "./spinner.ts";
+import { Params } from "./parse.ts";
 
-type Message = AIMessage | HumanMessage | SystemMessage | never; //{ role: Role; content: string };
+export type Message = AIMessage | HumanMessage | SystemMessage | never; //{ role: Role; content: string };
 
 /** Chatインスタンスを作成する
  * @param: Params - LLMのパラメータ、モデル */
 export class LLM {
-  private readonly transrator:
+  public readonly transrator:
     | ChatOpenAI
     | ChatAnthropic
     | ChatOllama
@@ -59,7 +60,7 @@ export class LLM {
         return new ChatOllama({
           baseUrl: params.url, // http://yourIP:11434
           model: params.model, // "llama2:7b-chat", codellama:13b-fast-instruct, elyza:13b-fast-instruct ...
-          maxTokens: params.maxTokens,
+          // maxTokens: params.maxTokens,
           temperature: params.temperature,
         });
       } else {
@@ -81,14 +82,14 @@ export class LLM {
   /** AI へ対話形式に質問し、回答を得る */
   async ask(messages: Message[]): Promise<AIMessage | undefined> {
     if (!this.transrator) return;
-    const spinner = new Spinner([".", "..", "..."], 100, 10000);
+    const spinner = new Spinner([".", "..", "..."], 100, 30000);
     spinner.start();
     const stream = await this.transrator.stream(messages); // 回答を取得
     spinner.stop();
     console.log(); // スピナーと回答の間の改行
     const chunks: string[] = [];
-    const aiPrpompt = String(`${this.params.model}: `);
-    Deno.stdout.writeSync(new TextEncoder().encode(aiPrpompt));
+    const modelName = `${this.params.model}: `;
+    Deno.stdout.writeSync(new TextEncoder().encode(modelName));
     for await (const chunk of stream) { // 1 chunkごとに出力
       const s = chunk.content.toString();
       Deno.stdout.writeSync(new TextEncoder().encode(s));

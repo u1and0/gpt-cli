@@ -86,6 +86,11 @@ function! gptcli#GPTWindow(system_prompt="", kwargs={})
         call add(l:args, a:kwargs["temperature"])
     endif
 
+    if has_key(a:kwargs, "url")  " default http://localhost:11434
+        call add(l:args, "-u")
+        call add(l:args, a:kwargs["url"])
+    endif
+
     echo join(l:args)
     " 新しいWindowでterminalでgptコマンドを実行する
     let l:cmd = ["new", "|", "term"]
