@@ -31,7 +31,6 @@ export function parseArgs(): Params {
     default: {
       temperature: 1.0,
       "max-tokens": 1000,
-      url: "http://localhost:11434",
     },
   });
   return {
@@ -41,7 +40,7 @@ export function parseArgs(): Params {
     model: args.m || args.model || "gpt-3.5-turbo",
     maxTokens: parseInt(String(args.x || args["max-tokens"])),
     temperature: parseFloat(String(args.t || args.temperature)),
-    url: args.u || args.url,
+    url: args.u || args.url || undefined,
     systemPrompt: args.s || args["system-prompt"] || undefined,
     content: args._.length > 0 ? args._.join(" ") : undefined, // 残りの引数をすべてスペースで結合
   };
