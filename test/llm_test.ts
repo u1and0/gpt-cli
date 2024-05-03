@@ -1,9 +1,16 @@
 import { assert } from "https://deno.land/std@0.224.0/assert/assert.ts";
+import { assertEquals } from "https://deno.land/std@0.224.0/assert/assert_equals.ts";
 import { assertThrows } from "https://deno.land/std@0.224.0/assert/assert_throws.ts";
-import { LLM } from "../lib/llm.ts";
 import { ChatOpenAI } from "npm:@langchain/openai";
 import { ChatAnthropic } from "npm:@langchain/anthropic";
 import { ChatOllama } from "npm:@langchain/community/chat_models/ollama";
+import {
+  AIMessage,
+  HumanMessage,
+  SystemMessage,
+} from "npm:@langchain/core/messages";
+
+import { generatePrompt, LLM } from "../lib/llm.ts";
 
 Deno.test("Should create a ChatOpenAI instance for a GPT model", () => {
   Deno.env.set("OPENAI_API_KEY", "sk-11111");
@@ -66,4 +73,43 @@ Deno.test("Should throw an error for an unknown model", () => {
     maxTokens: 2048,
   };
   assertThrows(() => new LLM(params), Error, 'model not found "unknown-model"');
+});
+
+Deno.test("Replicate prompt generator", () => {
+  const messages = [
+    new HumanMessage("hi"),
+    new AIMessage("hello, how can I help you?"),
+  ];
+  const prompt = generatePrompt(messages);
+  assertEquals(
+    prompt,
+    `<s>[INST] <<SYS>>
+
+<</SYS>>
+
+hi [/INST]
+hello, how can I help you?`,
+  );
+});
+
+Deno.test("Replicate prompt generator includes system prompt", () => {
+  const messages = [
+    new SystemMessage("you are honest AI assistant"),
+    new HumanMessage("hi"),
+    new AIMessage("hello, how can I help you?"),
+    new HumanMessage("what is your name?"),
+    new AIMessage("I have no name, just an AI"),
+  ];
+  const prompt = generatePrompt(messages);
+  assertEquals(
+    prompt,
+    `<s>[INST] <<SYS>>
+you are honest AI assistant
+<</SYS>>
+
+hi [/INST]
+hello, how can I help you?
+[INST] what is your name? [/INST]
+I have no name, just an AI`,
+  );
 });
