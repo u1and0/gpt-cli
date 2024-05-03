@@ -51,7 +51,7 @@ jobs:
         run: deno lint main.ts lib/*.ts test/*.ts
 
       - name: Run tests
-        run: deno test -A test/*.ts
+        run: deno test --allow-env test/*.ts
 
   builder:
     name: compile & publish artifact
