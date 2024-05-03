@@ -1,4 +1,7 @@
 import { HumanMessage } from "npm:@langchain/core/messages";
+
+import { Message } from "./llm.ts";
+
 /** ユーザーの入力とシステムプロンプトをmessages内にセットする */
 export async function getUserInputInMessage(
   messages: Message[],
