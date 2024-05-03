@@ -1,8 +1,7 @@
 import { Spinner } from "../lib/spinner.ts";
-import { assertEquals } from "https://deno.land/std@0.224.0/assert/assert_equals.ts";
 import { assertThrows } from "https://deno.land/std@0.224.0/assert/assert_throws.ts";
 
-Deno.test("Start and stop the spinner", async () => {
+Deno.test("Start and stop the spinner", () => {
   const spinner = new Spinner([".", "..", "..."], 100, 1000);
   spinner.start();
   spinner.stop();
@@ -34,7 +33,7 @@ Deno.test("Start and stop the spinner", async () => {
 //   );
 // });
 
-Deno.test("Spinner with empty texts array", async () => {
+Deno.test("Spinner with empty texts array", () => {
   assertThrows(
     () => new Spinner([], 100, 1000),
     Error,
@@ -42,7 +41,7 @@ Deno.test("Spinner with empty texts array", async () => {
   );
 });
 
-Deno.test("Spinner with negative interval", async () => {
+Deno.test("Spinner with negative interval", () => {
   assertThrows(
     () => new Spinner([".", "..", "..."], -100, 1000),
     Error,
@@ -50,7 +49,7 @@ Deno.test("Spinner with negative interval", async () => {
   );
 });
 
-Deno.test("Spinner with negative timeout", async () => {
+Deno.test("Spinner with negative timeout", () => {
   assertThrows(
     () => new Spinner([".", "..", "..."], 100, -1000),
     Error,
