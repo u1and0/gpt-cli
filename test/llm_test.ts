@@ -4,6 +4,7 @@ import { assertThrows } from "https://deno.land/std@0.224.0/assert/assert_throws
 import { ChatOpenAI } from "npm:@langchain/openai";
 import { ChatAnthropic } from "npm:@langchain/anthropic";
 import { ChatOllama } from "npm:@langchain/community/chat_models/ollama";
+import Replicate from "replicate";
 import {
   AIMessage,
   HumanMessage,
@@ -60,6 +61,23 @@ Deno.test("Should create a ChatOllama instance for an Ollama model", () => {
   assert(
     llm.transrator instanceof ChatOllama,
     `Expected LLM instance to be ChatOllama, but got ${llm.constructor.name}`,
+  );
+});
+
+Deno.test("Should create a Replicate instance for an Replicate model", () => {
+  const params = {
+    version: false,
+    help: false,
+    noConversation: false,
+    model: "meta/llama2:7b-chat",
+    url: undefined,
+    temperature: 0.7,
+    maxTokens: 2048,
+  };
+  const llm = new LLM(params);
+  assert(
+    llm.transrator instanceof Replicate,
+    `Expected LLM instance to be Replicate, but got ${llm.constructor.name}`,
   );
 });
 

@@ -11,7 +11,10 @@ import {
 import { Spinner } from "./spinner.ts";
 import { Params } from "./parse.ts";
 
+/** AIMessage */
 export type Message = AIMessage | HumanMessage | SystemMessage | never; //{ role: Role; content: string };
+type Model = `${string}/${string}`;
+type ModelWithVersion = `${Model}:${string}`;
 
 /** Chatインスタンスを作成する
  * @param: Params - LLMのパラメータ、モデル */
@@ -58,11 +61,6 @@ export class LLM {
           temperature: params.temperature,
           maxTokens: params.maxTokens,
         });
-      } else if (
-        // params.modelの文字列にollamaModelsのうちの一部が含まれていたらtrue
-        replicateModelPatterns.some((p: RegExp) => p.test(params.model))
-      ) {
-        return new Replicate();
       } else if (params.url !== undefined) {
         // params.modelの文字列にollamaModelsのうちの一部が含まれていたらtrue
         // ollamaModelPatterns.some((p: RegExp) => p.test(params.model))
@@ -71,6 +69,12 @@ export class LLM {
           model: params.model, // "llama2:7b-chat", codellama:13b-fast-instruct, elyza:13b-fast-instruct ...
           temperature: params.temperature,
         });
+      } else if (
+        // params.modelの文字列にollamaModelsのうちの一部が含まれていたらtrue
+        replicateModelPatterns.some((p: RegExp) => p.test(params.model)) && // replicateモデルのパターンに一致
+        (params.model as Model) === params.model // Model型に一致
+      ) {
+        return new Replicate();
       } else {
         throw new Error(`model not found "${params.model}"`);
       }
