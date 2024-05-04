@@ -7,7 +7,7 @@ import {
   HumanMessage,
   SystemMessage,
 } from "npm:@langchain/core/messages";
-import { IterableReadableStream } from "npm:@langchain/core/util/stream";
+import { IterableReadableStream } from "npm:@langchain/core/utils/stream";
 import { BaseMessageChunk } from "npm:@langchain/core/messages/base";
 
 import { Spinner } from "./spinner.ts";
@@ -107,14 +107,14 @@ export class LLM {
   }
 
   /** メッセージのストリームを生成する。
-  このメソッドは非同期的に実行され、AIからのメッセージストリームを返します。
-
-  @param : Message[] - 対話の流れの配列
-  @returns : Promise<IterableReadableStream<BaseMessageChunk>> AIからのメッセージストリーム
-
-  Replicateクラスでない場合はLLMの標準的なストリームを返します。
-  Replicateクラスである場合は、Replicate.stream()に渡すためのinputを作成してから、渡します。
-  */
+   * AIからのメッセージストリームを非同期的に返します。
+   *
+   * @param : Message[] - 対話の流れの配列
+   * @returns : Promise<IterableReadableStream<BaseMessageChunk>> AIからのメッセージストリーム
+   *
+   * Replicateクラスでない場合はLLMの標準的なストリームを返します。
+   * Replicateクラスである場合は、Replicate.stream()に渡すためのinputを作成してから、渡します。
+   */
   private async streamGenerator(
     messages: Message[],
   ): Promise<IterableReadableStream<BaseMessageChunk>> {
@@ -130,6 +130,7 @@ export class LLM {
     }
   }
 
+  /** Replicate.stream()へ渡すinputの作成 */
   private generateInput(messages: Message[]) {
     return {
       top_k: -1, // Integer that controls the number of top tokens to consider. Set to -1 to consider all tokens. Default: -1
@@ -152,6 +153,29 @@ export class LLM {
   }
 }
 
+/** Replicate.stream()へ渡すメッセージを作成する。
+ *
+ * @param : Message[] - AIMessage | HumanMessage | SystemMessage
+ * @returns : string
+ *
+ * 次の例のようにフォーマットする。
+ * SystemMessageは <<SYS>><</SYS>>で囲む。
+ * HumanMessageは [INST][/INST]で囲む。ただし、1要素目は後述。
+ * AIMessageは 何もしないで出力。
+ * HumanMessageの1要素目はシステムプロンプトを囲う。
+ *
+ * ( 例 )
+ * `<s>[INST] <<SYS>>
+ * you are honest AI assistant
+ * <</SYS>>
+ *
+ * hi [/INST]
+ * hello, how can I help you?
+ * [INST] what is your name? [/INST]
+ * I have no name, just an AI`,
+ *
+ * See also test/llm_test.ts
+ */
 export function generatePrompt(messages: Message[]): string {
   // SystemMessageを取得
   const sys = messages.find((m: Message) => m instanceof SystemMessage);
@@ -160,7 +184,6 @@ ${sys?.content ?? ""}
 <</SYS>>
 
 `;
-
   // SystemMessageを削除
   const humanAIMessages = messages.filter((m) => !(m instanceof SystemMessage));
   // HumanMessageであることの判定
@@ -185,6 +208,10 @@ ${sys?.content ?? ""}
   return `<s>[INST] ${systemPrompt}${humanAIPrompt}`;
 }
 
+/**
+ * @param : IterableReadableStream<BaseMessageChunk> - streamGenerator()で生成されたstream
+ * @returns : AsyncGenerator<string> - 文字列が非同期にyieldされる
+ */
 async function* streamEncoder(
   stream: IterableReadableStream<BaseMessageChunk>,
 ): AsyncGenerator<string> {
