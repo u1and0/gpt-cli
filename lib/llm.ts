@@ -2,13 +2,14 @@ import { ChatOpenAI } from "npm:@langchain/openai";
 import { ChatAnthropic } from "npm:@langchain/anthropic";
 import { ChatOllama } from "npm:@langchain/community/chat_models/ollama";
 import Replicate from "npm:replicate";
+import ServerSentEvent from "npm:replicate";
 import {
   AIMessage,
   HumanMessage,
   SystemMessage,
 } from "npm:@langchain/core/messages";
 import { IterableReadableStream } from "npm:@langchain/core/utils/stream";
-import { BaseMessageChunk } from "npm:@langchain/core/messages/base";
+import { BaseMessageChunk } from "npm:@langchain/core/messages";
 
 import { Spinner } from "./spinner.ts";
 import { Params } from "./parse.ts";
@@ -117,8 +118,12 @@ export class LLM {
    */
   private async streamGenerator(
     messages: Message[],
-  ): Promise<IterableReadableStream<BaseMessageChunk>> {
-    if (!this.transrator) return;
+  ): Promise<
+    IterableReadableStream<BaseMessageChunk> | AsyncGenerator<ServerSentEvent>
+  > {
+    if (!this.transrator) {
+      throw new Error("undefined transrator");
+    }
     if (!(this.transrator instanceof Replicate)) {
       return await this.transrator.stream(messages); // 回答を取得
     } else {
@@ -126,7 +131,7 @@ export class LLM {
       return (this.transrator as Replicate).stream(
         this.params.model as Model,
         { input },
-      );
+      ) as AsyncGenerator<ServerSentEvent>;
     }
   }
 
@@ -213,10 +218,14 @@ ${sys?.content ?? ""}
  * @returns : AsyncGenerator<string> - 文字列が非同期にyieldされる
  */
 async function* streamEncoder(
-  stream: IterableReadableStream<BaseMessageChunk>,
+  stream:
+    | IterableReadableStream<BaseMessageChunk>
+    | AsyncGenerator<ServerSentEvent>,
 ): AsyncGenerator<string> {
   for await (const chunk of stream) { // 1 chunkごとに出力
-    const s = chunk.content?.toString() || chunk.toString();
+    const s = chunk instanceof BaseMessageChunk
+      ? chunk.content?.toString()
+      : chunk.toString();
     Deno.stdout.writeSync(new TextEncoder().encode(s));
     yield s;
   }
