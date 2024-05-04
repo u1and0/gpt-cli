@@ -5,7 +5,7 @@ import { getUserInputInMessage } from "./lib/input.ts";
 import { parseArgs } from "./lib/parse.ts";
 import { Message } from "./lib/llm.ts";
 
-const VERSION = "v0.5.2";
+const VERSION = "v0.5.2r";
 const helpMessage = `ChatGPT API client for chat on console
     Usage:
       $ gpt -m gpt-3.5-turbo -x 1000 -t 1.0 [OPTIONS] PROMPT

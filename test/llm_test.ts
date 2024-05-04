@@ -4,7 +4,7 @@ import { assertThrows } from "https://deno.land/std@0.224.0/assert/assert_throws
 import { ChatOpenAI } from "npm:@langchain/openai";
 import { ChatAnthropic } from "npm:@langchain/anthropic";
 import { ChatOllama } from "npm:@langchain/community/chat_models/ollama";
-import Replicate from "replicate";
+import Replicate from "npm:replicate";
 import {
   AIMessage,
   HumanMessage,
