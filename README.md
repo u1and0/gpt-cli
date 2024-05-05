@@ -123,6 +123,9 @@ A Questions for Model
     - claude-3-opus-20240229
     - claude-3-haiku-20240307
     - claude-instant-1.2...
+- [Gemini](https://ai.google.dev/gemini-api/docs/models/gemini)
+    - gemini-1.5-pro-latest
+    - gemini-pro
 - [Replicate](https://replicate.com/models)
     - meta/meta-llama-3-70b-chat
     - meta/llama-2-7b-chat
