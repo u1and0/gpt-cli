@@ -1,6 +1,7 @@
 import { ChatOpenAI } from "npm:@langchain/openai";
 import { ChatAnthropic } from "npm:@langchain/anthropic";
 import { ChatOllama } from "npm:@langchain/community/chat_models/ollama";
+import { ChatGoogleGenerativeAI } from "npm:@langchain/google-genai";
 import Replicate from "npm:replicate";
 import ServerSentEvent from "npm:replicate";
 import {
@@ -25,6 +26,7 @@ export class LLM {
     | ChatOpenAI
     | ChatAnthropic
     | ChatOllama
+    | ChatGoogleGenerativeAI
     | Replicate
     | undefined;
 
@@ -62,6 +64,12 @@ export class LLM {
           modelName: params.model,
           temperature: params.temperature,
           maxTokens: params.maxTokens,
+        });
+      } else if (params.model.startsWith("gemini")) {
+        return new ChatGoogleGenerativeAI({
+          model: params.model,
+          temperature: params.temperature,
+          maxOutputTokens: params.maxTokens,
         });
       } else if (params.url !== undefined) {
         // params.modelの文字列にollamaModelsのうちの一部が含まれていたらtrue
@@ -118,9 +126,7 @@ export class LLM {
    */
   private async streamGenerator(
     messages: Message[],
-  ): Promise<
-    IterableReadableStream<BaseMessageChunk> | AsyncGenerator<ServerSentEvent>
-  > {
+  ): Promise<AsyncGenerator<BaseMessageChunk | ServerSentEvent>> {
     if (!this.transrator) {
       throw new Error("undefined transrator");
     }
@@ -213,20 +219,16 @@ ${sys?.content ?? ""}
   return `<s>[INST] ${systemPrompt}${humanAIPrompt}`;
 }
 
-/**
- * @param : IterableReadableStream<BaseMessageChunk> - streamGenerator()で生成されたstream
+/** メッセージストリームを標準出力に表示して文字列として結合して返す。
+ * @param : AsyncGenerator<BaseMessageChunk | ServerSentEvent> - streamGenerator()で生成されたstream
  * @returns : AsyncGenerator<string> - 文字列が非同期にyieldされる
  */
 async function* streamEncoder(
-  stream:
-    | IterableReadableStream<BaseMessageChunk>
-    | AsyncGenerator<ServerSentEvent>,
+  stream: AsyncGenerator<BaseMessageChunk | ServerSentEvent>,
 ): AsyncGenerator<string> {
-  for await (const chunk of stream) { // 1 chunkごとに出力
-    const s = chunk instanceof BaseMessageChunk
-      ? chunk.content?.toString()
-      : chunk.toString();
-    Deno.stdout.writeSync(new TextEncoder().encode(s));
-    yield s;
+  for await (const chunk of stream) {
+    const str = String(("content" in chunk) ? chunk.content : chunk); // 文字列化
+    Deno.stdout.writeSync(new TextEncoder().encode(str)); // チャンクごとに標準出力へ表示
+    yield str;
   }
 }
