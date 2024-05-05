@@ -102,7 +102,7 @@ Deno.test("Replicate prompt generator", () => {
   assertEquals(
     prompt,
     `<s>[INST] <<SYS>>
-
+You are helpful assistant.
 <</SYS>>
 
 hi [/INST]

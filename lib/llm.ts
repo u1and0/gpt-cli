@@ -47,11 +47,15 @@ export class LLM {
       const replicateModelPatterns = replicateModels.map((m: string) =>
         new RegExp(m)
       );
-      // const ollamaModels = ["elyza"];
-      // const ollamaModelPatterns = replicateModels.concat(ollamaModels).map((
-      //   m: string,
-      // ) => new RegExp(m));
-      if (params.model.startsWith("gpt")) {
+      if (params.url !== undefined) {
+        // params.modelの文字列にollamaModelsのうちの一部が含まれていたらtrue
+        // ollamaModelPatterns.some((p: RegExp) => p.test(params.model))
+        return new ChatOllama({
+          baseUrl: params.url, // http://yourIP:11434
+          model: params.model, // "llama2:7b-chat", codellama:13b-fast-instruct, elyza:13b-fast-instruct ...
+          temperature: params.temperature,
+        });
+      } else if (params.model.startsWith("gpt")) {
         return new ChatOpenAI({
           modelName: params.model,
           temperature: params.temperature,
@@ -62,14 +66,6 @@ export class LLM {
           modelName: params.model,
           temperature: params.temperature,
           maxTokens: params.maxTokens,
-        });
-      } else if (params.url !== undefined) {
-        // params.modelの文字列にollamaModelsのうちの一部が含まれていたらtrue
-        // ollamaModelPatterns.some((p: RegExp) => p.test(params.model))
-        return new ChatOllama({
-          baseUrl: params.url, // http://yourIP:11434
-          model: params.model, // "llama2:7b-chat", codellama:13b-fast-instruct, elyza:13b-fast-instruct ...
-          temperature: params.temperature,
         });
       } else if (
         // params.modelの文字列にollamaModelsのうちの一部が含まれていたらtrue
@@ -185,7 +181,7 @@ export function generatePrompt(messages: Message[]): string {
   // SystemMessageを取得
   const sys = messages.find((m: Message) => m instanceof SystemMessage);
   const systemPrompt = `<<SYS>>
-${sys?.content ?? ""}
+${sys?.content ?? "You are helpful assistant."}
 <</SYS>>
 
 `;
