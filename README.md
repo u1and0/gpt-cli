@@ -1,16 +1,16 @@
-<img src="https://img.shields.io/badge/version-v0.5.2-FF7777.svg"></img>
+<img src="https://img.shields.io/badge/version-v0.6.0-FF7777.svg"></img>
 <img src="https://img.shields.io/badge/LICENSE-MIT-3388FF.svg"></img>
 <img src="https://shield.deno.dev/deno/%5E1.39"></img>
 <img src="https://github.com/u1and0/gpt-cli/actions/workflows/deno.yml/badge.svg"></img>
 
-A command-line interface (CLI) that enables interactive conversations with AI models.
+Command-line interface  that enables interactive conversations with LLMs.
 
 ![Peek 2024-03-30 20-03.gif](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/113494/a15731ab-c7a7-c242-28ed-8abc6252c565.gif)
 
 # Quick start
 
 ```
-$ curl -LO https://github.com/u1and0/gpt-cli/releases/download/v0.5.2/gpt-cli-linux.zip
+$ curl -LO https://github.com/u1and0/gpt-cli/releases/download/v0.6.0/gpt-cli-linux.zip
 $ unzip gpt-cli.zip
 $ chmod 755 gpt
 $ sudo ln -s ./gpt /usr/bin
@@ -32,7 +32,7 @@ You have 3 options.
 The simplest way.
 
 ```
-$ curl -LO https://github.com/u1and0/gpt-cli/releases/download/v0.5.2/gpt-cli-linux.zip
+$ curl -LO https://github.com/u1and0/gpt-cli/releases/download/v0.6.0/gpt-cli-linux.zip
 $ unzip gpt-cli-linux.zip
 $ chmod 755 gpt
 $ sudo ln -s ./gpt /usr/bin
@@ -102,7 +102,7 @@ $ gpt -m gpt-3.5-turbo -x 1000 -t 1.0 [OPTIONS] PROMPT
 |--------------|-------------|------|----|
 | -v | --version | boolean | Show version |
 | -h | --help | boolean | Show this message |
-| -m | --model | string | OpenAI, Anthropic, Ollama model (gpt-4, claude-instant-1.2, claude-3-opus-20240229, claude-3-haiku-20240307, phi3, llama3:70b, mixtral:8x7b-text-v0.1-q5_K_M, default gpt-3.5-turbo) |
+| -m | --model | string | OpenAI, Anthropic, Ollama, Replicate model (default gpt-3.5-turbo) |
 | -x | --max\_tokens | number | Number of AI answer tokens (default 1000) |
 | -t | --temperature | number | Higher number means more creative answers, lower number means more exact answers (default 1.0) |
 | -u | --url | string | URL and port number for ollama server (default http://localhost:11434) |
@@ -113,6 +113,27 @@ $ gpt -m gpt-3.5-turbo -x 1000 -t 1.0 [OPTIONS] PROMPT
 ## PROMPT
 A Questions for Model
 
+
+## Models
+- [OpenAI](https://platform.openai.com/docs/models)
+    - gpt-4-turbo
+    - gpt-4-0125-preview
+    - gpt-3.5-turbo...
+- [Anthropic](https://docs.anthropic.com/claude/docs/models-overview)
+    - claude-3-opus-20240229
+    - claude-3-haiku-20240307
+    - claude-instant-1.2...
+- [Replicate](https://replicate.com/models)
+    - meta/meta-llama-3-70b-chat
+    - meta/llama-2-7b-chat
+    - mistralai/mistral-7b-instruct-v0.2
+    - mistralai/mixtral-8x7b-instruct-v0.1
+    - snowflake/snowflake-arctic-instruct
+    - replicate/flan-t5-xl...
+- [Ollama](https://ollama.com/library)  ** Using before "$ ollama serve" locally **
+    - phi3
+    - llama3:70b
+    - mixtral:8x7b-text-v0.1-q5\_K\_M...
 
 # Vim plugin (Optional)
 This is a Vimmer-only option.
