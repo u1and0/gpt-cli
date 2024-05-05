@@ -9,7 +9,6 @@ import {
   HumanMessage,
   SystemMessage,
 } from "npm:@langchain/core/messages";
-import { IterableReadableStream } from "npm:@langchain/core/utils/stream";
 import { BaseMessageChunk } from "npm:@langchain/core/messages";
 
 import { Spinner } from "./spinner.ts";
