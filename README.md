@@ -74,7 +74,7 @@ $ sudo ln -s ./gpt /usr/bin
 # Setup
 
 ## API keys
-### OpenAI API (GPT)
+### OpenAI API (for GPT)
 
 [Get OpenAI API key](https://platform.openai.com/api-keys), then set environment argument.
 
@@ -82,13 +82,35 @@ $ sudo ln -s ./gpt /usr/bin
 export OPENAI_API_KEY='sk-*****'
 ```
 
-### Anthropic API (Claude)
+### Anthropic API (for Claude)
 
 [Get Anthropic API key](https://console.anthropic.com/login), then set environment argument.
 
 ```
 export ANTHROPIC_API_KEY='sk-ant-*****'
 ```
+
+### Goolgle API (for Gemini)
+
+[Get Google API key](https://aistudio.google.com/app/apikey), then set environment argument.
+
+```
+export GOOGLE_API_KEY='*****'
+```
+
+### Replicate API (for Open Models)
+
+[Get Replicate API token](https://replicate.com/account/api-tokens), then set environment argument.
+
+```
+export REPLICATE_API_TOKEN='*****'
+```
+
+### Setup Ollama (for Local running Models)
+1. Setup Ollama, see [github.com/ollama/ollama](https://github.com/ollama/ollama)
+1. Download ollama model such as `ollama pull modelName`
+1. Start ollama `ollama serve` on your server.
+
 
 # Usage
 
@@ -127,7 +149,7 @@ A Questions for Model
     - gemini-1.5-pro-latest
     - gemini-pro
 - [Replicate](https://replicate.com/models)
-    - meta/meta-llama-3-70b-chat
+    - meta/meta-llama-3-70b-instruct
     - meta/llama-2-7b-chat
     - mistralai/mistral-7b-instruct-v0.2
     - mistralai/mixtral-8x7b-instruct-v0.1
@@ -158,11 +180,13 @@ hook_add = '''
     command! -nargs=0 -range GPTGenerateDocs <line1>,<line2>call gptcli#GPT('あなたは最高のコードライターです。 与えられたコードに基づいてわかりやすい日本語のドキュメントをコメントアウトして生成してください。', {"max_tokens": 2000, "model": "claude-3-haiku-20240307"})
     " Create test code
     command! -nargs=0 -range GPTGenerateTest <line1>,<line2>call gptcli#GPT('You are the best code tester. Please write test code that covers all cases to try the given code.', { "temperature": 0.5, "model": "claude-3-haiku-20240307" })
+    command! -nargs=0 -range GPTErrorBustor <line1>,<line2>call gptcli#GPT('Your task is to analyze the provided code snippet, identify any bugs or errors present, and provide a corrected version of the code that resolves these issues. Explain the problems you found in the original code and how your fixes address them. The corrected code should be functional, efficient, and adhere to best practices in programming.', {"temperature": 0.5, "model": "claude-3-sonnet-20240229"})
+    command! -nargs=0 -range GPTCodeOptimizer <line1>,<line2>call gptcli#GPT("Your task is to analyze the provided code snippet and suggest improvements to optimize its performance. Identify areas where the code can be made more efficient, faster, or less resource-intensive. Provide specific suggestions for optimization, along with explanations of how these changes can enhance the code performance. The optimized code should maintain the same functionality as the original code while demonstrating improved efficiency.", { "model": "meta/meta-llama-3-70b-chat" })
 
     " Any system prompt
-    command! -nargs=? -range GPTComplete <line1>,<line2>call gptcli#GPT(<q-args>, { "model": "claude-3-haiku-20240307" })
-    " Conversate with GPT
-    command! -nargs=? GPTConversate call gptcli#GPTWindow(<q-args>, {"model": "claude-3-sonnet-20240229" })
+    command! -nargs=? -range GPTComplete <line1>,<line2>call gptcli#GPT(<q-args>, { "model": "gemini-1.5-pro-latest" })
+    " Conversate with Ollama phi3 model
+    command! -nargs=? GPTConversate call gptcli#GPTWindow(<q-args>, { "model": "phi3:instruct", "url": "http://192.168.10.107:11434"})
 '''
 ```
 

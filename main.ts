@@ -35,7 +35,7 @@ const helpMessage =
         - gemini-1.5-pro-latest
         - gemini-pro
       - [Replicate](https://replicate.com/models)
-        - meta/meta-llama-3-70b-chat
+        - meta/meta-llama-3-70b-instruct
         - meta/llama-2-7b-chat
         - mistralai/mistral-7b-instruct-v0.2
         - mistralai/mixtral-8x7b-instruct-v0.1
