@@ -14,10 +14,10 @@ const helpMessage =
     Options:
       -v, --version: boolean   Show version
       -h, --help: boolean   Show this message
-      -m, --model: string OpenAI, Anthropic, Ollama, Replicate model (default gpt-3.5-turbo)
+      -m, --model: string OpenAI, Anthropic, Google, Replicate, Ollama model (default gpt-3.5-turbo)
       -x, --max-tokens: number Number of AI answer tokens (default 1000)
       -t, --temperature: number Higher number means more creative answers, lower number means more exact answers (default 1.0)
-      -u, --url: string URL and port number for ollama server (default http://localhost:11434)
+      -u, --url: string URL and port number for ollama server
       -s, --system-prompt: string The first instruction given to guide the AI model's response
       -n, --no-conversation: boolean   No conversation mode. Just one time question and answer.
     PROMPT:
