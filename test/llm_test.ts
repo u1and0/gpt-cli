@@ -3,6 +3,7 @@ import { assertEquals } from "https://deno.land/std@0.224.0/assert/assert_equals
 import { assertThrows } from "https://deno.land/std@0.224.0/assert/assert_throws.ts";
 import { ChatOpenAI } from "npm:@langchain/openai";
 import { ChatAnthropic } from "npm:@langchain/anthropic";
+import { ChatGoogleGenerativeAI } from "npm:@langchain/google-genai";
 import { ChatOllama } from "npm:@langchain/community/chat_models/ollama";
 import Replicate from "npm:replicate";
 import {
@@ -44,6 +45,23 @@ Deno.test("Should create a ChatAnthropic instance for a Claude model", () => {
   assert(
     llm.transrator instanceof ChatAnthropic,
     `Expected LLM instance to be ChatAnthropic, but got ${llm.constructor.name}`,
+  );
+});
+
+Deno.test("Should create a ChatGoogleGenerativeAI instance for a Claude model", () => {
+  Deno.env.set("GOOGLE_API_KEY", "11111");
+  const params = {
+    version: false,
+    help: false,
+    noConversation: false,
+    model: "gemini-1.5-Pro",
+    temperature: 0.7,
+    maxTokens: 2048,
+  };
+  const llm = new LLM(params);
+  assert(
+    llm.transrator instanceof ChatGoogleGenerativeAI,
+    `Expected LLM instance to be ChatGoogleGenerativeAI, but got ${llm.constructor.name}`,
   );
 });
 
@@ -102,7 +120,7 @@ Deno.test("Replicate prompt generator", () => {
   assertEquals(
     prompt,
     `<s>[INST] <<SYS>>
-
+You are helpful assistant.
 <</SYS>>
 
 hi [/INST]
