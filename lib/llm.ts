@@ -89,12 +89,15 @@ export class LLM {
   /** AI へ一回限りの質問をし、回答を出力して終了する */
   async query(messages: Message[]) {
     const stream = await this.streamGenerator(messages);
-    streamEncoder(stream);
+    for await (const _ of streamEncoder(stream)) {
+      //出力のために何もしない
+    }
   }
 
   /** AI へ対話形式に質問し、回答を得る */
   async ask(messages: Message[]): Promise<AIMessage> {
     const spinner = new Spinner([".", "..", "..."], 100, 30000);
+    // LLM に回答を考えさせる
     spinner.start();
     const stream = await this.streamGenerator(messages);
     spinner.stop();
