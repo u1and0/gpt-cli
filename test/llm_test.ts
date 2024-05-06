@@ -49,7 +49,7 @@ Deno.test("Should create a ChatAnthropic instance for a Claude model", () => {
 });
 
 Deno.test("Should create a ChatGoogleGenerativeAI instance for a Claude model", () => {
-  Deno.env.set("google_api_key", "11111");
+  Deno.env.set("GOOGLE_API_KEY", "11111");
   const params = {
     version: false,
     help: false,
