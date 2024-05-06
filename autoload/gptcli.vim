@@ -44,6 +44,8 @@ function! gptcli#GPT(system_prompt, kwargs={}) range
         call add(l:args, a:kwargs["url"])
     endif
 
+    " echom  l:args  " Debug print
+
     " 範囲指定をuser_promptとして使う。
     " 範囲指定がない場合は、現在のカーソル位置の行を使用する。
     let lines = getline(a:firstline, a:lastline)
@@ -55,6 +57,7 @@ function! gptcli#GPT(system_prompt, kwargs={}) range
 
     " コマンドを実行して選択範囲の最終行以降に追加する。
     let l:result = systemlist(l:cmd)
+    " echom l:result  " Debug print
     call append(a:lastline, l:result)
 endfunction
 
