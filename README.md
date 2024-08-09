@@ -18,7 +18,7 @@ $ gpt
 Ctrl-D to confirm input, q or exit to end conversation
 You: hi
 ...
-gpt-3.5-turbo: Hello! How can I assist you today?
+gpt-4o-mini: Hello! How can I assist you today?
 You:
 ```
 
@@ -115,7 +115,7 @@ export REPLICATE_API_TOKEN='*****'
 # Usage
 
 ```
-$ gpt -m gpt-3.5-turbo -x 1000 -t 1.0 [OPTIONS] PROMPT
+$ gpt -m gpt-4o-mini -x 1000 -t 1.0 [OPTIONS] PROMPT
 ```
 
 ## Options
@@ -124,7 +124,7 @@ $ gpt -m gpt-3.5-turbo -x 1000 -t 1.0 [OPTIONS] PROMPT
 |--------------|-------------|------|----|
 | -v | --version | boolean | Show version |
 | -h | --help | boolean | Show this message |
-| -m | --model | string | OpenAI, Anthropic, Google, Replicate, Ollama model (default gpt-3.5-turbo) |
+| -m | --model | string | OpenAI, Anthropic, Google, Replicate, Ollama model (default gpt-4o-mini) |
 | -x | --max\_tokens | number | Number of AI answer tokens (default 1000) |
 | -t | --temperature | number | Higher number means more creative answers, lower number means more exact answers (default 1.0) |
 | -u | --url | string | URL and port number for ollama server |
@@ -138,9 +138,8 @@ A Questions for Model
 
 ## Models
 - [OpenAI](https://platform.openai.com/docs/models)
-    - gpt-4-turbo
-    - gpt-4-0125-preview
-    - gpt-3.5-turbo...
+    - gpt-4o-mini
+    - gpt-4o...
 - [Anthropic](https://docs.anthropic.com/claude/docs/models-overview)
     - claude-3-opus-20240229
     - claude-3-haiku-20240307
