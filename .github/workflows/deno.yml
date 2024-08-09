@@ -45,13 +45,13 @@ jobs:
 
       # Uncomment this step to verify the use of 'deno fmt' on each commit.
       - name: Verify formatting
-        run: deno fmt --check main.ts lib/*.ts test/*.ts
+        run: deno fmt --check index.ts lib/*.ts test/*.ts
 
       - name: Run linter
-        run: deno lint main.ts lib/*.ts test/*.ts
+        run: deno lint index.ts lib/*.ts test/*.ts
 
       - name: Run checker
-        run: deno check main.ts lib/*.ts test/*.ts
+        run: deno check index.ts lib/*.ts test/*.ts
 
       - name: Run tests
         run: deno test --allow-env test/*.ts
@@ -81,7 +81,7 @@ jobs:
           deno-version: v1.x
 
       - name: Build binary
-        run: deno compile --allow-net --allow-env --output gpt main.ts
+        run: deno compile --allow-net --allow-env --output gpt index.ts
 
       - name: Binary upload (Unix, MacOS)
         # Artifact upload only occurs when tag matches
