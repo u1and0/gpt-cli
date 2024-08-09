@@ -1,32 +1,30 @@
 import { HumanMessage, SystemMessage } from "npm:@langchain/core/messages";
 
-import { LLM } from "./lib/llm.ts";
+import { LLM, Message } from "./lib/llm.ts";
 import { getUserInputInMessage } from "./lib/input.ts";
 import { parseArgs } from "./lib/parse.ts";
-import { Message } from "./lib/llm.ts";
 
-const VERSION = "v0.6.0";
+const VERSION = "v0.6.1";
 const helpMessage =
   `Command-line interface  that enables interactive conversations with LLMs.
     Usage:
-      $ gpt -m gpt-3.5-turbo -x 1000 -t 1.0 [OPTIONS] PROMPT
+      $ gpt -m gpt-4o-mini -x 1000 -t 1.0 [OPTIONS] PROMPT
 
     Options:
       -v, --version: boolean   Show version
       -h, --help: boolean   Show this message
-      -m, --model: string OpenAI, Anthropic, Ollama, Replicate model (default gpt-3.5-turbo)
+      -m, --model: string OpenAI, Anthropic, Google, Replicate, Ollama model (default gpt-4o-mini)
       -x, --max-tokens: number Number of AI answer tokens (default 1000)
       -t, --temperature: number Higher number means more creative answers, lower number means more exact answers (default 1.0)
-      -u, --url: string URL and port number for ollama server (default http://localhost:11434)
+      -u, --url: string URL and port number for ollama server
       -s, --system-prompt: string The first instruction given to guide the AI model's response
       -n, --no-conversation: boolean   No conversation mode. Just one time question and answer.
     PROMPT:
       string A Questions for Model
     Models:
       - [OpenAI](https://platform.openai.com/docs/models)
-        - gpt-4-turbo
-        - gpt-4-0125-preview
-        - gpt-3.5-turbo...
+        - gpt-4o-mini
+        - gpt-4o...
       - [Anthropic](https://docs.anthropic.com/claude/docs/models-overview)
         - claude-3-opus-20240229
         - claude-3-haiku-20240307

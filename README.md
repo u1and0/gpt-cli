@@ -1,4 +1,4 @@
-<img src="https://img.shields.io/badge/version-v0.6.0-FF7777.svg"></img>
+<img src="https://img.shields.io/badge/version-v0.6.1-FF7777.svg"></img>
 <img src="https://img.shields.io/badge/LICENSE-MIT-3388FF.svg"></img>
 <img src="https://shield.deno.dev/deno/%5E1.39"></img>
 <img src="https://github.com/u1and0/gpt-cli/actions/workflows/deno.yml/badge.svg"></img>
@@ -10,7 +10,7 @@ Command-line interface  that enables interactive conversations with LLMs.
 # Quick start
 
 ```
-$ curl -LO https://github.com/u1and0/gpt-cli/releases/download/v0.6.0/gpt-cli-linux.zip
+$ curl -LO https://github.com/u1and0/gpt-cli/releases/download/v0.6.1/gpt-cli-linux.zip
 $ unzip gpt-cli.zip
 $ chmod 755 gpt
 $ sudo ln -s ./gpt /usr/bin
@@ -18,7 +18,7 @@ $ gpt
 Ctrl-D to confirm input, q or exit to end conversation
 You: hi
 ...
-gpt-3.5-turbo: Hello! How can I assist you today?
+gpt-4o-mini: Hello! How can I assist you today?
 You:
 ```
 
@@ -32,7 +32,7 @@ You have 3 options.
 The simplest way.
 
 ```
-$ curl -LO https://github.com/u1and0/gpt-cli/releases/download/v0.6.0/gpt-cli-linux.zip
+$ curl -LO https://github.com/u1and0/gpt-cli/releases/download/v0.6.1/gpt-cli-linux.zip
 $ unzip gpt-cli-linux.zip
 $ chmod 755 gpt
 $ sudo ln -s ./gpt /usr/bin
@@ -115,7 +115,7 @@ export REPLICATE_API_TOKEN='*****'
 # Usage
 
 ```
-$ gpt -m gpt-3.5-turbo -x 1000 -t 1.0 [OPTIONS] PROMPT
+$ gpt -m gpt-4o-mini -x 1000 -t 1.0 [OPTIONS] PROMPT
 ```
 
 ## Options
@@ -124,10 +124,10 @@ $ gpt -m gpt-3.5-turbo -x 1000 -t 1.0 [OPTIONS] PROMPT
 |--------------|-------------|------|----|
 | -v | --version | boolean | Show version |
 | -h | --help | boolean | Show this message |
-| -m | --model | string | OpenAI, Anthropic, Ollama, Replicate model (default gpt-3.5-turbo) |
+| -m | --model | string | OpenAI, Anthropic, Google, Replicate, Ollama model (default gpt-4o-mini) |
 | -x | --max\_tokens | number | Number of AI answer tokens (default 1000) |
 | -t | --temperature | number | Higher number means more creative answers, lower number means more exact answers (default 1.0) |
-| -u | --url | string | URL and port number for ollama server (default http://localhost:11434) |
+| -u | --url | string | URL and port number for ollama server |
 | -s | --system-prompt | string | The first instruction given to guide the AI model's response. |
 | -n | --no-conversation | boolean | No conversation mode. Just one time question and answer. |
 
@@ -138,9 +138,8 @@ A Questions for Model
 
 ## Models
 - [OpenAI](https://platform.openai.com/docs/models)
-    - gpt-4-turbo
-    - gpt-4-0125-preview
-    - gpt-3.5-turbo...
+    - gpt-4o-mini
+    - gpt-4o...
 - [Anthropic](https://docs.anthropic.com/claude/docs/models-overview)
     - claude-3-opus-20240229
     - claude-3-haiku-20240307
