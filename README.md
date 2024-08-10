@@ -159,6 +159,14 @@ A Questions for Model
     - llama3:70b
     - mixtral:8x7b-text-v0.1-q5\_K\_M...
 
+## Test
+
+```
+$ deno test --allow-env
+```
+
+See [gpt-cli/test](https://github.com/u1and0/gpt-cli/tree/main/test)
+
 # Vim plugin (Optional)
 This is a Vimmer-only option.
 This option brings a Github Copilot-like experience to your Vim.
