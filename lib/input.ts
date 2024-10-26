@@ -1,17 +1,21 @@
 import { HumanMessage } from "npm:@langchain/core/messages";
 
 import { Message } from "./llm.ts";
+import { SlashCommand } from "./slash.ts";
 
 /** ユーザーの入力とシステムプロンプトをmessages内にセットする */
 export async function getUserInputInMessage(
   messages: Message[],
-): Promise<HumanMessage | undefined> {
+): Promise<HumanMessage | SlashCommand | undefined> {
   // 最後のMessageがユーザーからのメッセージではない場合、
   // endlessInput()でユーザーからの質問を待ち受ける
   const lastMessage: Message | undefined = messages.at(-1);
   // console.debug(lastMessage);
   if (!(lastMessage instanceof HumanMessage)) {
     const input = await endlessInput();
+    if (input.trim().startsWith("/")) {
+      return new SlashCommand(input);
+    }
     return new HumanMessage(input);
   }
   return;
