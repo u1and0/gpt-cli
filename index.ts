@@ -1,10 +1,15 @@
+/*
+Usage:
+$ deno run --allow-net --allow-env index.ts
+*/
+
 import { HumanMessage, SystemMessage } from "npm:@langchain/core/messages";
 
 import { LLM, Message } from "./lib/llm.ts";
 import { getUserInputInMessage } from "./lib/input.ts";
-import { parseArgs } from "./lib/parse.ts";
+import { Params, parseArgs } from "./lib/parse.ts";
 
-const VERSION = "v0.6.1";
+const VERSION = "v0.6.1r";
 const helpMessage =
   `Command-line interface  that enables interactive conversations with LLMs.
     Usage:
@@ -45,19 +50,7 @@ const helpMessage =
         - mixtral:8x7b-text-v0.1-q5_K_M...
 `;
 
-const main = async () => {
-  // Parse command argument
-  const params = parseArgs();
-  // console.debug(params);
-  if (params.version) {
-    console.error(`gpt ${VERSION}`);
-    Deno.exit(0);
-  }
-  if (params.help) {
-    console.error(helpMessage);
-    Deno.exit(0);
-  }
-
+const llmAsk = async (params: Params) => {
   // 引数に従ったLLMインスタンスを作成
   const llm = new LLM(params);
   // コマンドライン引数systemPromptとcontentがあれば
@@ -95,4 +88,20 @@ const main = async () => {
   }
 };
 
-main();
+const main = async () => {
+  // コマンドライン引数をパースして
+  const params = parseArgs();
+  // help, version flagが指定されていればinitで終了
+  if (params.version) {
+    console.error(`gpt ${VERSION}`);
+    Deno.exit(0);
+  }
+  if (params.help) {
+    console.error(helpMessage);
+    Deno.exit(0);
+  }
+  // llm へ質問し回答を得る。
+  await llmAsk(params);
+};
+
+await main();
