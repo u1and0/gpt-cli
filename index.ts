@@ -36,7 +36,7 @@ const llmAsk = async (params: Params) => {
       // ユーザーからの問いを追加
       const humanMessage = await getUserInputInMessage(messages);
       if (humanMessage instanceof SlashCommand) {
-        console.log(SlashCommand.toString());
+        console.log(humanMessage.exec());
         continue;
       }
       if (humanMessage) {

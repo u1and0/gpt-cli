@@ -1,5 +1,6 @@
 export const helpMessage =
   `Command-line interface  that enables interactive conversations with LLMs.
+
     Usage:
       $ gpt -m gpt-4o-mini -x 1000 -t 1.0 [OPTIONS] PROMPT
 
