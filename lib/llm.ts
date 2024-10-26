@@ -1,8 +1,13 @@
+/* LLMs */
 import { ChatOpenAI } from "npm:@langchain/openai";
 import { ChatAnthropic } from "npm:@langchain/anthropic";
 import { ChatOllama } from "npm:@langchain/community/chat_models/ollama";
 import { ChatGoogleGenerativeAI } from "npm:@langchain/google-genai";
 import Replicate from "npm:replicate";
+import { HfInference } from "npm:@huggingface/inference";
+import { HuggingFaceInference } from "npm:@langchain/community/llms/hf";
+
+/* Useful */
 import ServerSentEvent from "npm:replicate";
 import {
   AIMessage,
@@ -11,11 +16,12 @@ import {
 } from "npm:@langchain/core/messages";
 import { BaseMessageChunk } from "npm:@langchain/core/messages";
 
+/* My custom library from /lib */
 import { Spinner } from "./spinner.ts";
 import { Params } from "./parse.ts";
 
 /** AIMessage */
-export type Message = AIMessage | HumanMessage | SystemMessage | never; //{ role: Role; content: string };
+export type Message = AIMessage | HumanMessage | SystemMessage | never;
 type Model = `${string}/${string}`;
 
 /** Chatインスタンスを作成する
@@ -27,6 +33,8 @@ export class LLM {
     | ChatOllama
     | ChatGoogleGenerativeAI
     | Replicate
+    | HuggingFaceInference
+    | HfInference
     | undefined;
 
   constructor(private readonly params: Params) {
@@ -79,7 +87,9 @@ export class LLM {
         replicateModelPatterns.some((p: RegExp) => p.test(params.model)) && // replicateモデルのパターンに一致
         (params.model as Model) === params.model // Model型に一致
       ) {
-        return new Replicate();
+        return new HuggingFaceInference({ model: params.model });
+        // return new HfInference();
+        // return new Replicate();
       } else {
         throw new Error(`model not found "${params.model}"`);
       }
@@ -125,10 +135,23 @@ export class LLM {
   private async streamGenerator(
     messages: Message[],
   ): Promise<AsyncGenerator<BaseMessageChunk | ServerSentEvent>> {
+    // transrator が undefinedなら即終了
     if (!this.transrator) {
       throw new Error("undefined transrator");
     }
-    if (!(this.transrator instanceof Replicate)) {
+
+    if (this.transrator instanceof HuggingFaceInference) {
+      const inputs = this.generateInput(messages);
+      const stream = this.transrator.textGenerationStream({ inputs });
+      return stream;
+
+      // if (this.transrator instanceof HfInference) {
+      // return await this.transrator.chatCompletionStream({
+      //   model: this.params.model,
+      //   messages: messages,
+      //   max_tokens: this.params.maxTokens,
+      // });
+    } else if (!(this.transrator instanceof Replicate)) {
       return await this.transrator.stream(messages); // 回答を取得
     } else {
       const input = this.generateInput(messages);
