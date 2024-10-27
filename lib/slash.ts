@@ -1,5 +1,6 @@
 import { helpMessage } from "./help.ts";
-export type Command =
+import { Message } from "./llm.ts";
+export type _Command =
   | "/help"
   | "/?"
   | "/show"
@@ -8,26 +9,36 @@ export type Command =
   | "/clear"
   | "/bye";
 
+export const Command = {
+  Show: 0,
+  Load: 1,
+  Save: 2,
+  Clear: 3,
+  Bye: 4,
+  Help: 5,
+  Shortcuts: 6,
+} as const;
+
 export class SlashCommand {
-  readonly command: Command | string;
+  readonly command: Command;
 
   constructor(private readonly input: string) {
-    this.command = this.input.trim().split(/[\s\n\t]+/, 1)[0];
-  }
-
-  public exec(): string {
-    switch (this.command) {
+    const input0 = this.input.trim().split(/[\s\n\t]+/, 1)[0];
+    switch (input0) {
       case "/help":
       case "/?": {
-        return helpMessage;
+        this.command = Command.Help;
+        break;
       }
       case "/clear": {
         // これまでのコンテキストをクリアする
-        // messages = []
-        return "Context clear.";
+        this.command = Command.Clear;
+        break;
       }
+      // コマンドの解釈に失敗してもエラーにしないで
+      // 単に/から始まるプロンプトとする
       default: {
-        return `invalid slash command ${this.command}`;
+        console.error`invalid slash command ${this.command}`;
       }
     }
   }

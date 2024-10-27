@@ -14,7 +14,11 @@ export async function getUserInputInMessage(
   if (!(lastMessage instanceof HumanMessage)) {
     const input = await endlessInput();
     if (input.trim().startsWith("/")) {
-      return new SlashCommand(input);
+      try {
+        return new SlashCommand(input);
+      } catch (error) {
+        console.error(error);
+      }
     }
     return new HumanMessage(input);
   }
