@@ -1,5 +1,5 @@
 import { helpMessage } from "./help.ts";
-type Command =
+export type Command =
   | "/help"
   | "/?"
   | "/show"
@@ -9,12 +9,10 @@ type Command =
   | "/bye";
 
 export class SlashCommand {
-  private readonly command: Command | string;
+  readonly command: Command | string;
 
   constructor(private readonly input: string) {
-    console.log("input0:", this.input.trim().split(" ")[0]);
-    console.log("input1:", this.input.trim().split(" ")[1]);
-    this.command = this.input.trim().split(" ")[0];
+    this.command = this.input.trim().split(/[\s\n\t]+/, 1)[0];
   }
 
   public exec(): string {
