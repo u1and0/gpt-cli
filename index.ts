@@ -9,7 +9,7 @@ import { helpMessage } from "./lib/help.ts";
 import { LLM, Message } from "./lib/llm.ts";
 import { getUserInputInMessage } from "./lib/input.ts";
 import { Params, parseArgs } from "./lib/parse.ts";
-import { Command, SlashCommand } from "./lib/slash.ts";
+import { Command, isCommand } from "./lib/slash.ts";
 
 const VERSION = "v0.6.1r";
 
@@ -35,15 +35,15 @@ const llmAsk = async (params: Params) => {
       // 最後のメッセージがHumanMessageではない場合
       // ユーザーからの問いを追加
       const humanMessage = await getUserInputInMessage(messages);
-      if (humanMessage instanceof SlashCommand) {
-        switch (humanMessage.command) {
+      if (isCommand(humanMessage)) {
+        switch (humanMessage) {
           case Command.Help: {
             console.log(helpMessage);
             break;
           }
           case Command.Clear: {
             messages.splice(0, messages.length); // clear context
-            console.log("context clear successful");
+            console.log("Context clear successful");
             break;
           }
         }

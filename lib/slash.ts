@@ -9,37 +9,33 @@ export type _Command =
   | "/clear"
   | "/bye";
 
-export const Command = {
-  Show: 0,
-  Load: 1,
-  Save: 2,
-  Clear: 3,
-  Bye: 4,
-  Help: 5,
-  Shortcuts: 6,
-} as const;
-
-export class SlashCommand {
-  readonly command: Command;
-
-  constructor(private readonly input: string) {
-    const input0 = this.input.trim().split(/[\s\n\t]+/, 1)[0];
-    switch (input0) {
-      case "/help":
-      case "/?": {
-        this.command = Command.Help;
-        break;
-      }
-      case "/clear": {
-        // これまでのコンテキストをクリアする
-        this.command = Command.Clear;
-        break;
-      }
-      // コマンドの解釈に失敗してもエラーにしないで
-      // 単に/から始まるプロンプトとする
-      default: {
-        console.error`invalid slash command ${this.command}`;
-      }
-    }
-  }
+export enum Command {
+  Show = "SHOW",
+  Load = "LOAD",
+  Save = "SAVE",
+  Clear = "CLEAR",
+  Bye = "BYE",
+  Help = "HELP",
+  Shortcuts = "SHORTCUTS",
 }
+
+// Commandに指定したいずれかの数値を返す
+export const newSlashCommand = (input: string): Command | undefined => {
+  const input0 = input.trim().split(/[\s\n\t]+/, 1)[0];
+  const commandMap: Record<_Command, Command> = {
+    "/help": Command.Help,
+    "/?": Command.Help,
+    "/show": Command.Show,
+    "/load": Command.Load,
+    "/save": Command.Save,
+    "/clear": Command.Clear,
+    "/bye": Command.Bye,
+  };
+
+  return commandMap[input0 as _Command];
+};
+
+// Command 型の型ガード
+export const isCommand = (value: unknown): value is Command => {
+  return Object.values(Command).includes(value as Command);
+};
