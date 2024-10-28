@@ -1,20 +1,22 @@
-export const helpMessage =
-  `Command-line interface  that enables interactive conversations with LLMs.
-
-    Usage:
-      $ gpt -m gpt-4o-mini -x 1000 -t 1.0 [OPTIONS] PROMPT
-
+export const commandMessage = `
     // TODO Ollamaのものをパクってきた仮のコマンド
     Help (/commands):
       /set            Set session variables
-      /show           Show model information
+      ~~ /show           Show model information
       /load <model>   Load a session or model
       /save <model>   Save your current session
       /clear          Clear session context
       /bye            Exit
       /?, /help       Help for a command
-      /? shortcuts    Help for keyboard shortcuts
+      ~~ /? shortcuts    Help for keyboard shortcuts
+`;
 
+export const helpMessage =
+  `Command-line interface  that enables interactive conversations with LLMs.
+
+    Usage:
+      $ gpt -m gpt-4o-mini -x 1000 -t 1.0 [OPTIONS] PROMPT
+${commandMessage}
     Options:
       -v, --version: boolean   Show version
       -h, --help: boolean   Show this message

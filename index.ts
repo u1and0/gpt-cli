@@ -5,7 +5,7 @@ $ deno run --allow-net --allow-env index.ts
 
 import { HumanMessage, SystemMessage } from "npm:@langchain/core/messages";
 
-import { helpMessage } from "./lib/help.ts";
+import { commandMessage, helpMessage } from "./lib/help.ts";
 import { LLM, Message } from "./lib/llm.ts";
 import { getUserInputInMessage } from "./lib/input.ts";
 import { Params, parseArgs } from "./lib/parse.ts";
@@ -38,13 +38,16 @@ const llmAsk = async (params: Params) => {
       if (isCommand(humanMessage)) {
         switch (humanMessage) {
           case Command.Help: {
-            console.log(helpMessage);
+            console.log(commandMessage);
             break;
           }
           case Command.Clear: {
             messages.splice(0, messages.length); // clear context
             console.log("Context clear successful");
             break;
+          }
+          case Command.Bye: {
+            Deno.exit(0);
           }
         }
         continue; // Slashコマンドを処理したら次のループへ
