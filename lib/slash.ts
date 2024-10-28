@@ -3,20 +3,15 @@ import { Message } from "./llm.ts";
 export type _Command =
   | "/help"
   | "/?"
-  | "/show"
-  | "/load"
-  | "/save"
+  | "/set"
   | "/clear"
   | "/bye";
 
 export enum Command {
-  Show = "SHOW",
-  Load = "LOAD",
-  Save = "SAVE",
+  Help = "HELP",
+  Set = "SET",
   Clear = "CLEAR",
   Bye = "BYE",
-  Help = "HELP",
-  Shortcuts = "SHORTCUTS",
 }
 
 // Commandに指定したいずれかの数値を返す
@@ -25,9 +20,7 @@ export const newSlashCommand = (input: string): Command | undefined => {
   const commandMap: Record<_Command, Command> = {
     "/help": Command.Help,
     "/?": Command.Help,
-    "/show": Command.Show,
-    "/load": Command.Load,
-    "/save": Command.Save,
+    "/set": Command.Set,
     "/clear": Command.Clear,
     "/bye": Command.Bye,
   };
