@@ -15,8 +15,8 @@ export async function getUserInputInMessage(
     const input = await endlessInput();
     // / から始まる入力はコマンド解釈を試みる
     if (input.trim().startsWith("/")) {
-      // return new SlashCommand(input);
-      return newSlashCommand(input);
+      const cmd = newSlashCommand(input);
+      if (cmd) return cmd;
     }
     return new HumanMessage(input);
   }
