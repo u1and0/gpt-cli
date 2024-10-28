@@ -1,5 +1,3 @@
-import { helpMessage } from "./help.ts";
-import { Message } from "./llm.ts";
 export type _Command =
   | "/help"
   | "/?"
@@ -11,6 +9,11 @@ export enum Command {
   Clear = "CLEAR",
   Bye = "BYE",
 }
+
+// Command 型の型ガード
+export const isCommand = (value: unknown): value is Command => {
+  return Object.values(Command).includes(value as Command);
+};
 
 // Commandに指定したいずれかの数値を返す
 export const newSlashCommand = (input: string): Command | undefined => {
@@ -25,7 +28,12 @@ export const newSlashCommand = (input: string): Command | undefined => {
   return commandMap[input0 as _Command];
 };
 
-// Command 型の型ガード
-export const isCommand = (value: unknown): value is Command => {
-  return Object.values(Command).includes(value as Command);
+/** ユーザーの入力が@から始まると、@に続くモデル名を返す
+ *  @param input {string} : ユーザーの入力
+ *  @return {string} モデル名(@に続く文字列)
+ */
+export const extractAtModel = (input: string): string | undefined => {
+  const match = input.match(/^@[^\s\n\t]+/);
+  const modalName = match ? match[0].substring(1) : undefined;
+  return modalName;
 };

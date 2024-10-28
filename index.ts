@@ -9,13 +9,13 @@ import { commandMessage, helpMessage } from "./lib/help.ts";
 import { LLM, Message } from "./lib/llm.ts";
 import { getUserInputInMessage } from "./lib/input.ts";
 import { Params, parseArgs } from "./lib/parse.ts";
-import { Command, isCommand } from "./lib/slash.ts";
+import { Command, extractAtModel, isCommand } from "./lib/slash.ts";
 
 const VERSION = "v0.6.1r";
 
 const llmAsk = async (params: Params) => {
   // 引数に従ったLLMインスタンスを作成
-  const llm = new LLM(params);
+  let llm = new LLM(params);
   // コマンドライン引数systemPromptとcontentがあれば
   // システムプロンプトとユーザープロンプトを含めたMessageの生成
   const messages = [
@@ -32,9 +32,9 @@ const llmAsk = async (params: Params) => {
 
     // 対話的回答
     while (true) {
-      // 最後のメッセージがHumanMessageではない場合
-      // ユーザーからの問いを追加
+      // ユーザーからの入力待ち
       const humanMessage = await getUserInputInMessage(messages);
+
       if (isCommand(humanMessage)) {
         switch (humanMessage) {
           case Command.Help: {
@@ -51,7 +51,18 @@ const llmAsk = async (params: Params) => {
           }
         }
         continue; // Slashコマンドを処理したら次のループへ
+      } else if (humanMessage?.content.toString().startsWith("@")) {
+        // @Model名で始まるinput はllmモデルを再指定する
+        const model = extractAtModel(humanMessage.content.toString());
+        if (model) {
+          params.model = model;
+          llm = new LLM(params);
+          console.debug("new params:", params);
+        }
       }
+
+      // 最後のメッセージがHumanMessageではない場合
+      // ユーザーからの問いを追加
       if (humanMessage) {
         messages.push(humanMessage);
       }
