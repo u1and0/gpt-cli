@@ -1,9 +1,8 @@
 export const commandMessage = `
     Help (/commands):
-      /set            Set session variables
+      /?, /help       Help for a command
       /clear          Clear session context
       /bye            Exit
-      /?, /help       Help for a command
 `;
 
 export const helpMessage =

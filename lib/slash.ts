@@ -3,13 +3,11 @@ import { Message } from "./llm.ts";
 export type _Command =
   | "/help"
   | "/?"
-  | "/set"
   | "/clear"
   | "/bye";
 
 export enum Command {
   Help = "HELP",
-  Set = "SET",
   Clear = "CLEAR",
   Bye = "BYE",
 }
@@ -20,7 +18,6 @@ export const newSlashCommand = (input: string): Command | undefined => {
   const commandMap: Record<_Command, Command> = {
     "/help": Command.Help,
     "/?": Command.Help,
-    "/set": Command.Set,
     "/clear": Command.Clear,
     "/bye": Command.Bye,
   };
