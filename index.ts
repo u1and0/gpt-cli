@@ -56,6 +56,7 @@ const llmAsk = async (params: Params) => {
         const { model, message } = extractAtModel(
           humanMessage.content.toString(),
         );
+        // モデル名指定以外のプロンプトがなければ前のプロンプトを引き継ぐ。
         humanMessage = message ? message : messages.at(-2);
         if (model) {
           params.model = model;
