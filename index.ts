@@ -33,7 +33,7 @@ const llmAsk = async (params: Params) => {
     // 対話的回答
     while (true) {
       // ユーザーからの入力待ち
-      const humanMessage = await getUserInputInMessage(messages);
+      let humanMessage = await getUserInputInMessage(messages);
 
       if (isCommand(humanMessage)) {
         switch (humanMessage) {
@@ -53,11 +53,13 @@ const llmAsk = async (params: Params) => {
         continue; // Slashコマンドを処理したら次のループへ
       } else if (humanMessage?.content.toString().startsWith("@")) {
         // @Model名で始まるinput はllmモデルを再指定する
-        const model = extractAtModel(humanMessage.content.toString());
+        const { model, message } = extractAtModel(
+          humanMessage.content.toString(),
+        );
+        humanMessage = message ? message : messages.at(-2);
         if (model) {
           params.model = model;
           llm = new LLM(params);
-          console.debug("new params:", params);
         }
       }
 
