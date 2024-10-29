@@ -11,7 +11,7 @@ import { getUserInputInMessage } from "./lib/input.ts";
 import { Params, parseArgs } from "./lib/parse.ts";
 import { Command, extractAtModel, isCommand } from "./lib/slash.ts";
 
-const VERSION = "v0.6.1r";
+const VERSION = "v0.6.2";
 
 const llmAsk = async (params: Params) => {
   // 引数に従ったLLMインスタンスを作成

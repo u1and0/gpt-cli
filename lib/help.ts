@@ -5,12 +5,20 @@ export const commandMessage = `
       /bye            Exit
 `;
 
+const atMessage = `
+    Help (@commands):
+      Change model while asking.
+
+      @{ModelName}    Change LLM model
+        ex)   @gemini-1.5-pro any prompt...
+`;
+
 export const helpMessage =
   `Command-line interface  that enables interactive conversations with LLMs.
 
     Usage:
       $ gpt -m gpt-4o-mini -x 1000 -t 1.0 [OPTIONS] PROMPT
-${commandMessage}
+
     Options:
       -v, --version: boolean   Show version
       -h, --help: boolean   Show this message
@@ -27,12 +35,15 @@ ${commandMessage}
         - gpt-4o-mini
         - gpt-4o...
       - [Anthropic](https://docs.anthropic.com/claude/docs/models-overview)
+        - claude-3-5-sonnet-20241022
+        - claude-3-5-sonnet-latest
         - claude-3-opus-20240229
         - claude-3-haiku-20240307
         - claude-instant-1.2...
       - [Gemini](https://ai.google.dev/gemini-api/docs/models/gemini)
         - gemini-1.5-pro-latest
-        - gemini-pro
+        - gemini-1.5-flash
+        - gemini-pro...
       - [Replicate](https://replicate.com/models)
         - meta/meta-llama-3-70b-instruct
         - meta/llama-2-7b-chat
@@ -44,4 +55,6 @@ ${commandMessage}
         - phi3
         - llama3:70b
         - mixtral:8x7b-text-v0.1-q5_K_M...
+${commandMessage}
+${atMessage}
 `;
