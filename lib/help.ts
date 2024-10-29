@@ -1,16 +1,10 @@
 export const commandMessage = `
-    Help (/commands):
+    Help:
       /?, /help       Help for a command
       /clear          Clear session context
       /bye            Exit
-`;
-
-const atMessage = `
-    Help (@commands):
-      Change model while asking.
-
       @{ModelName}    Change LLM model
-        ex)   @gemini-1.5-pro any prompt...
+      ex)   @gemini-1.5-pro any prompt...
 `;
 
 export const helpMessage =
@@ -56,5 +50,4 @@ export const helpMessage =
         - llama3:70b
         - mixtral:8x7b-text-v0.1-q5_K_M...
 ${commandMessage}
-${atMessage}
 `;
