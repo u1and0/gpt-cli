@@ -159,6 +159,19 @@ A Questions for Model
     - llama3:70b
     - mixtral:8x7b-text-v0.1-q5\_K\_M...
 
+## / command
+Help (/commands):
+
+- /?, /help       Help for a command
+- /clear          Clear session context
+- /bye            Exit
+
+## @ command
+Help (@commands): Change model while asking.
+
+- @{ModelName}    Change LLM model
+- ex)   @gemini-1.5-pro any prompt...
+
 ## Test
 
 ```
