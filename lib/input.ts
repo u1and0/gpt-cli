@@ -66,15 +66,35 @@ async function multiInput(): Promise<string> {
   return inputs.join("\n");
 }
 
-export async function readStdin(): Promise<string> {
+export async function readStdin(timeout: number): Promise<string | null> {
+  if (Deno.isatty(Deno.stdin.rid)) {
+    return null; // TTYの場合は標準入力を読み取らない
+  }
+
   const decoder = new TextDecoder();
   let input = "";
   const buf = new Uint8Array(1024);
 
   while (true) {
-    const readResult = await Deno.stdin.read(buf);
-    if (readResult === null) break;
-    input += decoder.decode(buf.subarray(0, readResult));
+    const { readable } = Deno.stdin;
+    const readPromise = readable.read(buf);
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(
+        () => reject(new Error("Timeout")),
+        timeout,
+      )
+    );
+
+    try {
+      const readResult = await Promise.race([readPromise, timeoutPromise]);
+      if (readResult === null) break;
+      input += decoder.decode(buf.subarray(0, readResult));
+    } catch (error) {
+      if (error.messages === "Timeout") {
+        break; // タイムアウトした場合はループを抜ける
+      }
+      throw error; // それ以外は再スロー
+    }
   }
 
   return input.trim();
