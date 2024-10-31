@@ -65,3 +65,17 @@ async function multiInput(): Promise<string> {
   }
   return inputs.join("\n");
 }
+
+export async function readStdin(): Promise<string> {
+  const decoder = new TextDecoder();
+  let input = "";
+  const buf = new Uint8Array(1024);
+
+  while (true) {
+    const readResult = await Deno.stdin.read(buf);
+    if (readResult === null) break;
+    input += decoder.decode(buf.subarray(0, readResult));
+  }
+
+  return input.trim();
+}

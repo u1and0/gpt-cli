@@ -1,4 +1,11 @@
 /*
+このコードは、コマンドライン引数と標準入力を使用して、
+LLM（Large Language Model）と対話するためのツールです。
+ユーザーの入力を受け取り、LLMに質問を送信し、その回答を表示します。
+
+また、スラッシュコマンドを使用して、コンテキストのクリア、ヘルプの表示、
+プログラムの終了などの機能を提供します。
+
 Usage:
 $ deno run --allow-net --allow-env index.ts
 */
@@ -7,11 +14,11 @@ import { HumanMessage, SystemMessage } from "npm:@langchain/core/messages";
 
 import { commandMessage, helpMessage } from "./lib/help.ts";
 import { LLM, Message } from "./lib/llm.ts";
-import { getUserInputInMessage } from "./lib/input.ts";
+import { getUserInputInMessage, readStdin } from "./lib/input.ts";
 import { Params, parseArgs } from "./lib/parse.ts";
 import { Command, extractAtModel, isCommand } from "./lib/slash.ts";
 
-const VERSION = "v0.6.2";
+const VERSION = "v0.6.2r";
 
 const llmAsk = async (params: Params) => {
   // 引数に従ったLLMインスタンスを作成
@@ -84,7 +91,7 @@ const llmAsk = async (params: Params) => {
 
 const main = async () => {
   // コマンドライン引数をパースして
-  const params = parseArgs();
+  const params: Params = parseArgs();
   // help, version flagが指定されていればinitで終了
   if (params.version) {
     console.error(`gpt ${VERSION}`);
@@ -94,6 +101,14 @@ const main = async () => {
     console.error(helpMessage);
     Deno.exit(0);
   }
+
+  // 標準入力をチェック
+  const stdinContent = await readStdin();
+  if (stdinContent) {
+    params.content = stdinContent;
+    params.noConversation = true; // 標準入力がある場合は対話モードに入らない
+  }
+
   // llm へ質問し回答を得る。
   await llmAsk(params);
 };
