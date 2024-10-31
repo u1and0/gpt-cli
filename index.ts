@@ -8,6 +8,15 @@ LLM（Large Language Model）と対話するためのツールです。
 
 Usage:
 $ deno run --allow-net --allow-env index.ts
+
+Install:
+$ deno install --allow-env --allow-net -n gpt gpt-cli.ts
+
+Compile:
+$ deno compile --allow-net --allow-env -o gpt index.ts
+
+Run:
+$ gpt -
 */
 
 import { HumanMessage, SystemMessage } from "npm:@langchain/core/messages";
@@ -18,7 +27,7 @@ import { getUserInputInMessage, readStdin } from "./lib/input.ts";
 import { Params, parseArgs } from "./lib/parse.ts";
 import { Command, extractAtModel, isCommand } from "./lib/slash.ts";
 
-const VERSION = "v0.6.2r";
+const VERSION = "v0.6.3";
 
 const llmAsk = async (params: Params) => {
   // 引数に従ったLLMインスタンスを作成
@@ -103,7 +112,7 @@ const main = async () => {
   }
 
   // 標準入力をチェック
-  const stdinContent = await readStdin();
+  const stdinContent = await readStdin(10);
   if (stdinContent) {
     params.content = stdinContent;
     params.noConversation = true; // 標準入力がある場合は対話モードに入らない

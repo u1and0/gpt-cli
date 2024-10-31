@@ -1,4 +1,4 @@
-<img src="https://img.shields.io/badge/version-v0.6.2-FF7777.svg"></img>
+<img src="https://img.shields.io/badge/version-v0.6.3-FF7777.svg"></img>
 <img src="https://img.shields.io/badge/LICENSE-MIT-3388FF.svg"></img>
 <img src="https://shield.deno.dev/deno/%5E1.39"></img>
 <img src="https://github.com/u1and0/gpt-cli/actions/workflows/deno.yml/badge.svg"></img>
@@ -10,7 +10,7 @@ Command-line interface  that enables interactive conversations with LLMs.
 # Quick start
 
 ```
-$ curl -LO https://github.com/u1and0/gpt-cli/releases/download/v0.6.2/gpt-cli-linux.zip
+$ curl -LO https://github.com/u1and0/gpt-cli/releases/download/v0.6.3/gpt-cli-linux.zip
 $ unzip gpt-cli.zip
 $ chmod 755 gpt
 $ sudo ln -s ./gpt /usr/bin
@@ -24,6 +24,20 @@ You:
 
 However, the API key must be set to an environment variable in advance.
 
+## Single mode (Not conversation mode)
+
+```
+$ gpt -n "hi"
+Hello! How can I assist you today?
+```
+
+## Use pipeline
+
+```
+$ echo "hi" | gpt
+Hello! How can I assist you today?
+```
+
 
 # Installation
 You have 3 options.
@@ -32,7 +46,7 @@ You have 3 options.
 The simplest way.
 
 ```
-$ curl -LO https://github.com/u1and0/gpt-cli/releases/download/v0.6.2/gpt-cli-linux.zip
+$ curl -LO https://github.com/u1and0/gpt-cli/releases/download/v0.6.3/gpt-cli-linux.zip
 $ unzip gpt-cli-linux.zip
 $ chmod 755 gpt
 $ sudo ln -s ./gpt /usr/bin
@@ -65,7 +79,7 @@ Create binary by `deno compile`.
 ```
 $ git clone https://github.com/u1and0/gpt-cli
 $ cd gpt-cli
-$ deno compile --allow-net --allow-env --no-check --output gpt gpt-cli.ts
+$ deno compile --allow-net --allow-env --output gpt gpt-cli.ts
 $ chmod 755 ./gpt
 $ sudo ln -s ./gpt /usr/bin
 ```
