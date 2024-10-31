@@ -1,3 +1,4 @@
+import { readLines } from "https://deno.land/std/io/mod.ts";
 import { HumanMessage } from "npm:@langchain/core/messages";
 
 import { Message } from "./llm.ts";
@@ -45,24 +46,34 @@ Ctrl+Dで入力が確定されたらこれまでの入力を結合して文字�
 */
 async function multiInput(): Promise<string> {
   const inputs: string[] = [];
-  const decoder = new TextDecoder();
-  const stdin = Deno.stdin;
-  const buffer = new Uint8Array(100);
-  // 同じ行にプロンプト表示
   const ps = "You: ";
-  Deno.stdout.writeSync(new TextEncoder().encode(ps));
 
-  while (true) {
-    const n = await stdin.read(buffer);
-    if (n === null) {
-      break;
+  if (Deno.stdin.isTerminal()) {
+    // Chat Mode
+    const decoder = new TextDecoder();
+    const stdin = Deno.stdin;
+    const buffer = new Uint8Array(100);
+    // 同じ行にプロンプト表示
+    Deno.stdout.writeSync(new TextEncoder().encode(ps));
+
+    while (true) {
+      const n = await stdin.read(buffer);
+      if (n === null) {
+        break;
+      }
+      const input = decoder.decode(buffer.subarray(0, n)).trim();
+      if (input === "") {
+        continue;
+      }
+      inputs.push(input);
     }
-    const input = decoder.decode(buffer.subarray(0, n)).trim();
-    if (input === "") {
-      continue;
+  } else {
+    for await (const line of readLines(Deno.stdin)) {
+      // パイプ入力の場合
+      inputs.push(line);
     }
-    inputs.push(input);
   }
+
   return inputs.join("\n");
 }
 
