@@ -67,32 +67,29 @@ async function multiInput(): Promise<string> {
 }
 
 export async function readStdin(timeout: number): Promise<string | null> {
-  if (Deno.isatty(Deno.stdin.rid)) {
+  if (Deno.stdin.isTerminal()) {
     return null; // TTYの場合は標準入力を読み取らない
   }
 
   const decoder = new TextDecoder();
   let input = "";
-  const buf = new Uint8Array(1024);
 
-  while (true) {
-    const { readable } = Deno.stdin;
-    const readPromise = readable.read(buf);
-    const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(
-        () => reject(new Error("Timeout")),
-        timeout,
-      )
-    );
+  try {
+    const reader = Deno.stdin.readable.getReader();
+    const timer = setTimeout(() => reader.cancel(), timeout);
 
-    try {
-      const readResult = await Promise.race([readPromise, timeoutPromise]);
-      if (readResult === null) break;
-      input += decoder.decode(buf.subarray(0, readResult));
-    } catch (error) {
-      if (error.messages === "Timeout") {
-        break; // タイムアウトした場合はループを抜ける
-      }
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      input += decoder.decode(value);
+    }
+
+    clearTimeout(timer);
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      // タイムアウトによるくアンセル
+      console.error("Timeout");
+    } else {
       throw error; // それ以外は再スロー
     }
   }
