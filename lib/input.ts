@@ -25,17 +25,13 @@ export async function getUserInputInMessage(
   // console.debug(messages);
 }
 
-/** inputがなければ再度要求
- * q か exitが入力されたら正常終了
- */
+/** Ctrl+D が押された後の文字列が空行だったら再度標準入力を求める */
 async function endlessInput(): Promise<string> {
   let input: string | null;
-  while (true) { // inputがなければ再度要求
+  while (true) {
     input = await multiInput();
-    input = input.trim();
-    if (input === null) continue;
-    // 入力があったらその文字列を返す
-    if (input) return input;
+    // Ctrl+D が押された後の文字列が空行でなければreturn
+    if (input.trim()) return input;
   }
 }
 
