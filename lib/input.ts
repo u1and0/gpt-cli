@@ -1,4 +1,3 @@
-import { readLines } from "https://deno.land/std/io/mod.ts";
 import { HumanMessage } from "npm:@langchain/core/messages";
 
 import { Message } from "./llm.ts";
@@ -42,32 +41,26 @@ async function multiInput(): Promise<string> {
   const inputs: string[] = [];
   const ps = "You: ";
 
-  if (Deno.stdin.isTerminal()) { // Chat Mode
-    const decoder = new TextDecoder();
-    const stdin = Deno.stdin;
-    const buffer = new Uint8Array(100);
-    // 同じ行にプロンプト表示
-    Deno.stdout.writeSync(new TextEncoder().encode(ps));
+  const decoder = new TextDecoder();
+  const stdin = Deno.stdin;
+  const buffer = new Uint8Array(100);
+  // 同じ行にプロンプト表示
+  Deno.stdout.writeSync(new TextEncoder().encode(ps));
 
-    while (true) {
-      const n = await stdin.read(buffer);
-      // バッファなし = Ctrl+Dの入力は入力受付を中断する
-      if (n === null) {
-        break;
-      }
-      const input = decoder.decode(buffer.subarray(0, n)).trim();
-      // 空行は無視して入力受付を継続する
-      if (input === "") {
-        continue;
-      }
-      inputs.push(input);
+  while (true) {
+    console.log("hello world");
+    const n = await stdin.read(buffer);
+    // バッファなし = Ctrl+Dの入力は入力受付を中断する
+    if (n === null) {
+      break;
     }
-  } else { // パイプ入力の場合
-    for await (const line of readLines(Deno.stdin)) {
-      inputs.push(line);
+    const input = decoder.decode(buffer.subarray(0, n)).trim();
+    // 空行は無視して入力受付を継続する
+    if (input === "") {
+      continue;
     }
+    inputs.push(input);
   }
-
   return inputs.join("\n");
 }
 
