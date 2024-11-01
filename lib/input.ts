@@ -48,8 +48,7 @@ async function multiInput(): Promise<string> {
   const inputs: string[] = [];
   const ps = "You: ";
 
-  if (Deno.stdin.isTerminal()) {
-    // Chat Mode
+  if (Deno.stdin.isTerminal()) { // Chat Mode
     const decoder = new TextDecoder();
     const stdin = Deno.stdin;
     const buffer = new Uint8Array(100);
@@ -58,18 +57,19 @@ async function multiInput(): Promise<string> {
 
     while (true) {
       const n = await stdin.read(buffer);
+      // バッファなし = Ctrl+Dの入力は入力受付を中断する
       if (n === null) {
         break;
       }
       const input = decoder.decode(buffer.subarray(0, n)).trim();
+      // 空行は無視して入力受付を継続する
       if (input === "") {
         continue;
       }
       inputs.push(input);
     }
-  } else {
+  } else { // パイプ入力の場合
     for await (const line of readLines(Deno.stdin)) {
-      // パイプ入力の場合
       inputs.push(line);
     }
   }

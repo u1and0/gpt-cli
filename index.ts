@@ -27,10 +27,10 @@ import { getUserInputInMessage, readStdin } from "./lib/input.ts";
 import { Params, parseArgs } from "./lib/parse.ts";
 import { Command, extractAtModel, isCommand } from "./lib/slash.ts";
 
-const VERSION = "v0.6.3";
+const VERSION = "v0.6.2r";
 
 const llmAsk = async (params: Params) => {
-  console.debug(params);
+  params.debug && console.debug(params);
   // 引数に従ったLLMインスタンスを作成
   let llm = new LLM(params);
   // コマンドライン引数systemPromptとcontentがあれば
