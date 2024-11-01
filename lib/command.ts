@@ -1,4 +1,7 @@
-import { HumanMessage } from "npm:@langchain/core/messages";
+import { HumanMessage, SystemMessage } from "npm:@langchain/core/messages";
+import { Message } from "./lib/llm.ts";
+import { commandMessage } from "./lib/help.ts";
+
 export type _Command =
   | "/help"
   | "/?"
@@ -47,3 +50,28 @@ export const extractAtModel = (input: string): ModelMessage => {
   const message = input1 ? new HumanMessage(input1) : undefined;
   return { model, message };
 };
+
+/** /commandを実行する
+ * Help: ヘルプメッセージを出力する
+ * Clear: systemp promptを残してコンテキストを削除する
+ * Bye: コマンドを終了する
+ */
+export function slashCommandAction(
+  command: Command,
+  systemPrompt?: string,
+): Message[] | undefined {
+  switch (command) {
+    case Command.Help: {
+      console.log(commandMessage);
+      return;
+    }
+    case Command.Clear: {
+      // system promptが設定されていれば、それを残してコンテキストクリア
+      console.log("Context clear successful");
+      return systemPrompt ? [new SystemMessage(systemPrompt)] : [];
+    }
+    case Command.Bye: {
+      Deno.exit(0);
+    }
+  }
+}

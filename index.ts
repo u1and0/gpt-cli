@@ -21,11 +21,11 @@ $ gpt -
 
 import { HumanMessage, SystemMessage } from "npm:@langchain/core/messages";
 
-import { commandMessage, helpMessage } from "./lib/help.ts";
+import { helpMessage } from "./lib/help.ts";
 import { LLM, Message } from "./lib/llm.ts";
 import { getUserInputInMessage, readStdin } from "./lib/input.ts";
 import { Params, parseArgs } from "./lib/parse.ts";
-import { Command, extractAtModel, isCommand } from "./lib/slash.ts";
+import { extractAtModel, isCommand, slashCommandAction } from "./lib/slash.ts";
 
 const VERSION = "v0.6.2r";
 
@@ -35,7 +35,7 @@ const llmAsk = async (params: Params) => {
   let llm = new LLM(params);
   // コマンドライン引数systemPromptとcontentがあれば
   // システムプロンプトとユーザープロンプトを含めたMessageの生成
-  const messages = [
+  let messages = [
     params.systemPrompt && new SystemMessage(params.systemPrompt),
     params.content && new HumanMessage(params.content),
   ].filter(Boolean) as Message[];
@@ -53,19 +53,13 @@ const llmAsk = async (params: Params) => {
       let humanMessage = await getUserInputInMessage(messages);
 
       if (isCommand(humanMessage)) {
-        switch (humanMessage) {
-          case Command.Help: {
-            console.log(commandMessage);
-            break;
-          }
-          case Command.Clear: {
-            messages.splice(0, messages.length); // clear context
-            console.log("Context clear successful");
-            break;
-          }
-          case Command.Bye: {
-            Deno.exit(0);
-          }
+        // コンテキストクリア
+        const act: Message[] | undefined = slashCommandAction(
+          humanMessage,
+          params.systemPrompt,
+        );
+        if (act !== undefined) {
+          messages = act;
         }
         continue; // Slashコマンドを処理したら次のループへ
       } else if (humanMessage?.content.toString().startsWith("@")) {
