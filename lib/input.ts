@@ -2,7 +2,7 @@ import { readLines } from "https://deno.land/std/io/mod.ts";
 import { HumanMessage } from "npm:@langchain/core/messages";
 
 import { Message } from "./llm.ts";
-import { Command, newSlashCommand } from "./slash.ts";
+import { Command, newSlashCommand } from "./command.ts";
 
 /** ユーザーの入力とシステムプロンプトをmessages内にセットする */
 export async function getUserInputInMessage(

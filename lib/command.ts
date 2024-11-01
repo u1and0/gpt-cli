@@ -1,6 +1,6 @@
 import { HumanMessage, SystemMessage } from "npm:@langchain/core/messages";
-import { Message } from "./lib/llm.ts";
-import { commandMessage } from "./lib/help.ts";
+import { Message } from "./llm.ts";
+import { commandMessage } from "./help.ts";
 
 export type _Command =
   | "/help"

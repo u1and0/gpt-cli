@@ -25,7 +25,11 @@ import { helpMessage } from "./lib/help.ts";
 import { LLM, Message } from "./lib/llm.ts";
 import { getUserInputInMessage, readStdin } from "./lib/input.ts";
 import { Params, parseArgs } from "./lib/parse.ts";
-import { extractAtModel, isCommand, slashCommandAction } from "./lib/slash.ts";
+import {
+  extractAtModel,
+  isCommand,
+  slashCommandAction,
+} from "./lib/command.ts";
 
 const VERSION = "v0.6.2r";
 
