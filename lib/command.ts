@@ -3,7 +3,9 @@ export type _Command =
   | "/help"
   | "/?"
   | "/clear"
-  | "/bye";
+  | "/bye"
+  | "/exit"
+  | "/quit";
 
 export enum Command {
   Help = "HELP",
@@ -24,6 +26,8 @@ export const newSlashCommand = (input: string): Command | undefined => {
     "/?": Command.Help,
     "/clear": Command.Clear,
     "/bye": Command.Bye,
+    "/exit": Command.Bye,
+    "/quit": Command.Bye,
   };
 
   return commandMap[input0 as _Command];

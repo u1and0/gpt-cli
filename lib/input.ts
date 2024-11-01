@@ -34,8 +34,6 @@ async function endlessInput(): Promise<string> {
     input = await multiInput();
     input = input.trim();
     if (input === null) continue;
-    // q か exitが入力されたら正常終了
-    if (input === "q" || input === "exit") Deno.exit(0);
     // 入力があったらその文字列を返す
     if (input) return input;
   }
