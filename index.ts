@@ -42,7 +42,7 @@ const llmAsk = async (params: Params) => {
 
   try {
     // 一回限りの回答
-    if (params.noConversation) {
+    if (params.noChat) {
       await llm.query(messages);
       return;
     }
@@ -123,7 +123,7 @@ const main = async () => {
   const stdinContent: string | null = await readStdin();
   if (stdinContent) {
     params.content = stdinContent;
-    params.noConversation = true; // 標準入力がある場合は対話モードに入らない
+    params.noChat = true; // 標準入力がある場合は対話モードに入らない
   }
 
   // llm へ質問し回答を得る。
