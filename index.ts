@@ -123,7 +123,7 @@ const main = async () => {
   const stdinContent = await readStdin(10);
   if (stdinContent) {
     params.content = stdinContent;
-    // params.noConversation = true; // 標準入力がある場合は対話モードに入らない
+    params.noConversation = true; // 標準入力がある場合は対話モードに入らない
   }
 
   // llm へ質問し回答を得る。
