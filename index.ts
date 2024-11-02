@@ -16,7 +16,7 @@ Compile:
 $ deno compile --allow-net --allow-env -o gpt index.ts
 
 Run:
-$ gpt -
+$ gpt
 */
 
 import { HumanMessage, SystemMessage } from "npm:@langchain/core/messages";
@@ -24,10 +24,10 @@ import { HumanMessage, SystemMessage } from "npm:@langchain/core/messages";
 import { commandMessage, helpMessage } from "./lib/help.ts";
 import { LLM, Message } from "./lib/llm.ts";
 import { getUserInputInMessage, readStdin } from "./lib/input.ts";
-import { Params, parseArgs } from "./lib/parse.ts";
+import { Params, parseArgs } from "./lib/params.ts";
 import { Command, extractAtModel, isCommand } from "./lib/command.ts";
 
-const VERSION = "v0.6.2r";
+const VERSION = "v0.7.0";
 
 const llmAsk = async (params: Params) => {
   params.debug && console.debug(params);
@@ -42,7 +42,7 @@ const llmAsk = async (params: Params) => {
 
   try {
     // 一回限りの回答
-    if (params.noConversation) {
+    if (params.noChat) {
       await llm.query(messages);
       return;
     }
@@ -120,10 +120,10 @@ const main = async () => {
   }
 
   // 標準入力をチェック
-  const stdinContent = await readStdin(10);
+  const stdinContent: string | null = await readStdin();
   if (stdinContent) {
     params.content = stdinContent;
-    params.noConversation = true; // 標準入力がある場合は対話モードに入らない
+    params.noChat = true; // 標準入力がある場合は対話モードに入らない
   }
 
   // llm へ質問し回答を得る。

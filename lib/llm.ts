@@ -12,7 +12,7 @@ import {
 import { BaseMessageChunk } from "npm:@langchain/core/messages";
 
 import { Spinner } from "./spinner.ts";
-import { Params } from "./parse.ts";
+import { Params } from "./params.ts";
 
 /** AIMessage */
 export type Message = AIMessage | HumanMessage | SystemMessage | never; //{ role: Role; content: string };
