@@ -21,15 +21,11 @@ $ gpt -
 
 import { HumanMessage, SystemMessage } from "npm:@langchain/core/messages";
 
-import { helpMessage } from "./lib/help.ts";
+import { commandMessage, helpMessage } from "./lib/help.ts";
 import { LLM, Message } from "./lib/llm.ts";
 import { getUserInputInMessage, readStdin } from "./lib/input.ts";
 import { Params, parseArgs } from "./lib/parse.ts";
-import {
-  extractAtModel,
-  isCommand,
-  slashCommandAction,
-} from "./lib/command.ts";
+import { Command, extractAtModel, isCommand } from "./lib/command.ts";
 
 const VERSION = "v0.6.2r";
 
@@ -56,16 +52,29 @@ const llmAsk = async (params: Params) => {
       // ユーザーからの入力待ち
       let humanMessage = await getUserInputInMessage(messages);
 
+      /** /commandを実行する
+       * Help: ヘルプメッセージを出力する
+       * Clear: systemp promptを残してコンテキストを削除する
+       * Bye: コマンドを終了する
+       */
       if (isCommand(humanMessage)) {
-        // コンテキストクリア
-        const act: Message[] | undefined = slashCommandAction(
-          humanMessage,
-          params.systemPrompt,
-        );
-        if (act !== undefined) {
-          messages = act;
+        switch (humanMessage) {
+          case Command.Help: {
+            console.log(commandMessage);
+            continue; // Slashコマンドを処理したら次のループへ
+          }
+          case Command.Clear: {
+            // system promptが設定されていれば、それを残してコンテキストクリア
+            console.log("Context clear successful");
+            messages = params.systemPrompt
+              ? [new SystemMessage(params.systemPrompt)]
+              : [];
+            continue; // Slashコマンドを処理したら次のループへ
+          }
+          case Command.Bye: {
+            Deno.exit(0);
+          }
         }
-        continue; // Slashコマンドを処理したら次のループへ
       } else if (humanMessage?.content.toString().startsWith("@")) {
         // @Model名で始まるinput はllmモデルを再指定する
         const { model, message } = extractAtModel(

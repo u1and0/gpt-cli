@@ -48,7 +48,6 @@ async function multiInput(): Promise<string> {
   Deno.stdout.writeSync(new TextEncoder().encode(ps));
 
   while (true) {
-    console.log("hello world");
     const n = await stdin.read(buffer);
     // バッファなし = Ctrl+Dの入力は入力受付を中断する
     if (n === null) {
