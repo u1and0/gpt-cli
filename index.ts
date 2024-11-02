@@ -1,31 +1,48 @@
 /*
+このコードは、コマンドライン引数と標準入力を使用して、
+LLM（Large Language Model）と対話するためのツールです。
+ユーザーの入力を受け取り、LLMに質問を送信し、その回答を表示します。
+
+また、スラッシュコマンドを使用して、コンテキストのクリア、ヘルプの表示、
+プログラムの終了などの機能を提供します。
+
 Usage:
 $ deno run --allow-net --allow-env index.ts
+
+Install:
+$ deno install --allow-env --allow-net -n gpt gpt-cli.ts
+
+Compile:
+$ deno compile --allow-net --allow-env -o gpt index.ts
+
+Run:
+$ gpt
 */
 
 import { HumanMessage, SystemMessage } from "npm:@langchain/core/messages";
 
 import { commandMessage, helpMessage } from "./lib/help.ts";
 import { LLM, Message } from "./lib/llm.ts";
-import { getUserInputInMessage } from "./lib/input.ts";
-import { Params, parseArgs } from "./lib/parse.ts";
-import { Command, extractAtModel, isCommand } from "./lib/slash.ts";
+import { getUserInputInMessage, readStdin } from "./lib/input.ts";
+import { Params, parseArgs } from "./lib/params.ts";
+import { Command, extractAtModel, isCommand } from "./lib/command.ts";
 
-const VERSION = "v0.6.2";
+const VERSION = "v0.7.0";
 
 const llmAsk = async (params: Params) => {
+  params.debug && console.debug(params);
   // 引数に従ったLLMインスタンスを作成
   let llm = new LLM(params);
   // コマンドライン引数systemPromptとcontentがあれば
   // システムプロンプトとユーザープロンプトを含めたMessageの生成
-  const messages = [
+  let messages = [
     params.systemPrompt && new SystemMessage(params.systemPrompt),
     params.content && new HumanMessage(params.content),
   ].filter(Boolean) as Message[];
 
   try {
     // 一回限りの回答
-    if (params.noConversation) {
+    if (params.noChat) {
       await llm.query(messages);
       return;
     }
@@ -35,22 +52,29 @@ const llmAsk = async (params: Params) => {
       // ユーザーからの入力待ち
       let humanMessage = await getUserInputInMessage(messages);
 
+      /** /commandを実行する
+       * Help: ヘルプメッセージを出力する
+       * Clear: systemp promptを残してコンテキストを削除する
+       * Bye: コマンドを終了する
+       */
       if (isCommand(humanMessage)) {
         switch (humanMessage) {
           case Command.Help: {
             console.log(commandMessage);
-            break;
+            continue; // Slashコマンドを処理したら次のループへ
           }
           case Command.Clear: {
-            messages.splice(0, messages.length); // clear context
+            // system promptが設定されていれば、それを残してコンテキストクリア
             console.log("Context clear successful");
-            break;
+            messages = params.systemPrompt
+              ? [new SystemMessage(params.systemPrompt)]
+              : [];
+            continue; // Slashコマンドを処理したら次のループへ
           }
           case Command.Bye: {
             Deno.exit(0);
           }
         }
-        continue; // Slashコマンドを処理したら次のループへ
       } else if (humanMessage?.content.toString().startsWith("@")) {
         // @Model名で始まるinput はllmモデルを再指定する
         const { model, message } = extractAtModel(
@@ -84,7 +108,7 @@ const llmAsk = async (params: Params) => {
 
 const main = async () => {
   // コマンドライン引数をパースして
-  const params = parseArgs();
+  const params: Params = parseArgs();
   // help, version flagが指定されていればinitで終了
   if (params.version) {
     console.error(`gpt ${VERSION}`);
@@ -94,6 +118,14 @@ const main = async () => {
     console.error(helpMessage);
     Deno.exit(0);
   }
+
+  // 標準入力をチェック
+  const stdinContent: string | null = await readStdin();
+  if (stdinContent) {
+    params.content = stdinContent;
+    params.noChat = true; // 標準入力がある場合は対話モードに入らない
+  }
+
   // llm へ質問し回答を得る。
   await llmAsk(params);
 };

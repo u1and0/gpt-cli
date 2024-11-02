@@ -12,7 +12,7 @@ import {
 import { BaseMessageChunk } from "npm:@langchain/core/messages";
 
 import { Spinner } from "./spinner.ts";
-import { Params } from "./parse.ts";
+import { Params } from "./params.ts";
 
 /** AIMessage */
 export type Message = AIMessage | HumanMessage | SystemMessage | never; //{ role: Role; content: string };
@@ -55,6 +55,7 @@ export class LLM {
           baseUrl: params.url, // http://yourIP:11434
           model: params.model, // "llama2:7b-chat", codellama:13b-fast-instruct, elyza:13b-fast-instruct ...
           temperature: params.temperature,
+          // maxTokens: params.maxTokens, // Not implemented yet on Langchain
         });
       } else if (params.model.startsWith("gpt")) {
         return new ChatOpenAI({

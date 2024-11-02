@@ -2,7 +2,8 @@ import { parse } from "https://deno.land/std/flags/mod.ts";
 export type Params = {
   version: boolean;
   help: boolean;
-  noConversation: boolean;
+  noChat: boolean;
+  debug: boolean;
   model: string;
   temperature: number;
   maxTokens: number;
@@ -14,7 +15,16 @@ export type Params = {
 /** Parse console argument */
 export function parseArgs(): Params {
   const args = parse(Deno.args, {
-    boolean: ["v", "version", "h", "help", "n", "no-conversation"],
+    boolean: [
+      "v",
+      "version",
+      "h",
+      "help",
+      "n",
+      "no-chat",
+      "d",
+      "debug",
+    ],
     string: [
       "m",
       "model",
@@ -34,9 +44,12 @@ export function parseArgs(): Params {
     },
   });
   return {
+    // boolean option
     version: args.v || args.version || false,
     help: args.h || args.help || false,
-    noConversation: args.n || args["no-conversation"] || false,
+    noChat: args.n || args["no-chat"] || false,
+    debug: args.d || args.debug || false,
+    // string option
     model: args.m || args.model || "gpt-4o-mini",
     maxTokens: parseInt(String(args.x || args["max-tokens"])),
     temperature: parseFloat(String(args.t || args.temperature)),

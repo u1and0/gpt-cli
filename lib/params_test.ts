@@ -1,5 +1,5 @@
 import { assertEquals } from "https://deno.land/std@0.224.0/assert/assert_equals.ts";
-import { Params, parseArgs } from "../lib/parse.ts";
+import { Params, parseArgs } from "../lib/params.ts";
 
 Deno.test("parseArgs", () => {
   const testCases: [string[], Params][] = [
@@ -8,7 +8,8 @@ Deno.test("parseArgs", () => {
       {
         version: true,
         help: false,
-        noConversation: false,
+        noChat: false,
+        debug: false,
         model: "gpt-4o-mini",
         temperature: 1.0,
         maxTokens: 1000,
@@ -22,7 +23,8 @@ Deno.test("parseArgs", () => {
       {
         version: false,
         help: true,
-        noConversation: false,
+        noChat: false,
+        debug: false,
         model: "gpt-4o-mini",
         temperature: 1.0,
         maxTokens: 1000,
@@ -33,7 +35,7 @@ Deno.test("parseArgs", () => {
     ],
     [
       [
-        "--no-conversation",
+        "--no-chat",
         "-m",
         "gpt-4",
         "-t",
@@ -49,7 +51,8 @@ Deno.test("parseArgs", () => {
       {
         version: false,
         help: false,
-        noConversation: true,
+        noChat: true,
+        debug: false,
         model: "gpt-4",
         temperature: 0.5,
         maxTokens: 500,
