@@ -16,7 +16,7 @@ Compile:
 $ deno compile --allow-net --allow-env -o gpt index.ts
 
 Run:
-$ gpt -
+$ gpt
 */
 
 import { HumanMessage, SystemMessage } from "npm:@langchain/core/messages";
@@ -27,7 +27,7 @@ import { getUserInputInMessage, readStdin } from "./lib/input.ts";
 import { Params, parseArgs } from "./lib/parse.ts";
 import { Command, extractAtModel, isCommand } from "./lib/command.ts";
 
-const VERSION = "v0.6.2r";
+const VERSION = "v0.7.0";
 
 const llmAsk = async (params: Params) => {
   params.debug && console.debug(params);
@@ -120,7 +120,7 @@ const main = async () => {
   }
 
   // 標準入力をチェック
-  const stdinContent = await readStdin(10);
+  const stdinContent: string | null = await readStdin();
   if (stdinContent) {
     params.content = stdinContent;
     params.noConversation = true; // 標準入力がある場合は対話モードに入らない
