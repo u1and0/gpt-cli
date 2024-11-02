@@ -24,7 +24,7 @@ import { HumanMessage, SystemMessage } from "npm:@langchain/core/messages";
 import { commandMessage, helpMessage } from "./lib/help.ts";
 import { LLM, Message } from "./lib/llm.ts";
 import { getUserInputInMessage, readStdin } from "./lib/input.ts";
-import { Params, parseArgs } from "./lib/parse.ts";
+import { Params, parseArgs } from "./lib/params.ts";
 import { Command, extractAtModel, isCommand } from "./lib/command.ts";
 
 const VERSION = "v0.7.0";
