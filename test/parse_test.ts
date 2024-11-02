@@ -8,7 +8,7 @@ Deno.test("parseArgs", () => {
       {
         version: true,
         help: false,
-        noConversation: false,
+        noChat: false,
         model: "gpt-4o-mini",
         temperature: 1.0,
         maxTokens: 1000,
@@ -22,7 +22,7 @@ Deno.test("parseArgs", () => {
       {
         version: false,
         help: true,
-        noConversation: false,
+        noChat: false,
         model: "gpt-4o-mini",
         temperature: 1.0,
         maxTokens: 1000,
@@ -33,7 +33,7 @@ Deno.test("parseArgs", () => {
     ],
     [
       [
-        "--no-conversation",
+        "--no-chat",
         "-m",
         "gpt-4",
         "-t",
@@ -49,7 +49,7 @@ Deno.test("parseArgs", () => {
       {
         version: false,
         help: false,
-        noConversation: true,
+        noChat: true,
         model: "gpt-4",
         temperature: 0.5,
         maxTokens: 500,
