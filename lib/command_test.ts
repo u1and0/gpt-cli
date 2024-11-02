@@ -1,5 +1,5 @@
 import { assertEquals } from "https://deno.land/std@0.224.0/assert/assert_equals.ts";
-import { Command, extractAtModel, newSlashCommand } from "../lib/slash.ts";
+import { Command, extractAtModel, newSlashCommand } from "../lib/command.ts";
 
 Deno.test("SlashCommand constructor", () => {
   const testCases: [string, Command | string][] = [
