@@ -1,5 +1,5 @@
 import { assertEquals } from "https://deno.land/std@0.224.0/assert/assert_equals.ts";
-import { Params, parseArgs } from "../lib/parse.ts";
+import { Params, parseArgs } from "../lib/params.ts";
 
 Deno.test("parseArgs", () => {
   const testCases: [string[], Params][] = [
