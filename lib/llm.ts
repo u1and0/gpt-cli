@@ -2,6 +2,7 @@ import { ChatOpenAI } from "npm:@langchain/openai";
 import { ChatAnthropic } from "npm:@langchain/anthropic";
 import { ChatOllama } from "npm:@langchain/community/chat_models/ollama";
 import { ChatGoogleGenerativeAI } from "npm:@langchain/google-genai";
+import { ChatGroq } from "npm:@langchain/groq";
 import Replicate from "npm:replicate";
 import ServerSentEvent from "npm:replicate";
 import {
@@ -26,6 +27,7 @@ export class LLM {
     | ChatAnthropic
     | ChatOllama
     | ChatGoogleGenerativeAI
+    | ChatGroq
     | Replicate
     | undefined;
 
@@ -71,6 +73,12 @@ export class LLM {
         });
       } else if (params.model.startsWith("gemini")) {
         return new ChatGoogleGenerativeAI({
+          model: params.model,
+          temperature: params.temperature,
+          maxOutputTokens: params.maxTokens,
+        });
+      } else if (params.model.startsWith("llama")) {
+        return new ChatGroq({
           model: params.model,
           temperature: params.temperature,
           maxOutputTokens: params.maxTokens,
