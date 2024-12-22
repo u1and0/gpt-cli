@@ -3,7 +3,7 @@ import { parse } from "https://deno.land/std/flags/mod.ts";
 // Platformオプションとは
 // llamaモデルは共通のオープンモデルなので、
 // どこで実行するかをオプションで決める必要がある
-const platformList = ["ollama", "groq", "replicate"] as const;
+export const platformList = ["ollama", "groq", "replicate"] as const;
 type Platform = (typeof platformList)[number];
 
 /** Platform型であることを保証する */
