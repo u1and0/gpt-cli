@@ -32,75 +32,7 @@ export class LLM {
     | undefined;
 
   constructor(private readonly params: Params) {
-    this.transrator = (() => {
-      const replicateModels = [
-        "llama",
-        "mistral",
-        "command-r",
-        "llava",
-        "mixtral",
-        "deepseek",
-        "phi",
-        "hermes",
-        "orca",
-        "falcon",
-        "dolphin",
-        "gemma",
-      ];
-      const replicateModelPatterns = replicateModels.map((m: string) =>
-        new RegExp(m)
-      );
-
-      if (params.platform === "groq") {
-        return new ChatGroq({
-          model: params.model,
-          temperature: params.temperature,
-          maxOutputTokens: params.maxTokens,
-        });
-      }
-
-      if (params.platform === "ollama") {
-        if (params.url === undefined) {
-          throw new Error("ollama needs URL parameter use --url");
-        }
-        // params.modelの文字列にollamaModelsのうちの一部が含まれていたらtrue
-        // ollamaModelPatterns.some((p: RegExp) => p.test(params.model))
-        return new ChatOllama({
-          baseUrl: params.url, // http://yourIP:11434
-          model: params.model, // "llama2:7b-chat", codellama:13b-fast-instruct, elyza:13b-fast-instruct ...
-          temperature: params.temperature,
-          // maxTokens: params.maxTokens, // Not implemented yet on Langchain
-        });
-      }
-
-      if (params.model.startsWith("gpt") || params.model) {
-        return new ChatOpenAI({
-          modelName: params.model,
-          temperature: params.temperature,
-          maxTokens: params.maxTokens,
-        });
-      } else if (params.model.startsWith("claude")) {
-        return new ChatAnthropic({
-          modelName: params.model,
-          temperature: params.temperature,
-          maxTokens: params.maxTokens,
-        });
-      } else if (params.model.startsWith("gemini")) {
-        return new ChatGoogleGenerativeAI({
-          model: params.model,
-          temperature: params.temperature,
-          maxOutputTokens: params.maxTokens,
-        });
-      } else if (
-        // params.modelの文字列にollamaModelsのうちの一部が含まれていたらtrue
-        replicateModelPatterns.some((p: RegExp) => p.test(params.model)) && // replicateモデルのパターンに一致
-        (params.model as Model) === params.model // Model型に一致
-      ) {
-        return new Replicate();
-      } else {
-        throw new Error(`model not found "${params.model}"`);
-      }
-    })();
+    this.transrator = llmConstructor(params);
   }
 
   /** AI へ一回限りの質問をし、回答を出力して終了する */
@@ -202,7 +134,7 @@ export class LLM {
  *
  * See also test/llm_test.ts
  */
-export function generatePrompt(messages: Message[]): string {
+function generatePrompt(messages: Message[]): string {
   // SystemMessageを取得
   const sys = messages.find((m: Message) => m instanceof SystemMessage);
   const systemPrompt = `<<SYS>>
@@ -218,7 +150,7 @@ ${sys?.content ?? "You are helpful assistant."}
   };
   // HumanMessageは[INST][/INST] で囲む
   // AIMessageは何もしない
-  const generatePrompt = (messages: (AIMessage | HumanMessage)[]): string => {
+  const surroundINST = (messages: (AIMessage | HumanMessage)[]): string => {
     return messages.map((message: AIMessage | HumanMessage, index: number) => {
       if (index === 0) {
         return `${message.content} [/INST]`;
@@ -230,7 +162,7 @@ ${sys?.content ?? "You are helpful assistant."}
     })
       .join("\n");
   };
-  const humanAIPrompt = generatePrompt(humanAIMessages);
+  const humanAIPrompt = surroundINST(humanAIMessages);
   return `<s>[INST] ${systemPrompt}${humanAIPrompt}`;
 }
 
@@ -247,3 +179,112 @@ async function* streamEncoder(
     yield str;
   }
 }
+
+/** LLM クラスのtransratorプロパティをparamsから判定し、
+ * LLM インスタンスを生成して返す。
+ * @param{Params} params - command line arguments parsed by parseArgs()
+ * @return : LLM model
+ * @throws{Error} model not found "${params.model}"
+ */
+function llmConstructor(params: Params):
+  | ChatOpenAI
+  | ChatAnthropic
+  | ChatOllama
+  | ChatGoogleGenerativeAI
+  | ChatGroq
+  | Replicate
+  | undefined {
+  // platform === undefined
+  if (params.model.startsWith("gpt")) {
+    return new ChatOpenAI({
+      modelName: params.model,
+      temperature: params.temperature,
+      maxTokens: params.maxTokens,
+    });
+  } else if (params.model.startsWith("claude")) {
+    return new ChatAnthropic({
+      modelName: params.model,
+      temperature: params.temperature,
+      maxTokens: params.maxTokens,
+    });
+  } else if (params.model.startsWith("gemini")) {
+    return new ChatGoogleGenerativeAI({
+      model: params.model,
+      temperature: params.temperature,
+      maxOutputTokens: params.maxTokens,
+    });
+  } else if (openModelMatch(params.model)) {
+    // platformを判定
+    // llamaなどのオープンモデルはモデル名ではなく、
+    // platform名で判定する
+    switch (params.platform) {
+      case undefined: {
+        throw new Error(
+          "open model needs platform parameter like `--platform=ollama`",
+        );
+      }
+      case "groq": {
+        return new ChatGroq({
+          model: params.model,
+          temperature: params.temperature,
+          maxTokens: params.maxTokens,
+        });
+      }
+      case "ollama": {
+        // ollamaの場合は、ollamaが動作するサーバーのbaseUrlが必須
+        if (params.url === undefined) {
+          throw new Error(
+            "ollama needs URL parameter with `--url http://your.host:11434`",
+          );
+        }
+        // params.modelの文字列にollamaModelsのうちの一部が含まれていたらtrue
+        // ollamaModelPatterns.some((p: RegExp) => p.test(params.model))
+        return new ChatOllama({
+          baseUrl: params.url, // http://yourIP:11434
+          model: params.model, // "llama2:7b-chat", codellama:13b-fast-instruct, elyza:13b-fast-instruct ...
+          temperature: params.temperature,
+          // maxTokens: params.maxTokens, // Not implemented yet on Langchain
+        });
+      }
+      case "replicate": {
+        // params.modelの文字列にreplicateModelsのうちの一部が含まれていたらtrue
+        if (
+          // replicateモデルのパターンに一致
+          openModelMatch(params.model) &&
+          // Model型に一致
+          (params.model as Model) === params.model
+        ) {
+          return new Replicate();
+        } else {
+          throw new Error(`model not found "${params.model}"`);
+        }
+      }
+    }
+  } else {
+    // not match any if-else if
+    throw new Error(`model not found "${params.model}"`);
+  }
+}
+
+/** replicateモデルのパターンに一致したらtrue */
+const openModelMatch = (model: string): boolean => {
+  const replicateModels = [
+    "llama",
+    "mistral",
+    "command-r",
+    "llava",
+    "mixtral",
+    "deepseek",
+    "phi",
+    "hermes",
+    "orca",
+    "falcon",
+    "dolphin",
+    "gemma",
+  ];
+  const replicateModelPatterns = replicateModels.map((m: string) =>
+    new RegExp(m)
+  );
+
+  return replicateModelPatterns.some((p: RegExp) => p.test(model));
+};
