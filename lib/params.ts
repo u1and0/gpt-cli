@@ -7,8 +7,9 @@ export const platformList = ["ollama", "groq", "replicate"] as const;
 type Platform = (typeof platformList)[number];
 
 /** Platform型であることを保証する */
-function isPlatform(value: string): value is Platform {
-  return platformList.includes(value as Platform);
+function isPlatform(value: unknown): value is Platform {
+  return typeof value === "string" &&
+    platformList.includes(value as Platform);
 }
 
 export type Params = {

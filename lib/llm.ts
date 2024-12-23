@@ -24,8 +24,10 @@ export type Message = AIMessage | HumanMessage | SystemMessage | never; //{ role
 type Model = `${string}/${string}`;
 
 /** Model型であることを保証する */
-const isModel = (value: string): value is Model => {
-  return value.includes("/") && value.split("/").length === 2;
+const isModel = (value: unknown): value is Model => {
+  return typeof value === "string" &&
+    value.includes("/") &&
+    value.split("/").length === 2;
 };
 
 /** Chatインスタンスを作成する

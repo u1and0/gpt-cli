@@ -191,7 +191,7 @@ Help (/commands):
 Help (@commands): Change model while asking.
 
 - @{ModelName}    Change LLM model
-- ex)   @gemini-1.5-pro any prompt...
+- ex)   @gemini-1.5-pro your question...
 
 ## Test
 
