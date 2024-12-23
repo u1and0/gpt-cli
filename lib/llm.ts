@@ -225,13 +225,24 @@ function llmConstructor(params: Params):
     // ...
   };
 
+  const platformMap: PlatfromMap = {
+    "groq": createGroqInstance,
+  };
+
   const createInstance = Object.keys(modelMap).find((regex) =>
     new RegExp(regex).test(params.model)
   );
-  if (createInstance === undefined) {
-    throw new Error(`unknown model ${params.model}`);
+
+  if (createInstance !== undefined) {
+    return modelMap[createInstance](params);
   }
-  return modelMap[createInstance](params);
+
+  const createInstanceFromPlatform = platformMap[params.platform];
+  if (createInstanceFromPlatform !== undefined) {
+    return platformMap[createInstanceFromPlatform](params);
+  }
+
+  throw new Error(`unknown model ${params.model}`);
 }
 
 // } else {
@@ -244,11 +255,6 @@ function llmConstructor(params: Params):
 //       );
 //     }
 //     case "groq": {
-//       return new ChatGroq({
-//         model: params.model,
-//         temperature: params.temperature,
-//         maxTokens: params.maxTokens,
-//       });
 //     }
 //     case "togetherai": {
 //       return new ChatTogetherAI({
@@ -315,5 +321,13 @@ const createGoogleGenerativeAIInstance = (params: Params) => {
     model: params.model,
     temperature: params.temperature,
     maxOutputTokens: params.maxTokens,
+  });
+};
+
+const createGroqInstance = (params: Params) => {
+  return new ChatGroq({
+    model: params.model,
+    temperature: params.temperature,
+    maxTokens: params.maxTokens,
   });
 };
