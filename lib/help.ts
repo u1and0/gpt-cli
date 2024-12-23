@@ -64,5 +64,11 @@ export const helpMessage =
           - llama3.1-70b-specdec
           - llama-3.2-1b-preview
           - llama-3.2-3b-preview
+      - [TogetherAI](https://api.together.ai/models)  ** Using before "$ ollama serve" locally **
+          - meta-llama/Llama-3.3-70B-Instruct-Turbo
+          - Qwen/QwQ-32B-Preview
+          - meta-llama/Llama-3.1-405B-Instruct-Turbo
+          - google/gemma-2-27b-it
+          - mistralai/Mistral-7B-Instruct-v0.3...
 ${commandMessage}
 `;

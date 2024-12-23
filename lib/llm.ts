@@ -3,6 +3,7 @@ import { ChatAnthropic } from "npm:@langchain/anthropic";
 import { ChatOllama } from "npm:@langchain/community/chat_models/ollama";
 import { ChatGoogleGenerativeAI } from "npm:@langchain/google-genai";
 import { ChatGroq } from "npm:@langchain/groq";
+import { ChatTogetherAI } from "npm:@langchain/community/chat_models/togetherai";
 import Replicate from "npm:replicate";
 import ServerSentEvent from "npm:replicate";
 import {
@@ -203,6 +204,7 @@ function llmConstructor(params: Params):
   | ChatOllama
   | ChatGoogleGenerativeAI
   | ChatGroq
+  | ChatTogetherAI
   | Replicate
   | undefined {
   if (params.model.startsWith("gpt")) {
@@ -229,10 +231,9 @@ function llmConstructor(params: Params):
       temperature: params.temperature,
       maxOutputTokens: params.maxTokens,
     });
-  } else if (openModelMatch(params.model)) {
-    // platformを判定
-    // llamaなどのオープンモデルはモデル名ではなく、
-    // platform名で判定する
+  } else {
+    // それ以外のモデルはオープンモデルとして platformを判定
+    // llamaなどのオープンモデルはモデル名ではなく、 platform名で判定する
     switch (params.platform) {
       case undefined: {
         throw new Error(
@@ -241,6 +242,13 @@ function llmConstructor(params: Params):
       }
       case "groq": {
         return new ChatGroq({
+          model: params.model,
+          temperature: params.temperature,
+          maxTokens: params.maxTokens,
+        });
+      }
+      case "togetherai": {
+        return new ChatTogetherAI({
           model: params.model,
           temperature: params.temperature,
           maxTokens: params.maxTokens,
@@ -272,31 +280,5 @@ function llmConstructor(params: Params):
         }
       }
     }
-  } else {
-    // not match any if-else if
-    throw new Error(`model not found "${params.model}"`);
   }
 }
-
-/** replicateモデルのパターンに一致したらtrue */
-const openModelMatch = (model: string): boolean => {
-  const replicateModels = [
-    "llama",
-    "mistral",
-    "command-r",
-    "llava",
-    "mixtral",
-    "deepseek",
-    "phi",
-    "hermes",
-    "orca",
-    "falcon",
-    "dolphin",
-    "gemma",
-  ];
-  const replicateModelPatterns = replicateModels.map((m: string) =>
-    new RegExp(m)
-  );
-
-  return replicateModelPatterns.some((p: RegExp) => p.test(model));
-};
