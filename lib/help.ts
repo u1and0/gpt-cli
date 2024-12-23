@@ -33,7 +33,10 @@ export const helpMessage =
     Models:
       - [OpenAI](https://platform.openai.com/docs/models)
         - gpt-4o-mini
-        - gpt-4o...
+        - gpt-4o
+        - o1
+        - o1-preview
+        - o1-mini...
       - [Anthropic](https://docs.anthropic.com/claude/docs/models-overview)
         - claude-3-5-sonnet-20241022
         - claude-3-5-sonnet-latest
@@ -55,5 +58,11 @@ export const helpMessage =
         - phi3
         - llama3:70b
         - mixtral:8x7b-text-v0.1-q5_K_M...
+      - [Groq](https://console.groq.com/docs/models)  ** Using before "$ ollama serve" locally **
+          - llama3-groq-70b-8192-tool-use-preview
+          - llama-3.3-70b-specdec
+          - llama3.1-70b-specdec
+          - llama-3.2-1b-preview
+          - llama-3.2-3b-preview
 ${commandMessage}
 `;

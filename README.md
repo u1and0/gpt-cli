@@ -154,7 +154,10 @@ A Questions for Model
 ## Models
 - [OpenAI](https://platform.openai.com/docs/models)
     - gpt-4o-mini
-    - gpt-4o...
+    - gpt-4o
+    - o1
+    - o1-preview
+    - o1-mini...
 - [Anthropic](https://docs.anthropic.com/claude/docs/models-overview)
     - claude-3-opus-20240229
     - claude-3-haiku-20240307
