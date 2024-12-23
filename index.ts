@@ -27,7 +27,7 @@ import { getUserInputInMessage, readStdin } from "./lib/input.ts";
 import { Params, parseArgs } from "./lib/params.ts";
 import { Command, extractAtModel, isCommand } from "./lib/command.ts";
 
-const VERSION = "v0.7.0";
+const VERSION = "v0.7.0r";
 
 const llmAsk = async (params: Params) => {
   params.debug && console.debug(params);
