@@ -205,12 +205,17 @@ function llmConstructor(params: Params):
   | ChatGroq
   | Replicate
   | undefined {
-  // platform === undefined
   if (params.model.startsWith("gpt")) {
     return new ChatOpenAI({
       modelName: params.model,
       temperature: params.temperature,
       maxTokens: params.maxTokens,
+    });
+  } else if (/^o[0-9]/.test(params.model)) {
+    return new ChatOpenAI({
+      modelName: params.model,
+      temperature: params.temperature,
+      // max_completion_tokens: params.maxTokens,
     });
   } else if (params.model.startsWith("claude")) {
     return new ChatAnthropic({
