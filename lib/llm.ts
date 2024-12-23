@@ -50,7 +50,19 @@ export class LLM {
       const replicateModelPatterns = replicateModels.map((m: string) =>
         new RegExp(m)
       );
-      if (params.url !== undefined) {
+
+      if (params.platform === "groq") {
+        return new ChatGroq({
+          model: params.model,
+          temperature: params.temperature,
+          maxOutputTokens: params.maxTokens,
+        });
+      }
+
+      if (params.platform === "ollama") {
+        if (params.url === undefined) {
+          throw new Error("ollama needs URL parameter use --url");
+        }
         // params.modelの文字列にollamaModelsのうちの一部が含まれていたらtrue
         // ollamaModelPatterns.some((p: RegExp) => p.test(params.model))
         return new ChatOllama({
@@ -59,7 +71,9 @@ export class LLM {
           temperature: params.temperature,
           // maxTokens: params.maxTokens, // Not implemented yet on Langchain
         });
-      } else if (params.model.startsWith("gpt")) {
+      }
+
+      if (params.model.startsWith("gpt") || params.model) {
         return new ChatOpenAI({
           modelName: params.model,
           temperature: params.temperature,
@@ -73,12 +87,6 @@ export class LLM {
         });
       } else if (params.model.startsWith("gemini")) {
         return new ChatGoogleGenerativeAI({
-          model: params.model,
-          temperature: params.temperature,
-          maxOutputTokens: params.maxTokens,
-        });
-      } else if (params.model.startsWith("llama")) {
-        return new ChatGroq({
           model: params.model,
           temperature: params.temperature,
           maxOutputTokens: params.maxTokens,
