@@ -22,7 +22,7 @@ export enum Command {
 }
 
 // Command 型の型ガード
-export const isCommand = (value: unknown): value is Command => {
+export const isSlashCommand = (value: unknown): value is Command => {
   return Object.values(Command).includes(value as Command);
 };
 
@@ -90,3 +90,15 @@ export function handleSlashCommand(
   // messagesをそのまま返す
   return messages;
 }
+
+/** @が最初につく場合を判定 */
+export const isAtCommand = (humanMessage: unknown): boolean => {
+  if (!(humanMessage instanceof HumanMessage)) {
+    return false;
+  }
+  const content = humanMessage.content.toString();
+  if (!content) {
+    return false;
+  }
+  return content.startsWith("@");
+};

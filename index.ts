@@ -29,7 +29,8 @@ import {
   Command,
   extractAtModel,
   handleSlashCommand,
-  isCommand,
+  isAtCommand,
+  isSlashCommand,
   modelStack,
 } from "./lib/command.ts";
 
@@ -39,17 +40,6 @@ const VERSION = "v1.0.0";
 function consoleInfoWithGrayText(s: string): void {
   console.info(`\x1b[90m${s}\x1b[0m`);
 }
-
-const isAtCommand = (humanMessage: unknown): boolean => {
-  if (!(humanMessage instanceof HumanMessage)) {
-    return false;
-  }
-  const content = humanMessage.content.toString();
-  if (!content) {
-    return false;
-  }
-  return content.startsWith("@");
-};
 
 const llmAsk = async (params: Params) => {
   params.debug && console.debug(params);
@@ -78,7 +68,7 @@ const llmAsk = async (params: Params) => {
       );
 
       // /commandを実行する
-      if (isCommand(humanMessage)) {
+      if (isSlashCommand(humanMessage)) {
         messages = handleSlashCommand(humanMessage, messages);
         continue;
       } else if (isAtCommand(humanMessage)) {
@@ -90,8 +80,18 @@ const llmAsk = async (params: Params) => {
         humanMessage = message || messages.at(-2) || new HumanMessage("");
 
         if (model) {
+          const modelBackup = params.model;
           params.model = model;
-          llm = new LLM(params);
+          try {
+            llm = new LLM(params);
+          } catch (error: unknown) {
+            // Modelの解釈に失敗したらエラーを吐いて
+            // 前のモデルに戻す
+            console.error(error);
+            params.model = modelBackup;
+            continue;
+          }
+          modelStack.push(model);
         }
       }
 
