@@ -17,7 +17,16 @@ import { Params } from "./params.ts";
 
 /** AIMessage */
 export type Message = AIMessage | HumanMessage | SystemMessage | never; //{ role: Role; content: string };
+
+/** replicateで使うモデルは以下の形式
+ * owner/name or owner/name:version
+ */
 type Model = `${string}/${string}`;
+
+/** Model型であることを保証する */
+const isModel = (value: string): value is Model => {
+  return value.includes("/") && value.split("/").length === 2;
+};
 
 /** Chatインスタンスを作成する
  * @param: Params - LLMのパラメータ、モデル */
@@ -247,16 +256,12 @@ function llmConstructor(params: Params):
         });
       }
       case "replicate": {
-        // params.modelの文字列にreplicateModelsのうちの一部が含まれていたらtrue
-        if (
-          // replicateモデルのパターンに一致
-          openModelMatch(params.model) &&
-          // Model型に一致
-          (params.model as Model) === params.model
-        ) {
+        if (isModel(params.model)) { // Model型に一致
           return new Replicate();
         } else {
-          throw new Error(`model not found "${params.model}"`);
+          throw new Error(
+            `Invalid reference to model version: "${params.model}". Expected format: owner/name or owner/name:version `,
+          );
         }
       }
     }

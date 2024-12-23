@@ -47,6 +47,8 @@ const llmAsk = async (params: Params) => {
       return;
     }
 
+    // 灰色のテキスト
+    console.info(`\x1b[90m${commandMessage}\x1b[0m`);
     // 対話的回答
     while (true) {
       // ユーザーからの入力待ち
