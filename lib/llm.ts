@@ -192,6 +192,17 @@ async function* streamEncoder(
   }
 }
 
+type ModelMap = {
+  [key: string]: (params: Params) =>
+    | ChatOpenAI
+    | ChatAnthropic
+    | ChatOllama
+    | ChatGoogleGenerativeAI
+    | ChatGroq
+    | ChatTogetherAI
+    | Replicate;
+};
+
 /** LLM クラスのtransratorプロパティをparamsから判定し、
  * LLM インスタンスを生成して返す。
  * @param{Params} params - command line arguments parsed by parseArgs()
@@ -205,80 +216,104 @@ function llmConstructor(params: Params):
   | ChatGoogleGenerativeAI
   | ChatGroq
   | ChatTogetherAI
-  | Replicate
-  | undefined {
-  if (params.model.startsWith("gpt")) {
-    return new ChatOpenAI({
-      modelName: params.model,
-      temperature: params.temperature,
-      maxTokens: params.maxTokens,
-    });
-  } else if (/^o[0-9]/.test(params.model)) {
-    return new ChatOpenAI({
-      modelName: params.model,
-      temperature: params.temperature,
-      // max_completion_tokens: params.maxTokens,
-    });
-  } else if (params.model.startsWith("claude")) {
-    return new ChatAnthropic({
-      modelName: params.model,
-      temperature: params.temperature,
-      maxTokens: params.maxTokens,
-    });
-  } else if (params.model.startsWith("gemini")) {
-    return new ChatGoogleGenerativeAI({
-      model: params.model,
-      temperature: params.temperature,
-      maxOutputTokens: params.maxTokens,
-    });
-  } else {
-    // それ以外のモデルはオープンモデルとして platformを判定
-    // llamaなどのオープンモデルはモデル名ではなく、 platform名で判定する
-    switch (params.platform) {
-      case undefined: {
-        throw new Error(
-          "open model needs platform parameter like `--platform=ollama`",
-        );
-      }
-      case "groq": {
-        return new ChatGroq({
-          model: params.model,
-          temperature: params.temperature,
-          maxTokens: params.maxTokens,
-        });
-      }
-      case "togetherai": {
-        return new ChatTogetherAI({
-          model: params.model,
-          temperature: params.temperature,
-          maxTokens: params.maxTokens,
-        });
-      }
-      case "ollama": {
-        // ollamaの場合は、ollamaが動作するサーバーのbaseUrlが必須
-        if (params.url === undefined) {
-          throw new Error(
-            "ollama needs URL parameter with `--url http://your.host:11434`",
-          );
-        }
-        // params.modelの文字列にollamaModelsのうちの一部が含まれていたらtrue
-        // ollamaModelPatterns.some((p: RegExp) => p.test(params.model))
-        return new ChatOllama({
-          baseUrl: params.url, // http://yourIP:11434
-          model: params.model, // "llama2:7b-chat", codellama:13b-fast-instruct, elyza:13b-fast-instruct ...
-          temperature: params.temperature,
-          // maxTokens: params.maxTokens, // Not implemented yet on Langchain
-        });
-      }
-      case "replicate": {
-        if (isModel(params.model)) { // Model型に一致
-          return new Replicate();
-        } else {
-          throw new Error(
-            `Invalid reference to model version: "${params.model}". Expected format: owner/name or owner/name:version `,
-          );
-        }
-      }
-    }
+  | Replicate {
+  const modelMap: ModelMap = {
+    "^gpt": createOpenAIInstance,
+    "^o[0-9]": createOpenAIOModelINstance,
+    "^claude": createAnthropicInstance,
+    "^gemini": createGoogleGenerativeAIInstance,
+    // ...
+  };
+
+  const createInstance = Object.keys(modelMap).find((regex) =>
+    new RegExp(regex).test(params.model)
+  );
+  if (createInstance === undefined) {
+    throw new Error(`unknown model ${params.model}`);
   }
+  return modelMap[createInstance](params);
 }
+
+// } else {
+//   // それ以外のモデルはオープンモデルとして platformを判定
+//   // llamaなどのオープンモデルはモデル名ではなく、 platform名で判定する
+//   switch (params.platform) {
+//     case undefined: {
+//       throw new Error(
+//         "open model needs platform parameter like `--platform=ollama`",
+//       );
+//     }
+//     case "groq": {
+//       return new ChatGroq({
+//         model: params.model,
+//         temperature: params.temperature,
+//         maxTokens: params.maxTokens,
+//       });
+//     }
+//     case "togetherai": {
+//       return new ChatTogetherAI({
+//         model: params.model,
+//         temperature: params.temperature,
+//         maxTokens: params.maxTokens,
+//       });
+//     }
+//     case "ollama": {
+//       // ollamaの場合は、ollamaが動作するサーバーのbaseUrlが必須
+//       if (params.url === undefined) {
+//         throw new Error(
+//           "ollama needs URL parameter with `--url http://your.host:11434`",
+//         );
+//       }
+//       // params.modelの文字列にollamaModelsのうちの一部が含まれていたらtrue
+//       // ollamaModelPatterns.some((p: RegExp) => p.test(params.model))
+//       return new ChatOllama({
+//         baseUrl: params.url, // http://yourIP:11434
+//         model: params.model, // "llama2:7b-chat", codellama:13b-fast-instruct, elyza:13b-fast-instruct ...
+//         temperature: params.temperature,
+//         // maxTokens: params.maxTokens, // Not implemented yet on Langchain
+//       });
+//     }
+//     case "replicate": {
+//       if (isModel(params.model)) { // Model型に一致
+//         return new Replicate();
+//       } else {
+//         throw new Error(
+//           `Invalid reference to model version: "${params.model}". Expected format: owner/name or owner/name:version `,
+//         );
+//       }
+//     }
+//   }
+// }
+// }
+
+const createOpenAIInstance = (params: Params): ChatOpenAI => {
+  return new ChatOpenAI({
+    modelName: params.model,
+    temperature: params.temperature,
+    maxTokens: params.maxTokens,
+  });
+};
+
+const createOpenAIOModelINstance = (params: Params) => {
+  return new ChatOpenAI({
+    modelName: params.model,
+    temperature: params.temperature,
+    // max_completion_tokens: params.maxTokens,
+  });
+};
+
+const createAnthropicInstance = (params: Params) => {
+  return new ChatAnthropic({
+    modelName: params.model,
+    temperature: params.temperature,
+    maxTokens: params.maxTokens,
+  });
+};
+
+const createGoogleGenerativeAIInstance = (params: Params) => {
+  return new ChatGoogleGenerativeAI({
+    model: params.model,
+    temperature: params.temperature,
+    maxOutputTokens: params.maxTokens,
+  });
+};
