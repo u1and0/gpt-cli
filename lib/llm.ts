@@ -40,6 +40,7 @@ export class LLM {
     | ChatOllama
     | ChatGoogleGenerativeAI
     | ChatGroq
+    | ChatTogetherAI
     | Replicate
     | undefined;
 
@@ -294,7 +295,7 @@ const createOpenAIInstance = (params: Params): ChatOpenAI => {
   });
 };
 
-const createOpenAIOModelINstance = (params: Params) => {
+const createOpenAIOModelINstance = (params: Params): ChatOpenAI => {
   return new ChatOpenAI({
     modelName: params.model,
     temperature: params.temperature,
@@ -302,7 +303,7 @@ const createOpenAIOModelINstance = (params: Params) => {
   });
 };
 
-const createAnthropicInstance = (params: Params) => {
+const createAnthropicInstance = (params: Params): ChatAnthropic => {
   return new ChatAnthropic({
     modelName: params.model,
     temperature: params.temperature,
@@ -310,7 +311,9 @@ const createAnthropicInstance = (params: Params) => {
   });
 };
 
-const createGoogleGenerativeAIInstance = (params: Params) => {
+const createGoogleGenerativeAIInstance = (
+  params: Params,
+): ChatGoogleGenerativeAI => {
   return new ChatGoogleGenerativeAI({
     model: params.model,
     temperature: params.temperature,
