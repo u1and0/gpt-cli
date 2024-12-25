@@ -10,7 +10,6 @@ export type Params = {
   temperature: number;
   maxTokens: number;
   url?: string;
-  platform?: Platform;
   systemPrompt?: string;
   content?: string;
 };
@@ -40,24 +39,12 @@ export function parseArgs(): Params {
       "temperature",
       "x",
       "max-tokens",
-      "p",
-      "platform",
     ],
     default: {
       temperature: 1.0,
       "max-tokens": 1000,
     },
   });
-
-  // platform の値を検証
-  const platform = args.p || args.platform;
-  if (platform !== undefined && !isPlatform(platform)) {
-    throw new Error(
-      `You must choose one of these Platforms : --platform=${
-        platformList.join(", ")
-      }`,
-    );
-  }
 
   return {
     // boolean option
@@ -70,7 +57,6 @@ export function parseArgs(): Params {
     maxTokens: parseInt(String(args.x || args["max-tokens"])),
     temperature: parseFloat(String(args.t || args.temperature)),
     url: args.u || args.url || undefined,
-    platform: platform as Platform | undefined,
     systemPrompt: args.s || args["system-prompt"] || undefined,
     content: args._.length > 0 ? args._.join(" ") : undefined, // 残りの引数をすべてスペースで結合
   };
