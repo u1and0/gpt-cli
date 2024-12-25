@@ -76,6 +76,7 @@ Deno.test("Should create a ChatOllama instance for an Ollama model", () => {
     debug: false,
     model: "llama:7b-chat",
     url: "http://yourIP:11434",
+    platform: "ollama",
     temperature: 0.7,
     maxTokens: 2048,
   };
@@ -94,6 +95,7 @@ Deno.test("Should create a Replicate instance for an Replicate model", () => {
     debug: false,
     model: "meta/llama2:7b-chat",
     url: undefined,
+    platform: "replicate",
     temperature: 0.7,
     maxTokens: 2048,
   };
@@ -114,7 +116,11 @@ Deno.test("Should throw an error for an unknown model", () => {
     temperature: 0.7,
     maxTokens: 2048,
   };
-  assertThrows(() => new LLM(params), Error, 'model not found "unknown-model"');
+  assertThrows(
+    () => new LLM(params),
+    Error,
+    "You must choose one of these Platforms : --platform=ollama, groq, togetherai, replicate",
+  );
 });
 
 Deno.test("Replicate prompt generator", () => {

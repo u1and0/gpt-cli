@@ -146,7 +146,7 @@ export class LLM {
  *
  * See also test/llm_test.ts
  */
-function generatePrompt(messages: Message[]): string {
+export function generatePrompt(messages: Message[]): string {
   // SystemMessageを取得
   const sys = messages.find((m: Message) => m instanceof SystemMessage);
   const systemPrompt = `<<SYS>>
@@ -193,14 +193,34 @@ async function* streamEncoder(
 }
 
 type ModelMap = {
-  [key: string]: (params: Params) =>
-    | ChatOpenAI
-    | ChatAnthropic
-    | ChatOllama
-    | ChatGoogleGenerativeAI
-    | ChatGroq
-    | ChatTogetherAI
-    | Replicate;
+  [key: string]: (
+    params: Params,
+  ) => ChatOpenAI | ChatAnthropic | ChatGoogleGenerativeAI;
+};
+
+// Platformオプション
+// llamaモデルは共通のオープンモデルなので、
+// どこで実行するかをオプションで決める必要がある
+export const platformList = [
+  "ollama",
+  "groq",
+  "togetherai",
+  "replicate",
+] as const;
+
+export type Platform = (typeof platformList)[number];
+
+/** Platform型であることを保証する */
+export function isPlatform(value: unknown): value is Platform {
+  return typeof value === "string" &&
+    platformList.includes(value as Platform);
+}
+
+/** Platformごとに返すモデルのインスタンスを返す関数 */
+type PlatformMap = {
+  [key in Platform]: (
+    params: Params,
+  ) => ChatGroq | ChatTogetherAI | ChatOllama | Replicate;
 };
 
 /** LLM クラスのtransratorプロパティをparamsから判定し、
@@ -212,85 +232,59 @@ type ModelMap = {
 function llmConstructor(params: Params):
   | ChatOpenAI
   | ChatAnthropic
-  | ChatOllama
   | ChatGoogleGenerativeAI
   | ChatGroq
   | ChatTogetherAI
+  | ChatOllama
   | Replicate {
   const modelMap: ModelMap = {
     "^gpt": createOpenAIInstance,
     "^o[0-9]": createOpenAIOModelINstance,
     "^claude": createAnthropicInstance,
     "^gemini": createGoogleGenerativeAIInstance,
-    // ...
-  };
+  } as const;
 
-  const platformMap: PlatfromMap = {
+  const platformMap: PlatformMap = {
     "groq": createGroqInstance,
-  };
+    "togetherai": createTogetherAIInstance,
+    "ollama": createOllamaInstance,
+    "replicate": createReplicateInstance,
+  } as const;
 
+  // Closed modelがインスタンス化できるか
+  // 正規表現でマッチング
   const createInstance = Object.keys(modelMap).find((regex) =>
     new RegExp(regex).test(params.model)
   );
 
+  // Closed modelが見つかればそれをインスタンス化して返す
   if (createInstance !== undefined) {
     return modelMap[createInstance](params);
   }
 
-  const createInstanceFromPlatform = platformMap[params.platform];
-  if (createInstanceFromPlatform !== undefined) {
-    return platformMap[createInstanceFromPlatform](params);
+  // Closed modelでマッチするモデルが見つからなかった場合、
+  // Open model がインスタンス化できるか。
+  //
+  // llamaなどのオープンモデルはモデル名ではなく、
+  // platform名で判定する
+  //
+  // platformがオプションに指定されていなければエラー
+  if (params.platform === undefined) {
+    throw new Error(
+      `You must choose one of these Platforms : --platform=${
+        platformList.join(", ")
+      }`,
+    );
   }
 
-  throw new Error(`unknown model ${params.model}`);
-}
+  // platformMap からオプションに指定したものがなければエラー
+  const createInstanceFromPlatform = platformMap[params.platform];
+  if (createInstanceFromPlatform === undefined) {
+    throw new Error(`unknown model ${params.model}`);
+  }
 
-// } else {
-//   // それ以外のモデルはオープンモデルとして platformを判定
-//   // llamaなどのオープンモデルはモデル名ではなく、 platform名で判定する
-//   switch (params.platform) {
-//     case undefined: {
-//       throw new Error(
-//         "open model needs platform parameter like `--platform=ollama`",
-//       );
-//     }
-//     case "groq": {
-//     }
-//     case "togetherai": {
-//       return new ChatTogetherAI({
-//         model: params.model,
-//         temperature: params.temperature,
-//         maxTokens: params.maxTokens,
-//       });
-//     }
-//     case "ollama": {
-//       // ollamaの場合は、ollamaが動作するサーバーのbaseUrlが必須
-//       if (params.url === undefined) {
-//         throw new Error(
-//           "ollama needs URL parameter with `--url http://your.host:11434`",
-//         );
-//       }
-//       // params.modelの文字列にollamaModelsのうちの一部が含まれていたらtrue
-//       // ollamaModelPatterns.some((p: RegExp) => p.test(params.model))
-//       return new ChatOllama({
-//         baseUrl: params.url, // http://yourIP:11434
-//         model: params.model, // "llama2:7b-chat", codellama:13b-fast-instruct, elyza:13b-fast-instruct ...
-//         temperature: params.temperature,
-//         // maxTokens: params.maxTokens, // Not implemented yet on Langchain
-//       });
-//     }
-//     case "replicate": {
-//       if (isModel(params.model)) { // Model型に一致
-//         return new Replicate();
-//       } else {
-//         throw new Error(
-//           `Invalid reference to model version: "${params.model}". Expected format: owner/name or owner/name:version `,
-//         );
-//       }
-//     }
-//   }
-// }
-// }
+  return createInstanceFromPlatform(params);
+}
 
 const createOpenAIInstance = (params: Params): ChatOpenAI => {
   return new ChatOpenAI({
@@ -324,10 +318,43 @@ const createGoogleGenerativeAIInstance = (params: Params) => {
   });
 };
 
-const createGroqInstance = (params: Params) => {
+const createGroqInstance = (params: Params): ChatGroq => {
   return new ChatGroq({
     model: params.model,
     temperature: params.temperature,
     maxTokens: params.maxTokens,
   });
+};
+
+const createTogetherAIInstance = (params: Params): ChatTogetherAI => {
+  return new ChatTogetherAI({
+    model: params.model,
+    temperature: params.temperature,
+    maxTokens: params.maxTokens,
+  });
+};
+
+const createOllamaInstance = (params: Params): ChatOllama => {
+  // ollamaの場合は、ollamaが動作するサーバーのbaseUrlが必須
+  if (params.url === undefined) {
+    throw new Error(
+      "ollama needs URL parameter with `--url http://your.host:11434`",
+    );
+  }
+  return new ChatOllama({
+    baseUrl: params.url, // http://yourIP:11434
+    model: params.model, // "llama2:7b-chat", codellama:13b-fast-instruct, elyza:13b-fast-instruct ...
+    temperature: params.temperature,
+    // maxTokens: params.maxTokens, // Not implemented yet on Langchain
+  });
+};
+
+const createReplicateInstance = (params: Params): Replicate => {
+  if (isModel(params.model)) { // Model型に一致
+    return new Replicate();
+  } else {
+    throw new Error(
+      `Invalid reference to model version: "${params.model}". Expected format: owner/name or owner/name:version `,
+    );
+  }
 };
