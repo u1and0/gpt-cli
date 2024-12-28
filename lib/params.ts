@@ -1,21 +1,5 @@
 import { parse } from "https://deno.land/std/flags/mod.ts";
-
-// Platformオプション
-// llamaモデルは共通のオープンモデルなので、
-// どこで実行するかをオプションで決める必要がある
-export const platformList = [
-  "ollama",
-  "groq",
-  "togetherai",
-  "replicate",
-] as const;
-type Platform = (typeof platformList)[number];
-
-/** Platform型であることを保証する */
-function isPlatform(value: unknown): value is Platform {
-  return typeof value === "string" &&
-    platformList.includes(value as Platform);
-}
+import { isPlatform, Platform, platformList } from "./llm.ts";
 
 export type Params = {
   version: boolean;
@@ -68,7 +52,11 @@ export function parseArgs(): Params {
   // platform の値を検証
   const platform = args.p || args.platform;
   if (platform !== undefined && !isPlatform(platform)) {
-    throw new Error(`Platform must be one of: ${platformList.join(", ")}`);
+    throw new Error(
+      `You must choose one of these Platforms : --platform=${
+        platformList.join(", ")
+      }`,
+    );
   }
 
   return {
