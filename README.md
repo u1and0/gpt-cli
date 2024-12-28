@@ -142,7 +142,6 @@ $ gpt -m gpt-4o-mini -x 1000 -t 1.0 [OPTIONS] PROMPT
 | -x | --max\_tokens | number | Number of AI answer tokens (default 1000) |
 | -t | --temperature | number | Higher number means more creative answers, lower number means more exact answers (default 1.0) |
 | -u | --url | string | URL and port number for ollama server |
-| -p | --platform |  string | Platform choose from ollama, groq, replicate |
 | -s | --system-prompt | string | The first instruction given to guide the AI model's response. |
 | -n | --no-chat | boolean | No chat mode. Just one time question and answer. |
 
