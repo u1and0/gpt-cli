@@ -240,7 +240,7 @@ function llmConstructor(params: Params):
   | Replicate {
   const modelMap: ModelMap = {
     "^gpt": createOpenAIInstance,
-    "^o[0-9]": createOpenAIOModelINstance,
+    "^o[0-9]": createOpenAIOModelInstance,
     "^claude": createAnthropicInstance,
     "^gemini": createGoogleGenerativeAIInstance,
   } as const;
@@ -268,20 +268,20 @@ function llmConstructor(params: Params):
   //
   // llamaなどのオープンモデルはモデル名ではなく、
   // platform名で判定する
-  //
+
+  // platformが特定できないときは空文字が返る
+  const { platform, model } = parsePlatform(params.model);
   // platformがオプションに指定されていなければエラー
-  if (params.platform === undefined) {
+  if (!isPlatform(platform)) {
     throw new Error(
-      `You must choose one of these Platforms : --platform=${
-        platformList.join(", ")
-      }`,
+      `unknown platform "${platform}", choose from ${platformList.join(", ")}`,
     );
   }
 
   // platformMap からオプションに指定したものがなければエラー
-  const createInstanceFromPlatform = platformMap[params.platform];
+  const createInstanceFromPlatform = platformMap[platform];
   if (createInstanceFromPlatform === undefined) {
-    throw new Error(`unknown model ${params.model}`);
+    throw new Error(`unknown model ${model}`);
   }
 
   return createInstanceFromPlatform(params);
@@ -295,7 +295,7 @@ const createOpenAIInstance = (params: Params): ChatOpenAI => {
   });
 };
 
-const createOpenAIOModelINstance = (params: Params): ChatOpenAI => {
+const createOpenAIOModelInstance = (params: Params): ChatOpenAI => {
   return new ChatOpenAI({
     modelName: params.model,
     temperature: params.temperature,
@@ -322,16 +322,18 @@ const createGoogleGenerativeAIInstance = (
 };
 
 const createGroqInstance = (params: Params): ChatGroq => {
+  const { platform: _platform, model } = parsePlatform(params.model);
   return new ChatGroq({
-    model: params.model,
+    model: model,
     temperature: params.temperature,
     maxTokens: params.maxTokens,
   });
 };
 
 const createTogetherAIInstance = (params: Params): ChatTogetherAI => {
+  const { platform: _platform, model } = parsePlatform(params.model);
   return new ChatTogetherAI({
-    model: params.model,
+    model: model,
     temperature: params.temperature,
     maxTokens: params.maxTokens,
   });
@@ -344,20 +346,38 @@ const createOllamaInstance = (params: Params): ChatOllama => {
       "ollama needs URL parameter with `--url http://your.host:11434`",
     );
   }
+  const { platform: _platform, model } = parsePlatform(params.model);
   return new ChatOllama({
     baseUrl: params.url, // http://yourIP:11434
-    model: params.model, // "llama2:7b-chat", codellama:13b-fast-instruct, elyza:13b-fast-instruct ...
+    model: model, // "llama2:7b-chat", codellama:13b-fast-instruct, elyza:13b-fast-instruct ...
     temperature: params.temperature,
     // maxTokens: params.maxTokens, // Not implemented yet on Langchain
   });
 };
 
 const createReplicateInstance = (params: Params): Replicate => {
-  if (isModel(params.model)) { // Model型に一致
+  const { platform: _platform, model } = parsePlatform(params.model);
+  if (isModel(model)) { // Model型に一致
     return new Replicate();
   } else {
     throw new Error(
-      `Invalid reference to model version: "${params.model}". Expected format: owner/name or owner/name:version `,
+      `Invalid reference to model version: "${model}". Expected format: owner/name or owner/name:version `,
     );
   }
 };
+
+/** １つ目の"/"で引数を分割して、
+ * １つ目をplatformとして、
+ * 2つめ移行をmodelとして返す
+ */
+export function parsePlatform(
+  model: string,
+): { platform: string; model: string } {
+  const parts = model.split("/");
+  if (parts.length < 2) {
+    return { platform: "", model: model };
+  }
+  const platform = parts[0];
+  const modelName = parts.slice(1).join("/");
+  return { platform, model: modelName };
+}
