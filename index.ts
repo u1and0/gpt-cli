@@ -77,6 +77,7 @@ const llmAsk = async (params: Params) => {
           humanMessage.content.toString(),
         );
         // モデル名指定以外のプロンプトがなければ前のプロンプトを引き継ぐ。
+        // 前のプロンプトもなければ空のHumanMessageを渡す
         humanMessage = message || messages.at(-2) || new HumanMessage("");
 
         // @コマンドで指定したモデルのパースに成功したら
