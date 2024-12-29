@@ -22,27 +22,22 @@ export type Message = AIMessage | HumanMessage | SystemMessage | never; //{ role
 /** replicateで使うモデルは以下の形式
  * owner/name or owner/name:version
  */
-type Model = `${string}/${string}`;
+type ReplicateModel = `${string}/${string}`;
 
-/** Model型であることを保証する */
-const isModel = (value: unknown): value is Model => {
+/** ReplicateModel型であることを保証する */
+const isReplicateModel = (value: unknown): value is ReplicateModel => {
   return typeof value === "string" &&
     value.includes("/") &&
     value.split("/").length === 2;
 };
 
+type OpenModel = ChatGroq | ChatTogetherAI | ChatOllama | Replicate;
+type CloseModel = ChatOpenAI | ChatAnthropic | ChatGoogleGenerativeAI;
+
 /** Chatインスタンスを作成する
  * @param: Params - LLMのパラメータ、モデル */
 export class LLM {
-  public readonly transrator:
-    | ChatOpenAI
-    | ChatAnthropic
-    | ChatOllama
-    | ChatGoogleGenerativeAI
-    | ChatGroq
-    | ChatTogetherAI
-    | Replicate
-    | undefined;
+  public readonly transrator?: OpenModel | CloseModel;
 
   constructor(private readonly params: Params) {
     this.transrator = llmConstructor(params);
@@ -95,7 +90,7 @@ export class LLM {
     } else {
       const input = this.generateInput(messages);
       return (this.transrator as Replicate).stream(
-        this.params.model as Model,
+        this.params.model as ReplicateModel,
         { input },
       ) as AsyncGenerator<ServerSentEvent>;
     }
@@ -193,11 +188,7 @@ async function* streamEncoder(
   }
 }
 
-type ModelMap = {
-  [key: string]: (
-    params: Params,
-  ) => ChatOpenAI | ChatAnthropic | ChatGoogleGenerativeAI;
-};
+type ModelMap = { [key: string]: (params: Params) => CloseModel };
 
 // Platformオプション
 // llamaモデルは共通のオープンモデルなので、
@@ -218,11 +209,7 @@ export function isPlatform(value: unknown): value is Platform {
 }
 
 /** Platformごとに返すモデルのインスタンスを返す関数 */
-type PlatformMap = {
-  [key in Platform]: (
-    params: Params,
-  ) => ChatGroq | ChatTogetherAI | ChatOllama | Replicate;
-};
+type PlatformMap = { [key in Platform]: (params: Params) => OpenModel };
 
 /** LLM クラスのtransratorプロパティをparamsから判定し、
  * LLM インスタンスを生成して返す。
@@ -230,14 +217,7 @@ type PlatformMap = {
  * @return : LLM model
  * @throws{Error} model not found "${params.model}"
  */
-function llmConstructor(params: Params):
-  | ChatOpenAI
-  | ChatAnthropic
-  | ChatGoogleGenerativeAI
-  | ChatGroq
-  | ChatTogetherAI
-  | ChatOllama
-  | Replicate {
+function llmConstructor(params: Params): OpenModel | CloseModel {
   const modelMap: ModelMap = {
     "^gpt": createOpenAIInstance,
     "^o[0-9]": createOpenAIOModelInstance,
@@ -322,7 +302,7 @@ const createGoogleGenerativeAIInstance = (
 };
 
 const createGroqInstance = (params: Params): ChatGroq => {
-  const { platform: _platform, model } = parsePlatform(params.model);
+  const { platform: _, model } = parsePlatform(params.model);
   return new ChatGroq({
     model: model,
     temperature: params.temperature,
@@ -331,7 +311,7 @@ const createGroqInstance = (params: Params): ChatGroq => {
 };
 
 const createTogetherAIInstance = (params: Params): ChatTogetherAI => {
-  const { platform: _platform, model } = parsePlatform(params.model);
+  const { platform: _, model } = parsePlatform(params.model);
   return new ChatTogetherAI({
     model: model,
     temperature: params.temperature,
@@ -346,7 +326,7 @@ const createOllamaInstance = (params: Params): ChatOllama => {
       "ollama needs URL parameter with `--url http://your.host:11434`",
     );
   }
-  const { platform: _platform, model } = parsePlatform(params.model);
+  const { platform: _, model } = parsePlatform(params.model);
   return new ChatOllama({
     baseUrl: params.url, // http://yourIP:11434
     model: model, // "llama2:7b-chat", codellama:13b-fast-instruct, elyza:13b-fast-instruct ...
@@ -356,8 +336,8 @@ const createOllamaInstance = (params: Params): ChatOllama => {
 };
 
 const createReplicateInstance = (params: Params): Replicate => {
-  const { platform: _platform, model } = parsePlatform(params.model);
-  if (isModel(model)) { // Model型に一致
+  const { platform: _, model } = parsePlatform(params.model);
+  if (isReplicateModel(model)) {
     return new Replicate();
   } else {
     throw new Error(
