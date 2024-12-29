@@ -113,6 +113,7 @@ Deno.test("Should create a Replicate instance for an Replicate model", () => {
 });
 
 Deno.test("Should create a Groq instance for an Groq model", () => {
+  Deno.env.set("GROQ_API_KEY", "sk-11111");
   const params = {
     version: false,
     help: false,
@@ -133,6 +134,7 @@ Deno.test("Should create a Groq instance for an Groq model", () => {
 });
 
 Deno.test("Should create a TogetherAI instance for an TogetherAI model", () => {
+  Deno.env.set("TOGETHER_AI_API_KEY", "sk-11111");
   const params = {
     version: false,
     help: false,

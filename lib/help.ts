@@ -1,5 +1,3 @@
-import { platformList } from "./llm.ts";
-
 export const commandMessage = `
 Ctrl+D to confirm input.
 

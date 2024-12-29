@@ -1,5 +1,4 @@
 import { parse } from "https://deno.land/std/flags/mod.ts";
-import { isPlatform, Platform, platformList } from "./llm.ts";
 
 export type Params = {
   version: boolean;
