@@ -10,10 +10,16 @@ Command-line interface  that enables interactive chat with LLMs.
 # Quick start
 
 ```
+# Install binary
 $ curl -LO https://github.com/u1and0/gpt-cli/releases/download/v0.8.0/gpt-cli-linux.zip
 $ unzip gpt-cli.zip
 $ chmod 755 gpt
 $ sudo ln -s ./gpt /usr/bin
+
+# Setup API key
+$ export OPENAI_API_KEY='sk-*****'
+
+# Run
 $ gpt
 Ctrl-D to confirm input, q or exit to end chat
 You: hi
