@@ -50,11 +50,11 @@ jobs:
       - name: Run linter
         run: deno lint index.ts lib/*.ts test/*.ts
 
-      # - name: Run checker
-      #   run: deno check index.ts lib/*.ts test/*.ts
+      - name: Run checker
+        run: deno check index.ts lib/*.ts test/*.ts
 
       - name: Run tests
-        run: deno test --allow-env --no-check test/*.ts
+        run: deno test --allow-env test/*.ts
 
   builder:
     name: compile & publish artifact
@@ -63,12 +63,22 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: linux
+          - name: linux-x64
             vm: ubuntu-latest
-          - name: macosx
+            target: x86_64-unknown-linux-gnu
+          - name: linux-arm64
+            vm: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+          - name: macosx-x64
             vm: macos-latest
-          - name: windows
+            target: x86_64-apple-darwin
+          - name: macosx-arm64
+            vm: macos-latest
+            target: aarch64-apple-darwin
+          - name: windows-x64
             vm: windows-latest
+            target: x86_64-pc-windows-msvc
+
 
     steps:
       - name: Setup repo
@@ -81,7 +91,7 @@ jobs:
           deno-version: v2.x.x
 
       - name: Build binary
-        run: deno compile --allow-net --allow-env --output gpt index.ts
+        run: deno compile --allow-net --allow-env --target ${{ matrix.target }} --output gpt index.ts
 
       - name: Binary upload (Unix, MacOS)
         # Artifact upload only occurs when tag matches
@@ -92,7 +102,6 @@ jobs:
           path: gpt
 
       - name: Binary upload (Windows)
-        if: runner.os == 'Windows' && startsWith(github.ref, 'refs/tags/v')
         uses: actions/upload-artifact@v4
         with:
           name: gpt-cli-${{ matrix.name }}
