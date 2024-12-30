@@ -34,7 +34,7 @@ import {
   modelStack,
 } from "./lib/command.ts";
 
-const VERSION = "v1.0.0";
+const VERSION = "v0.8.0";
 
 /** 灰色のテキストで表示 */
 function consoleInfoWithGrayText(s: string): void {
@@ -77,16 +77,19 @@ const llmAsk = async (params: Params) => {
           humanMessage.content.toString(),
         );
         // モデル名指定以外のプロンプトがなければ前のプロンプトを引き継ぐ。
+        // 前のプロンプトもなければ空のHumanMessageを渡す
         humanMessage = message || messages.at(-2) || new HumanMessage("");
 
+        // @コマンドで指定したモデルのパースに成功したら
+        // モデルスタックに追加して新しいモデルで会話を始める。
+        // パースに失敗したら、以前のモデルを復元してエラー表示して
+        // 前のモデルに戻して会話を継続。
         if (model) {
           const modelBackup = params.model;
           params.model = model;
           try {
             llm = new LLM(params);
           } catch (error: unknown) {
-            // Modelの解釈に失敗したらエラーを吐いて
-            // 前のモデルに戻す
             console.error(error);
             params.model = modelBackup;
             continue;
