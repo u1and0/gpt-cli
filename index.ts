@@ -25,9 +25,21 @@ import { commandMessage, helpMessage } from "./lib/help.ts";
 import { LLM, Message } from "./lib/llm.ts";
 import { getUserInputInMessage, readStdin } from "./lib/input.ts";
 import { Params, parseArgs } from "./lib/params.ts";
-import { Command, extractAtModel, isCommand } from "./lib/command.ts";
+import {
+  Command,
+  extractAtModel,
+  handleSlashCommand,
+  isAtCommand,
+  isSlashCommand,
+  modelStack,
+} from "./lib/command.ts";
 
-const VERSION = "v0.7.0";
+const VERSION = "v0.8.0";
+
+/** 灰色のテキストで表示 */
+function consoleInfoWithGrayText(s: string): void {
+  console.info(`\x1b[90m${s}\x1b[0m`);
+}
 
 const llmAsk = async (params: Params) => {
   params.debug && console.debug(params);
@@ -48,51 +60,46 @@ const llmAsk = async (params: Params) => {
     }
 
     // 対話的回答
+    consoleInfoWithGrayText(commandMessage);
     while (true) {
       // ユーザーからの入力待ち
-      let humanMessage = await getUserInputInMessage(messages);
+      let humanMessage: HumanMessage | Command = await getUserInputInMessage(
+        messages,
+      );
 
-      /** /commandを実行する
-       * Help: ヘルプメッセージを出力する
-       * Clear: systemp promptを残してコンテキストを削除する
-       * Bye: コマンドを終了する
-       */
-      if (isCommand(humanMessage)) {
-        switch (humanMessage) {
-          case Command.Help: {
-            console.log(commandMessage);
-            continue; // Slashコマンドを処理したら次のループへ
-          }
-          case Command.Clear: {
-            // system promptが設定されていれば、それを残してコンテキストクリア
-            console.log("Context clear successful");
-            messages = params.systemPrompt
-              ? [new SystemMessage(params.systemPrompt)]
-              : [];
-            continue; // Slashコマンドを処理したら次のループへ
-          }
-          case Command.Bye: {
-            Deno.exit(0);
-          }
-        }
-      } else if (humanMessage?.content.toString().startsWith("@")) {
+      // /commandを実行する
+      if (isSlashCommand(humanMessage)) {
+        messages = handleSlashCommand(humanMessage, messages);
+        continue;
+      } else if (isAtCommand(humanMessage)) {
         // @Model名で始まるinput はllmモデルを再指定する
         const { model, message } = extractAtModel(
           humanMessage.content.toString(),
         );
         // モデル名指定以外のプロンプトがなければ前のプロンプトを引き継ぐ。
-        humanMessage = message ? message : messages.at(-2);
+        // 前のプロンプトもなければ空のHumanMessageを渡す
+        humanMessage = message || messages.at(-2) || new HumanMessage("");
+
+        // @コマンドで指定したモデルのパースに成功したら
+        // モデルスタックに追加して新しいモデルで会話を始める。
+        // パースに失敗したら、以前のモデルを復元してエラー表示して
+        // 前のモデルに戻して会話を継続。
         if (model) {
+          const modelBackup = params.model;
           params.model = model;
-          llm = new LLM(params);
+          try {
+            llm = new LLM(params);
+          } catch (error: unknown) {
+            console.error(error);
+            params.model = modelBackup;
+            continue;
+          }
+          modelStack.push(model);
         }
       }
 
-      // 最後のメッセージがHumanMessageではない場合
       // ユーザーからの問いを追加
-      if (humanMessage) {
-        messages.push(humanMessage);
-      }
+      messages.push(humanMessage);
       // console.debug(messages);
       // AIからの回答を追加
       const aiMessage = await llm.ask(messages);
@@ -119,6 +126,8 @@ const main = async () => {
     Deno.exit(0);
   }
 
+  // modelStackに使用した最初のモデルを追加
+  modelStack.push(params.model);
   // 標準入力をチェック
   const stdinContent: string | null = await readStdin();
   if (stdinContent) {

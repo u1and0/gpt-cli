@@ -1,4 +1,5 @@
 import { parse } from "https://deno.land/std/flags/mod.ts";
+
 export type Params = {
   version: boolean;
   help: boolean;
@@ -43,6 +44,7 @@ export function parseArgs(): Params {
       "max-tokens": 1000,
     },
   });
+
   return {
     // boolean option
     version: args.v || args.version || false,

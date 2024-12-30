@@ -4,5 +4,10 @@
   },
   "test": {
     "exclude": ["node_modules/"]
-  }
+  },
+  "dependencies": {
+      "@langchain/groq": "^0.1.2"
+  },
+  "nodeModulesDir": "auto"
 }
+

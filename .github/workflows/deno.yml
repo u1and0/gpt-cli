@@ -38,10 +38,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Deno
-        uses: denoland/setup-deno@v1
+        uses: denoland/setup-deno@v2
         # uses: denoland/setup-deno@61fe2df320078202e33d7d5ad347e7dcfa0e8f31  # v1.1.2
         with:
-          deno-version: v1.x
+          deno-version: v2.x.x
 
       # Uncomment this step to verify the use of 'deno fmt' on each commit.
       - name: Verify formatting
@@ -63,25 +63,35 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: linux
+          - name: linux-x64
             vm: ubuntu-latest
-          - name: macosx
+            target: x86_64-unknown-linux-gnu
+          - name: linux-arm64
+            vm: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+          - name: macosx-x64
             vm: macos-latest
-          - name: windows
+            target: x86_64-apple-darwin
+          - name: macosx-arm64
+            vm: macos-latest
+            target: aarch64-apple-darwin
+          - name: windows-x64
             vm: windows-latest
+            target: x86_64-pc-windows-msvc
+
 
     steps:
       - name: Setup repo
         uses: actions/checkout@v4
 
       - name: Setup Deno
-        uses: denoland/setup-deno@v1
+        uses: denoland/setup-deno@v2
         # uses: denoland/setup-deno@61fe2df320078202e33d7d5ad347e7dcfa0e8f31  # v1.1.2
         with:
-          deno-version: v1.x
+          deno-version: v2.x.x
 
       - name: Build binary
-        run: deno compile --allow-net --allow-env --output gpt index.ts
+        run: deno compile --allow-net --allow-env --target ${{ matrix.target }} --output gpt index.ts
 
       - name: Binary upload (Unix, MacOS)
         # Artifact upload only occurs when tag matches
