@@ -213,9 +213,10 @@ A Questions for Model
 ## / command
 Help (/commands):
 
-- /?, /help       Help for a command
-- /clear          Clear session context
-- /bye            Exit
+- /?, /help         Help for a command
+- /clear            Clear session context
+- /modelStack       Show model's history
+- /bye,/exit,/quit  Exit
 
 ## @ command
 Help (@commands): Change model while asking.
@@ -252,12 +253,12 @@ hook_add = '''
     " Create test code
     command! -nargs=0 -range GPTGenerateTest <line1>,<line2>call gptcli#GPT('You are the best code tester. Please write test code that covers all cases to try the given code.', { "temperature": 0.5, "model": "claude-3-haiku-20240307" })
     command! -nargs=0 -range GPTErrorBustor <line1>,<line2>call gptcli#GPT('Your task is to analyze the provided code snippet, identify any bugs or errors present, and provide a corrected version of the code that resolves these issues. Explain the problems you found in the original code and how your fixes address them. The corrected code should be functional, efficient, and adhere to best practices in programming.', {"temperature": 0.5, "model": "claude-3-sonnet-20240229"})
-    command! -nargs=0 -range GPTCodeOptimizer <line1>,<line2>call gptcli#GPT("Your task is to analyze the provided code snippet and suggest improvements to optimize its performance. Identify areas where the code can be made more efficient, faster, or less resource-intensive. Provide specific suggestions for optimization, along with explanations of how these changes can enhance the code performance. The optimized code should maintain the same functionality as the original code while demonstrating improved efficiency.", { "model": "meta/meta-llama-3-70b-instruct" })
+    command! -nargs=0 -range GPTCodeOptimizer <line1>,<line2>call gptcli#GPT("Your task is to analyze the provided code snippet and suggest improvements to optimize its performance. Identify areas where the code can be made more efficient, faster, or less resource-intensive. Provide specific suggestions for optimization, along with explanations of how these changes can enhance the code performance. The optimized code should maintain the same functionality as the original code while demonstrating improved efficiency.", { "model": "replicate/meta/meta-llama-3-70b-instruct" })
 
     " Any system prompt
     command! -nargs=? -range GPTComplete <line1>,<line2>call gptcli#GPT(<q-args>, { "model": "claude-3-haiku-20240307" })
     " Chat with GPT
-    command! -nargs=? GPTChat call gptcli#GPTWindow(<q-args>, { "model": "phi3:instruct", "url": "http://localhost:11434"})
+    command! -nargs=? GPTChat call gptcli#GPTWindow(<q-args>, { "model": "ollama/phi3:instruct", "url": "http://localhost:11434"})
 ```
 
 ![Peek 2024-04-01 03-35.gif](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/113494/f243f19b-ee47-9821-5899-7ed2acc17320.gif)

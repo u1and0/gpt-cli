@@ -42,30 +42,29 @@ export const helpMessage =
         - claude-instant-1.2...
       - [Gemini](https://ai.google.dev/gemini-api/docs/models/gemini)
         - gemini-1.5-pro-latest
-        - gemini-1.5-flash
-        - gemini-pro...
+        - gemini-2.0-flash-exp...
+      - [Groq](https://console.groq.com/docs/models)
+        - groq/llama3-groq-70b-8192-tool-use-preview
+        - groq/llama-3.3-70b-specdec
+        - groq/llama3.1-70b-specdec
+        - groq/llama-3.2-1b-preview
+        - groq/llama-3.2-3b-preview
+      - [TogetherAI](https://api.together.ai/models)
+        - togetherai/meta-llama/Llama-3.3-70B-Instruct-Turbo
+        - togetherai/Qwen/QwQ-32B-Preview
+        - togetherai/meta-llama/Llama-3.1-405B-Instruct-Turbo
+        - togetherai/google/gemma-2-27b-it
+        - togetherai/mistralai/Mistral-7B-Instruct-v0.3...
       - [Replicate](https://replicate.com/models)
-        - meta/meta-llama-3-70b-instruct
-        - meta/llama-2-7b-chat
-        - mistralai/mistral-7b-instruct-v0.2
-        - mistralai/mixtral-8x7b-instruct-v0.1
-        - snowflake/snowflake-arctic-instruct
-        - replicate/flan-t5-xl...
+        - replicate/meta/meta-llama-3-70b-instruct
+        - replicate/meta/llama-2-7b-chat
+        - replicate/mistralai/mistral-7b-instruct-v0.2
+        - replicate/mistralai/mixtral-8x7b-instruct-v0.1
+        - replicate/snowflake/snowflake-arctic-instruct
+        - replicate/replicate/flan-t5-xl...
       - [Ollama](https://ollama.com/library)  ** Using before "$ ollama serve" locally **
-        - phi3
-        - llama3:70b
-        - mixtral:8x7b-text-v0.1-q5_K_M...
-      - [Groq](https://console.groq.com/docs/models)  ** Using before "$ ollama serve" locally **
-          - llama3-groq-70b-8192-tool-use-preview
-          - llama-3.3-70b-specdec
-          - llama3.1-70b-specdec
-          - llama-3.2-1b-preview
-          - llama-3.2-3b-preview
-      - [TogetherAI](https://api.together.ai/models)  ** Using before "$ ollama serve" locally **
-          - meta-llama/Llama-3.3-70B-Instruct-Turbo
-          - Qwen/QwQ-32B-Preview
-          - meta-llama/Llama-3.1-405B-Instruct-Turbo
-          - google/gemma-2-27b-it
-          - mistralai/Mistral-7B-Instruct-v0.3...
+        - ollama/phi3
+        - ollama/llama3:70b
+        - ollama/mixtral:8x7b-text-v0.1-q5_K_M...
 ${commandMessage}
 `;
