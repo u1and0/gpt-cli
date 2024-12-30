@@ -6,7 +6,7 @@ Help:
   /clear            Clear session context
   /modelStack       Show model's history
   /bye,/exit,/quit  Exit
-  @{ModelName}      Change LLM model
+  @ModelName      Change LLM model
   ex)   @gemini-1.5-pro your question...
 `;
 
@@ -19,7 +19,7 @@ export const helpMessage =
     Options:
       -v, --version: boolean   Show version
       -h, --help: boolean   Show this message
-      -m, --model: string OpenAI, Anthropic, Google, Replicate, Ollama model (default gpt-4o-mini)
+      -m, --model: string LLM model (default gpt-4o-mini)
       -x, --max-tokens: number Number of AI answer tokens (default 1000)
       -t, --temperature: number Higher number means more creative answers, lower number means more exact answers (default 1.0)
       -u, --url: string URL and port number for ollama server

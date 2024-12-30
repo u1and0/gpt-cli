@@ -104,12 +104,28 @@ export OPENAI_API_KEY='sk-*****'
 export ANTHROPIC_API_KEY='sk-ant-*****'
 ```
 
-### Goolgle API (for Gemini)
+### Google API (for Gemini)
 
 [Get Google API key](https://aistudio.google.com/app/apikey), then set environment argument.
 
 ```
 export GOOGLE_API_KEY='*****'
+```
+
+### Groq API
+
+[Get Groq API key](https://console.groq.com/keys), then set environment argument.
+
+```
+export GROQ_API_KEY='*****'
+```
+
+### Together AI API
+
+[Get Together AI API key](https://api.together.xyz/settings/api-keys), then set environment argument.
+
+```
+export TOGETHER_AI_API_KEY='*****'
 ```
 
 ### Replicate API (for Open Models)
@@ -138,7 +154,7 @@ $ gpt -m gpt-4o-mini -x 1000 -t 1.0 [OPTIONS] PROMPT
 |--------------|-------------|------|----|
 | -v | --version | boolean | Show version |
 | -h | --help | boolean | Show this message |
-| -m | --model | string | OpenAI, Anthropic, Google, Replicate, Ollama model (default gpt-4o-mini) |
+| -m | --model | string | LLM model (default gpt-4o-mini) |
 | -x | --max\_tokens | number | Number of AI answer tokens (default 1000) |
 | -t | --temperature | number | Higher number means more creative answers, lower number means more exact answers (default 1.0) |
 | -u | --url | string | URL and port number for ollama server |
@@ -164,6 +180,18 @@ A Questions for Model
 - [Gemini](https://ai.google.dev/gemini-api/docs/models/gemini)
     - gemini-1.5-pro-latest
     - gemini-2.0-flash-exp...
+- [Groq](https://console.groq.com/docs/models)
+    - groq/llama3-groq-70b-8192-tool-use-preview
+    - groq/llama-3.3-70b-specdec
+    - groq/llama3.1-70b-specdec
+    - groq/llama-3.2-1b-preview
+    - groq/llama-3.2-3b-preview...
+- [TogetherAI](https://api.together.ai/models)
+    - togetherai/meta-llama/Llama-3.3-70B-Instruct-Turbo
+    - togetherai/Qwen/QwQ-32B-Preview
+    - togetherai/meta-llama/Llama-3.1-405B-Instruct-Turbo
+    - togetherai/google/gemma-2-27b-it
+    - togetherai/mistralai/Mistral-7B-Instruct-v0.3...
 - [Replicate](https://replicate.com/models)
     - replicate/meta/meta-llama-3-70b-instruct
     - replicate/meta/llama-2-7b-chat
@@ -175,18 +203,6 @@ A Questions for Model
     - ollama/phi3
     - ollama/llama3:70b
     - ollama/mixtral:8x7b-text-v0.1-q5\_K\_M...
-- [Groq](https://console.groq.com/docs/models)  ** Using before "$ ollama serve" locally **
-    - groq/llama3-groq-70b-8192-tool-use-preview
-    - groq/llama-3.3-70b-specdec
-    - groq/llama3.1-70b-specdec
-    - groq/llama-3.2-1b-preview
-    - groq/llama-3.2-3b-preview...
-- [TogetherAI](https://api.together.ai/models)  ** Using before "$ ollama serve" locally **
-    - togetherai/meta-llama/Llama-3.3-70B-Instruct-Turbo
-    - togetherai/Qwen/QwQ-32B-Preview
-    - togetherai/meta-llama/Llama-3.1-405B-Instruct-Turbo
-    - togetherai/google/gemma-2-27b-it
-    - togetherai/mistralai/Mistral-7B-Instruct-v0.3...
 
 ## / command
 Help (/commands):
@@ -198,7 +214,7 @@ Help (/commands):
 ## @ command
 Help (@commands): Change model while asking.
 
-- @{ModelName}    Change LLM model
+- @ModelName    Change LLM model
 - ex)   @gemini-1.5-pro your question...
 
 ## Test
