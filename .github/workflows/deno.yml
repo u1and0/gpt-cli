@@ -102,6 +102,7 @@ jobs:
           path: gpt
 
       - name: Binary upload (Windows)
+        if: runner.os == 'Windows' && startsWith(github.ref, 'refs/tags/v')
         uses: actions/upload-artifact@v4
         with:
           name: gpt-cli-${{ matrix.name }}
