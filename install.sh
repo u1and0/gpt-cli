@@ -45,13 +45,6 @@ install_gpt() {
         return 1
     }
 
-    # Set executable permissions and move
-    chmod 755 gpt &&
-    mv ./gpt /usr/bin/ || {
-        echo "Installation failed."
-        return 1
-    }
-
     # Remove zip file if successful
     rm "gpt-cli-${os_arch}.zip"
 }
