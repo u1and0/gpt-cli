@@ -11,8 +11,7 @@ Command-line interface  that enables interactive chat with LLMs.
 
 ```
 # Install binary
-$ curl -LO https://github.com/u1and0/gpt-cli/releases/download/v0.8.0/gpt-cli-linux.zip
-$ unzip gpt-cli.zip
+$ bash -c "$(curl -fsSL https://raw.githubusercontent.com/u1and0/gpt-cli/refs/heads/main/install.sh)"
 $ chmod 755 gpt
 $ sudo ln -s ./gpt /usr/bin
 
@@ -50,6 +49,15 @@ You have 3 options.
 
 ## Download binary
 The simplest way.
+
+```
+$ bash -c "$(curl -fsSL https://raw.githubusercontent.com/u1and0/gpt-cli/refs/heads/main/install.sh)"
+$ chmod 755 gpt
+$ sudo ln -s ./gpt /usr/bin
+$ gpt -v
+```
+
+Almost same command here.
 
 ```
 $ curl -LO https://github.com/u1and0/gpt-cli/releases/download/v0.8.0/gpt-cli-linux.zip
