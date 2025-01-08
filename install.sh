@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # OSとアーキテクチャを取得
 get_os_arch() {
     local os=$(uname -s | tr '[:upper:]' '[:lower:]')
@@ -62,4 +64,49 @@ if install_gpt; then
 else
     echo "GPT command installation failed."
     exit 1
+fi
+
+# link path
+check_binary() {
+  echo -n "  - gpt実行可能ファイルを確認しています ... "
+  local output
+  output=$(GPT_DEFAULT_OPTS= "$gpt_base"/bin/gpt --version 2>&1)
+  if [ $? -ne 0 ]; then
+    echo "エラー: $output"
+    binary_error="無効なバイナリ"
+  fi
+  rm -f "$gpt_base"/bin/gpt
+  return 1
+}
+
+link_gpt_in_path() {
+  if which_gpt="$(command -v gpt)"; then
+    echo "  - \$PATH内で見つかりました"
+    echo "  - シンボリックリンクの作成: bin/gpt -> $which_gpt"
+    (cd "$gpt_base"/bin && rm -f gpt && ln -sf "$which_gpt" gpt)
+    check_binary && return
+  fi
+  return 1
+}
+
+# Set gpt base path
+cd "$(dirname "${BASH_SOURCE[0]}")"
+gpt_base=$(pwd)
+gpt_base_esc=$(printf %q "$gpt_base")
+
+# gpt-cliのインストール
+if install_gpt; then
+  echo "GPTコマンドのインストールが正常に完了しました。"
+else
+  echo "GPTコマンドのインストールに失敗しました。"
+  exit 1
+fi
+
+# gptに関連した処理
+link_gpt_in_path
+
+# エラーチェック
+if [ -n "$binary_error" ]; then
+  echo "gpt関連のエラー: $binary_error"
+  exit 1
 fi
