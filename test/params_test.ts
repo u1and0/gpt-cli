@@ -60,6 +60,21 @@ Deno.test("getFilePaths - should handle multiple files with other arguments", ()
   assertEquals(result, ["file1.txt", "file2.txt"]);
 });
 
+Deno.test("getFilePaths - should handle -f and --file arguments", () => {
+  const args = [
+    "program",
+    "arg1",
+    "--file",
+    "file1.txt",
+    "arg2",
+    "-f",
+    "file2.txt",
+    "arg3",
+  ];
+  const result = getFilePaths(args);
+  assertEquals(result, ["file1.txt", "file2.txt"]);
+});
+
 Deno.test("parseArgs", () => {
   const testCases: [string[], Params][] = [
     [

@@ -83,7 +83,7 @@ export function parseArgs(): Params {
 export function getFilePaths(args: string[]): string[] {
   const files: string[] = [];
   for (let i = 0; i < args.length; i++) {
-    if (args[i] === "-f") {
+    if (args[i] === "-f" || args[i] === "--file") {
       // -fの後に引数がない場合はエラー
       if (i + 1 >= args.length) {
         throw new Error("No file specified after -f option");
