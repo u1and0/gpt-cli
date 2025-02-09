@@ -35,30 +35,40 @@ Deno.test("parseArgs", () => {
     ],
     [
       [
-        "--no-chat",
+        // no chat flag
+        "-n",
+        // debug flag
+        "-d",
+        // model
         "-m",
         "gpt-4",
+        // temperature
         "-t",
         "0.5",
+        // max token
         "-x",
         "500",
+        // Ollama url
         "-u",
         "https://example.com",
+        // システムプロンプト
         "-s",
         "You are a helpful AI assistant.",
-        "Hello, world!",
+        // 残りの引数はスペースでjoinされて最初のユーザープロンプトに使用される
+        "Hello",
+        "world!",
       ],
       {
         version: false,
         help: false,
         noChat: true,
-        debug: false,
+        debug: true,
         model: "gpt-4",
         temperature: 0.5,
         maxTokens: 500,
         url: "https://example.com",
         systemPrompt: "You are a helpful AI assistant.",
-        content: "Hello, world!",
+        content: "Hello world!",
       },
     ],
   ];
