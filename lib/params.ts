@@ -46,6 +46,8 @@ export function parseArgs(): Params {
     },
   });
 
+  // parse()で解釈すると最後に指定したものに上書きされてしまう
+  // そのため、getFilePaths()で特別なparseをする
   const files = getFilePaths(Deno.args);
 
   return {
@@ -59,17 +61,11 @@ export function parseArgs(): Params {
     maxTokens: parseInt(String(args.x || args["max-tokens"])),
     temperature: parseFloat(String(args.t || args.temperature)),
     url: args.u || args.url || undefined,
-    // files: Array.isArray(args.f)
-    //   ? args.f
-    //   : args.f
-    //   ? [args.f]
-    //   : Array.isArray(args.files)
-    //   ? args.files
-    //   : args.files
-    //   ? [args.files]
-    files: files.length !== 0 ? files : undefined,
     systemPrompt: args.s || args["system-prompt"] || undefined,
-    content: args._.length > 0 ? args._.join(" ") : undefined, // 残りの引数をすべてスペースで結合
+    // 残りの引数をすべてスペースで結合
+    content: args._.length > 0 ? args._.join(" ") : undefined,
+    // string array option
+    files: files.length !== 0 ? files : undefined,
   };
 }
 
