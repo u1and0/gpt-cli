@@ -1,18 +1,16 @@
 import { parse } from "https://deno.land/std/flags/mod.ts";
+import { LLMParam } from "./llm.ts";
 
 export type Params = {
   version: boolean;
   help: boolean;
   noChat: boolean;
   debug: boolean;
-  model: string;
-  temperature: number;
-  maxTokens: number;
   url?: string;
   files?: string[];
   systemPrompt?: string;
   content?: string;
-};
+} & LLMParam;
 
 /** Parse console argument */
 export function parseArgs(): Params {
