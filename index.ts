@@ -25,6 +25,7 @@ import { commandMessage, helpMessage } from "./lib/help.ts";
 import { LLM, Message } from "./lib/llm.ts";
 import { getUserInputInMessage, readStdin } from "./lib/input.ts";
 import { Params, parseArgs } from "./lib/params.ts";
+import { parseFileContent } from "./lib/file.ts";
 import {
   Command,
   extractAtModel,
@@ -48,11 +49,14 @@ const llmAsk = async (params: Params) => {
   // コマンドライン引数systemPromptとcontentがあれば
   // システムプロンプトとユーザープロンプトを含めたMessageの生成
   // params.content があった場合は、コンテンツからメッセージを作成
-  const initialMessage = params.content || "";
+  let initialMessage = params.content || "";
   // params.files が1つ以上あれば、readFileした内容をinitialMessageに追加
-  // if (params.files && params.files.length > 0) {
-  //   initialMessage *= parseFileContents(params.files)...].join("\n")
-  // }
+  if (params.files && params.files.length > 0) {
+    for (const filePath of params.files) {
+      const codeBlock = await parseFileContent(filePath);
+      initialMessage += "\n" + codeBlock;
+    }
+  }
 
   let messages = [
     params.systemPrompt && new SystemMessage(params.systemPrompt),
