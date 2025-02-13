@@ -20,13 +20,15 @@ Deno.test("Read file contents test", async () => {
     // Assert results
     assertEquals(fileContents.length, expectedContents.length);
     for (let i = 0; i < fileContents.length; i++) {
-      assertEquals(fileContents[i], expectedContents[i]);
+      assertEquals(
+        fileContents[i],
+        "```" + filePaths[i] + "\n" + expectedContents[i] + "\n```",
+      );
     }
   } catch (error) {
     console.error("Error during test:", error);
     throw error;
-  } finally {
-    // Clean up test files
+  } finally { // Clean up test files
     try {
       await Deno.remove(filePaths[0]);
       await Deno.remove(filePaths[1]);
