@@ -173,6 +173,7 @@ $ gpt -m gpt-4o-mini -x 8192 -t 1.0 [OPTIONS] PROMPT
 | -t | --temperature | number | Higher number means more creative answers, lower number means more exact answers (default 1.0) |
 | -u | --url | string | URL and port number for ollama server |
 | -s | --system-prompt | string | The first instruction given to guide the AI model's response. |
+| -f | --file | string | Attachment file path. |
 | -n | --no-chat | boolean | No chat mode. Just one time question and answer. |
 
 

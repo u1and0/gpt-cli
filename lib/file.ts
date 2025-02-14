@@ -3,19 +3,25 @@
 *  ユーザープロンプトとする
 * */
 
-export async function parseFileContents(
-  filePaths: string[],
-): Promise<string[]> {
-  const contentsArray: string[] = [];
+type CodeBlock = string;
 
-  for (const filePath of filePaths) {
-    try {
-      const content = await Deno.readTextFile(filePath);
-      contentsArray.push(content);
-    } catch (error) {
-      // Skip the file and continue
-      console.error(`Error reading file ${filePath}:`, error);
-    }
+/** ファイルパスを引数に、
+ * ファイルの内容をコードブロックに入れて返す
+ */
+export async function parseFileContent(
+  filePath: string,
+): Promise<CodeBlock> {
+  try {
+    const content = await Deno.readTextFile(filePath);
+    const codeBlock: CodeBlock = [
+      "```" + filePath, // 1行目はコードブロックとファイルパス
+      content, // ファイルの内容
+      "```", // 最終行はコードブロック
+    ].join("\n");
+    return codeBlock;
+  } catch (error) {
+    // Skip the file and continue
+    console.error(`Error reading file ${filePath}:`, error);
   }
-  return contentsArray;
+  return "";
 }
