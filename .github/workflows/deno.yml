@@ -54,7 +54,7 @@ jobs:
         run: deno check index.ts lib/*.ts test/*.ts
 
       - name: Run tests
-        run: deno test --allow-env test/*.ts
+        run: deno test --allow-env --allow-read --allow-write test/*.ts
 
   builder:
     name: compile & publish artifact
