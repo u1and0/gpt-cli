@@ -40,7 +40,7 @@ export function parseArgs(): Params {
     ],
     default: {
       temperature: 1.0,
-      "max-tokens": 1000,
+      "max-tokens": 8192,
     },
   });
 
