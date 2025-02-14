@@ -91,7 +91,7 @@ jobs:
           deno-version: v2.x.x
 
       - name: Build binary
-        run: deno compile --allow-net --allow-env --target ${{ matrix.target }} --output gpt index.ts
+        run: deno compile --allow-read --allow-net --allow-env --target ${{ matrix.target }} --output gpt index.ts
 
       - name: Binary upload (Unix, MacOS)
         # Artifact upload only occurs when tag matches
