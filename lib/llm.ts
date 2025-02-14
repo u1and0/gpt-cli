@@ -19,6 +19,18 @@ import { Params } from "./params.ts";
 /** AIMessage */
 export type Message = AIMessage | HumanMessage | SystemMessage | never; //{ role: Role; content: string };
 
+/** LLMParam
+ * LLM モデルに渡すパラメータ
+ * - model
+ * - max_tokens
+ * - temperature
+ */
+export type LLMParam = {
+  model: string;
+  temperature: number;
+  maxTokens: number;
+};
+
 /** replicateで使うモデルは以下の形式
  * owner/name or owner/name:version
  */

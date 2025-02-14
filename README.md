@@ -1,4 +1,4 @@
-<img src="https://img.shields.io/badge/version-v0.8.0-FF7777.svg"></img>
+<img src="https://img.shields.io/badge/version-v0.9.0-FF7777.svg"></img>
 <img src="https://img.shields.io/badge/LICENSE-MIT-3388FF.svg"></img>
 <img src="https://shield.deno.dev/deno/%5E1.39"></img>
 <img src="https://github.com/u1and0/gpt-cli/actions/workflows/deno.yml/badge.svg"></img>
@@ -60,7 +60,7 @@ $ gpt -v
 Almost same command here.
 
 ```
-$ curl -LO https://github.com/u1and0/gpt-cli/releases/download/v0.8.0/gpt-cli-linux.zip
+$ curl -LO https://github.com/u1and0/gpt-cli/releases/download/v0.9.0/gpt-cli-linux.zip
 $ unzip gpt-cli-linux.zip
 $ chmod 755 gpt
 $ sudo ln -s ./gpt /usr/bin
@@ -159,7 +159,7 @@ export REPLICATE_API_TOKEN='*****'
 # Usage
 
 ```
-$ gpt -m gpt-4o-mini -x 1000 -t 1.0 [OPTIONS] PROMPT
+$ gpt -m gpt-4o-mini -x 8192 -t 1.0 [OPTIONS] PROMPT
 ```
 
 ## Options
@@ -169,7 +169,7 @@ $ gpt -m gpt-4o-mini -x 1000 -t 1.0 [OPTIONS] PROMPT
 | -v | --version | boolean | Show version |
 | -h | --help | boolean | Show this message |
 | -m | --model | string | LLM model (default gpt-4o-mini) |
-| -x | --max\_tokens | number | Number of AI answer tokens (default 1000) |
+| -x | --max\_tokens | number | Number of AI answer tokens (default 8192) |
 | -t | --temperature | number | Higher number means more creative answers, lower number means more exact answers (default 1.0) |
 | -u | --url | string | URL and port number for ollama server |
 | -s | --system-prompt | string | The first instruction given to guide the AI model's response. |
@@ -184,24 +184,27 @@ A Questions for Model
 - [OpenAI](https://platform.openai.com/docs/models)
     - gpt-4o-mini
     - gpt-4o
+    - o1-mini
     - o1
-    - o1-preview
-    - o1-mini...
+    - o3-mini...
 - [Anthropic](https://docs.anthropic.com/claude/docs/models-overview)
-    - claude-3-opus-20240229
+    - claude-3-5-sonnet-20241022
     - claude-3-5-sonnet-latest
-    - claude-3-5-haiku-latest
+    - claude-3-opus-20240229
+    - claude-3-haiku-20240307
 - [Gemini](https://ai.google.dev/gemini-api/docs/models/gemini)
     - gemini-1.5-pro-latest
-    - gemini-2.0-flash-exp...
+    - gemini-2.0-flash...
+    - gemini-2.0-flash-thinking-exp...
 - [Groq](https://console.groq.com/docs/models)
-    - groq/llama3-groq-70b-8192-tool-use-preview
-    - groq/llama-3.3-70b-specdec
     - groq/llama3.1-70b-specdec
-    - groq/llama-3.2-1b-preview
-    - groq/llama-3.2-3b-preview...
+    - groq/llama-3.3-70b-specdec
+    - groq/deepseek-r1-distill-qwen-32b
+    - groq/deepseek-r1-distill-llama-70b
 - [TogetherAI](https://api.together.ai/models)
-    - togetherai/meta-llama/Llama-3.3-70B-Instruct-Turbo
+    - togetherai/deepseek-ai/DeepSeek-R1
+    - togetherai/deepseek-ai/DeepSeek-R1-Distill-Llama-70B-free
+    - togetherai/meta-llama/Llama-3.3-70B-Instruct-Turbo-Free
     - togetherai/Qwen/QwQ-32B-Preview
     - togetherai/meta-llama/Llama-3.1-405B-Instruct-Turbo
     - togetherai/google/gemma-2-27b-it
@@ -216,7 +219,7 @@ A Questions for Model
 - [Ollama](https://ollama.com/library)  ** Using before "$ ollama serve" locally **
     - ollama/phi3
     - ollama/llama3:70b
-    - ollama/mixtral:8x7b-text-v0.1-q5\_K\_M...
+    - ollama/mixtral:8x7b-text-v0.1-q5_K_M...
 
 ## / command
 Help (/commands):

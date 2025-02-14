@@ -7,32 +7,6 @@ Deno.test("Start and stop the spinner", () => {
   spinner.stop();
 });
 
-// Deno.test("Spinner timeout", async () => {
-//   const timeoutSpinner = new Spinner([".", "..", "..."], 100, 500);
-//   const longTimeProcess = async (): Promise<void> => {
-//     return new Promise((resolve) => {
-//       setTimeout(() => {
-//         console.log("long time processing...");
-//         resolve();
-//       }, 1000);
-//     });
-//   };
-//   const sleep = (ms: number): Promise<void> => {
-//     return new Promise((resolve) => setTimeout(resolve, ms));
-//   };
-//   assertThrows(
-//     async () => {
-//       timeoutSpinner.start();
-//       // await longTimeProcess();
-//       // sleep(1000);
-//       await new Promise((resolve) => setTimeout(resolve, 1000));
-//       timeoutSpinner.stop();
-//     },
-//     Error,
-//     "Timeout error",
-//   );
-// });
-
 Deno.test("Spinner with empty texts array", () => {
   assertThrows(
     () => new Spinner([], 100, 1000),

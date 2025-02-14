@@ -7,20 +7,20 @@ Help:
   /modelStack       Show model's history
   /bye,/exit,/quit  Exit
   @ModelName      Change LLM model
-  ex)   @gemini-1.5-pro your question...
+  ex)   @gemini-2.0-flash your question...
 `;
 
 export const helpMessage =
   `Command-line interface  that enables interactive chat with LLMs.
 
     Usage:
-      $ gpt -m gpt-4o-mini -x 1000 -t 1.0 [OPTIONS] PROMPT
+      $ gpt -m gpt-4o-mini -x 8192 -t 1.0 [OPTIONS] PROMPT
 
     Options:
       -v, --version: boolean   Show version
       -h, --help: boolean   Show this message
       -m, --model: string LLM model (default gpt-4o-mini)
-      -x, --max-tokens: number Number of AI answer tokens (default 1000)
+      -x, --max-tokens: number Number of AI answer tokens (default 8192)
       -t, --temperature: number Higher number means more creative answers, lower number means more exact answers (default 1.0)
       -u, --url: string URL and port number for ollama server
       -s, --system-prompt: string The first instruction given to guide the AI model's response
@@ -31,26 +31,27 @@ export const helpMessage =
       - [OpenAI](https://platform.openai.com/docs/models)
         - gpt-4o-mini
         - gpt-4o
+        - o1-mini
         - o1
-        - o1-preview
-        - o1-mini...
+        - o3-mini...
       - [Anthropic](https://docs.anthropic.com/claude/docs/models-overview)
         - claude-3-5-sonnet-20241022
         - claude-3-5-sonnet-latest
         - claude-3-opus-20240229
         - claude-3-haiku-20240307
-        - claude-instant-1.2...
       - [Gemini](https://ai.google.dev/gemini-api/docs/models/gemini)
         - gemini-1.5-pro-latest
-        - gemini-2.0-flash-exp...
+        - gemini-2.0-flash...
+        - gemini-2.0-flash-thinking-exp...
       - [Groq](https://console.groq.com/docs/models)
-        - groq/llama3-groq-70b-8192-tool-use-preview
-        - groq/llama-3.3-70b-specdec
         - groq/llama3.1-70b-specdec
-        - groq/llama-3.2-1b-preview
-        - groq/llama-3.2-3b-preview
+        - groq/llama-3.3-70b-specdec
+        - groq/deepseek-r1-distill-qwen-32b
+        - groq/deepseek-r1-distill-llama-70b
       - [TogetherAI](https://api.together.ai/models)
-        - togetherai/meta-llama/Llama-3.3-70B-Instruct-Turbo
+        - togetherai/deepseek-ai/DeepSeek-R1
+        - togetherai/deepseek-ai/DeepSeek-R1-Distill-Llama-70B-free
+        - togetherai/meta-llama/Llama-3.3-70B-Instruct-Turbo-Free
         - togetherai/Qwen/QwQ-32B-Preview
         - togetherai/meta-llama/Llama-3.1-405B-Instruct-Turbo
         - togetherai/google/gemma-2-27b-it

@@ -34,7 +34,7 @@ import {
   modelStack,
 } from "./lib/command.ts";
 
-const VERSION = "v0.8.0";
+const VERSION = "v0.9.0";
 
 /** 灰色のテキストで表示 */
 function consoleInfoWithGrayText(s: string): void {
@@ -47,9 +47,16 @@ const llmAsk = async (params: Params) => {
   let llm = new LLM(params);
   // コマンドライン引数systemPromptとcontentがあれば
   // システムプロンプトとユーザープロンプトを含めたMessageの生成
+  // params.content があった場合は、コンテンツからメッセージを作成
+  const initialMessage = params.content || "";
+  // params.files が1つ以上あれば、readFileした内容をinitialMessageに追加
+  // if (params.files && params.files.length > 0) {
+  //   initialMessage *= parseFileContents(params.files)...].join("\n")
+  // }
+
   let messages = [
     params.systemPrompt && new SystemMessage(params.systemPrompt),
-    params.content && new HumanMessage(params.content),
+    initialMessage && new HumanMessage(initialMessage),
   ].filter(Boolean) as Message[];
 
   try {
