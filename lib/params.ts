@@ -37,6 +37,9 @@ export function parseArgs(): Params {
       "temperature",
       "x",
       "max-tokens",
+      // parse()で解釈すると最後に指定したものに上書きされてしまう
+      // "f",
+      // "file",
     ],
     default: {
       temperature: 1.0,
@@ -44,8 +47,7 @@ export function parseArgs(): Params {
     },
   });
 
-  // parse()で解釈すると最後に指定したものに上書きされてしまう
-  // そのため、getFilePaths()で特別なparseをする
+  // parse()で解釈する代わりにgetFilePaths()で特別なparseをする
   const files = getFilePaths(Deno.args);
 
   return {
