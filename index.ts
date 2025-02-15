@@ -42,6 +42,68 @@ function consoleInfoWithGrayText(s: string): void {
   console.info(`\x1b[90m${s}\x1b[0m`);
 }
 
+/** ユーザーからの入力により実行を分岐する
+ * while loop内の処理
+ * @param {LLM} - AIのインスタンス
+ * @param {Params} - コマンドラインパラメータ
+ * @param {Message[]} - User / AI / System message
+ * @returns {Promise<{ llm: LLM; messages: Message[] } | undefined>}
+ * @throws {Error} - LLM can not answer your question
+ */
+async function userSession(
+  llm: LLM,
+  params: Params,
+  messages: Message[],
+): Promise<{ llm: LLM; messages: Message[] } | undefined> {
+  // ユーザーからの入力待ち
+  let humanMessage: HumanMessage | Command = await getUserInputInMessage(
+    messages,
+  );
+
+  // /commandを実行する
+  if (isSlashCommand(humanMessage)) {
+    messages = handleSlashCommand(humanMessage, messages);
+    return;
+  } else if (isAtCommand(humanMessage)) {
+    // @Model名で始まるinput はllmモデルを再指定する
+    const { model, message } = extractAtModel(
+      humanMessage.content.toString(),
+    );
+    // モデル名指定以外のプロンプトがなければ前のプロンプトを引き継ぐ。
+    // 前のプロンプトもなければ空のHumanMessageを渡す
+    humanMessage = message || messages.at(-2) || new HumanMessage("");
+
+    // @コマンドで指定したモデルのパースに成功したら
+    // モデルスタックに追加して新しいモデルで会話を始める。
+    // パースに失敗したら、以前のモデルを復元してエラー表示して
+    // 前のモデルに戻して会話を継続。
+    if (model) {
+      const modelBackup = params.model;
+      params.model = model;
+      try {
+        llm = new LLM(params);
+      } catch (error: unknown) {
+        console.error(error);
+        params.model = modelBackup;
+        return;
+      }
+      modelStack.push(model);
+    }
+  }
+
+  // ユーザーからの問いを追加
+  messages.push(humanMessage as HumanMessage);
+  // console.debug(messages);
+  // AIからの回答を追加
+  const aiMessage = await llm.ask(messages);
+  if (!aiMessage) {
+    throw new Error("LLM can not answer your question");
+  }
+  messages.push(aiMessage);
+
+  return { llm, messages };
+}
+
 const llmAsk = async (params: Params) => {
   params.debug && console.debug(params);
   // 引数に従ったLLMインスタンスを作成
@@ -50,9 +112,17 @@ const llmAsk = async (params: Params) => {
   // システムプロンプトとユーザープロンプトを含めたMessageの生成
   // params.content があった場合は、コンテンツからメッセージを作成
   let initialMessage = params.content || "";
+
   // params.files が1つ以上あれば、readFileした内容をinitialMessageに追加
   if (params.files && params.files.length > 0) {
-    for (const filePath of params.files) {
+    // params.files のstring[]と、
+    // expandGlobのパターンのiteratorを合わせて
+    // forループに渡す
+    // const allFiles =
+
+    // 指定されたすべてのファイルをテキストにパースして
+    // 最初のユーザープロンプトに含める
+    for await (const filePath of params.files) {
       const codeBlock = await parseFileContent(filePath);
       initialMessage += "\n" + codeBlock;
     }
@@ -73,51 +143,9 @@ const llmAsk = async (params: Params) => {
     // 対話的回答
     consoleInfoWithGrayText(commandMessage);
     while (true) {
-      // ユーザーからの入力待ち
-      let humanMessage: HumanMessage | Command = await getUserInputInMessage(
-        messages,
-      );
-
-      // /commandを実行する
-      if (isSlashCommand(humanMessage)) {
-        messages = handleSlashCommand(humanMessage, messages);
-        continue;
-      } else if (isAtCommand(humanMessage)) {
-        // @Model名で始まるinput はllmモデルを再指定する
-        const { model, message } = extractAtModel(
-          humanMessage.content.toString(),
-        );
-        // モデル名指定以外のプロンプトがなければ前のプロンプトを引き継ぐ。
-        // 前のプロンプトもなければ空のHumanMessageを渡す
-        humanMessage = message || messages.at(-2) || new HumanMessage("");
-
-        // @コマンドで指定したモデルのパースに成功したら
-        // モデルスタックに追加して新しいモデルで会話を始める。
-        // パースに失敗したら、以前のモデルを復元してエラー表示して
-        // 前のモデルに戻して会話を継続。
-        if (model) {
-          const modelBackup = params.model;
-          params.model = model;
-          try {
-            llm = new LLM(params);
-          } catch (error: unknown) {
-            console.error(error);
-            params.model = modelBackup;
-            continue;
-          }
-          modelStack.push(model);
-        }
-      }
-
-      // ユーザーからの問いを追加
-      messages.push(humanMessage);
-      // console.debug(messages);
-      // AIからの回答を追加
-      const aiMessage = await llm.ask(messages);
-      if (!aiMessage) {
-        throw new Error("LLM can not answer your question");
-      }
-      messages.push(aiMessage);
+      const result = await userSession(llm, params, messages);
+      if (result === undefined) continue;
+      ({ llm, messages } = result);
     }
   } catch (error) {
     console.error(error);

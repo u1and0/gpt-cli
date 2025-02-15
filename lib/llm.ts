@@ -17,7 +17,7 @@ import { Spinner } from "./spinner.ts";
 import { Params } from "./params.ts";
 
 /** AIMessage */
-export type Message = AIMessage | HumanMessage | SystemMessage | never; //{ role: Role; content: string };
+export type Message = AIMessage | HumanMessage | SystemMessage; //{ role: Role; content: string };
 
 /** LLMParam
  * LLM モデルに渡すパラメータ
