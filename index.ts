@@ -20,13 +20,12 @@ $ gpt
 */
 
 import { HumanMessage, SystemMessage } from "npm:@langchain/core/messages";
-import { expandGlob, GlobIterator } from "https://deno.land/std/fs/mod.ts";
 
 import { commandMessage, helpMessage } from "./lib/help.ts";
 import { LLM, Message } from "./lib/llm.ts";
 import { getUserInputInMessage, readStdin } from "./lib/input.ts";
 import { Params, parseArgs } from "./lib/params.ts";
-import { parseFileContent } from "./lib/file.ts";
+import { filesGenerator, parseFileContent } from "./lib/file.ts";
 import { CodeBlock } from "./lib/file.ts";
 import {
   Command,
@@ -53,30 +52,6 @@ class InitialMessage {
 
   public getContent(): string {
     return this.content;
-  }
-}
-
-// Helper function to check if a string is a glob pattern
-function isGlobPattern(pattern: string) {
-  // Simple check for common glob wildcards
-  return /\*|\?|\[|\]/.test(pattern);
-}
-
-/** 与えられたパターンに応じてパスを返すジェネレーター
- * globパターンが含まれている場合:
- *  expandGlob()を使ってファイル名をyieldする
- * globパターンが含まれていない場合:
- *  patternをそのままyieldする
- */
-async function* filesGenerator(patterns: string[]): AsyncGenerator<string> {
-  for (const pattern of patterns) {
-    if (!isGlobPattern(pattern)) {
-      yield pattern;
-    }
-    const globIterator: GlobIterator = expandGlob(pattern); // 明示的に型指定
-    for await (const filePath of globIterator) {
-      yield filePath.path; // filePathはGlobEntry型なので、.pathでstringを取り出す
-    }
   }
 }
 
