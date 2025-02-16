@@ -44,6 +44,11 @@ function! gptcli#GPT(system_prompt, kwargs={}) range
         call add(l:args, a:kwargs["url"])
     endif
 
+    if has_key(a:kwargs, "file")
+        call add(l:args, "-f")
+        call add(l:args, a:kwargs["file"])
+    endif
+
     " echom  l:args  " Debug print
 
     " 範囲指定をuser_promptとして使う。
@@ -92,6 +97,11 @@ function! gptcli#GPTWindow(system_prompt="", kwargs={})
     if has_key(a:kwargs, "url")  " default http://localhost:11434
         call add(l:args, "-u")
         call add(l:args, a:kwargs["url"])
+    endif
+
+    if has_key(a:kwargs, "file")
+        call add(l:args, "-f")
+        call add(l:args, a:kwargs["file"])
     endif
 
     echo join(l:args)

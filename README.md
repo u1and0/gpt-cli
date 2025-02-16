@@ -173,7 +173,7 @@ $ gpt -m gpt-4o-mini -x 8192 -t 1.0 [OPTIONS] PROMPT
 | -t | --temperature | number | Higher number means more creative answers, lower number means more exact answers (default 1.0) |
 | -u | --url | string | URL and port number for ollama server |
 | -s | --system-prompt | string | The first instruction given to guide the AI model's response. |
-| -f | --file | string | Attachment file path. |
+| -f | --file | string | Attachment file path. The Glob pattern can be used. (Such as `./test/*.ts`)|
 | -n | --no-chat | boolean | No chat mode. Just one time question and answer. |
 
 
@@ -217,7 +217,7 @@ A Questions for Model
     - replicate/mistralai/mixtral-8x7b-instruct-v0.1
     - replicate/snowflake/snowflake-arctic-instruct
     - replicate/replicate/flan-t5-xl...
-- [Ollama](https://ollama.com/library)  ** Using before "$ ollama serve" locally **
+- [Ollama](https://ollama.com/library)  **Use before `$ ollama serve` locally**
     - ollama/phi3
     - ollama/llama3:70b
     - ollama/mixtral:8x7b-text-v0.1-q5_K_M...
