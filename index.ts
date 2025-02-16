@@ -20,12 +20,14 @@ $ gpt
 */
 
 import { HumanMessage, SystemMessage } from "npm:@langchain/core/messages";
+import { expandGlob, GlobIterator } from "https://deno.land/std/fs/mod.ts";
 
 import { commandMessage, helpMessage } from "./lib/help.ts";
 import { LLM, Message } from "./lib/llm.ts";
 import { getUserInputInMessage, readStdin } from "./lib/input.ts";
 import { Params, parseArgs } from "./lib/params.ts";
 import { parseFileContent } from "./lib/file.ts";
+import { CodeBlock } from "./lib/file.ts";
 import {
   Command,
   extractAtModel,
@@ -42,11 +44,47 @@ function consoleInfoWithGrayText(s: string): void {
   console.info(`\x1b[90m${s}\x1b[0m`);
 }
 
+class InitialMessage {
+  constructor(readonly content: string) {}
+
+  public add(codeBlock: CodeBlock) {
+    return new InitialMessage(this.content + "\n" + codeBlock);
+  }
+
+  public getContent(): string {
+    return this.content;
+  }
+}
+
+// Helper function to check if a string is a glob pattern
+function isGlobPattern(pattern: string) {
+  // Simple check for common glob wildcards
+  return /\*|\?|\[|\]/.test(pattern);
+}
+
+/** 与えられたパターンに応じてパスを返すジェネレーター
+ * globパターンが含まれている場合:
+ *  expandGlob()を使ってファイル名をyieldする
+ * globパターンが含まれていない場合:
+ *  patternをそのままyieldする
+ */
+async function* filesGenerator(patterns: string[]): AsyncGenerator<string> {
+  for (const pattern of patterns) {
+    if (!isGlobPattern(pattern)) {
+      yield pattern;
+    }
+    const globIterator: GlobIterator = expandGlob(pattern); // 明示的に型指定
+    for await (const filePath of globIterator) {
+      yield filePath.path; // filePathはGlobEntry型なので、.pathでstringを取り出す
+    }
+  }
+}
+
 /** ユーザーからの入力により実行を分岐する
  * while loop内の処理
- * @param {LLM} - AIのインスタンス
- * @param {Params} - コマンドラインパラメータ
- * @param {Message[]} - User / AI / System message
+ * @param {LLM} llm - AIのインスタンス
+ * @param {Params} params - コマンドラインパラメータ
+ * @param {Message[]} messages - User | AI | System message
  * @returns {Promise<{ llm: LLM; messages: Message[] } | undefined>}
  * @throws {Error} - LLM can not answer your question
  */
@@ -111,27 +149,26 @@ const llmAsk = async (params: Params) => {
   // コマンドライン引数systemPromptとcontentがあれば
   // システムプロンプトとユーザープロンプトを含めたMessageの生成
   // params.content があった場合は、コンテンツからメッセージを作成
-  let initialMessage = params.content || "";
+  let initialMessage = new InitialMessage(params.content || "");
 
   // params.files が1つ以上あれば、readFileした内容をinitialMessageに追加
+  // params.files のstring[]と、
+  // expandGlobのパターンのiteratorを合わせて
+  // forループに渡す
   if (params.files && params.files.length > 0) {
-    // params.files のstring[]と、
-    // expandGlobのパターンのiteratorを合わせて
-    // forループに渡す
-    // const allFiles =
-
-    // 指定されたすべてのファイルをテキストにパースして
-    // 最初のユーザープロンプトに含める
-    for await (const filePath of params.files) {
+    for await (const filePath of filesGenerator(params.files)) {
+      // 指定されたすべてのファイルをテキストにパースして
+      // 最初のユーザープロンプトに含める
       const codeBlock = await parseFileContent(filePath);
-      initialMessage += "\n" + codeBlock;
+      initialMessage = initialMessage.add(codeBlock);
     }
   }
 
+  const initContent = initialMessage.getContent();
   let messages = [
     params.systemPrompt && new SystemMessage(params.systemPrompt),
-    initialMessage && new HumanMessage(initialMessage),
-  ].filter(Boolean) as Message[];
+    initContent && new HumanMessage(initContent),
+  ].filter(Boolean) as Message[]; // truty のものだけ残す
 
   try {
     // 一回限りの回答

@@ -3,7 +3,7 @@
 *  ユーザープロンプトとする
 * */
 
-type CodeBlock = string;
+export type CodeBlock = string;
 
 /** ファイルパスを引数に、
  * ファイルの内容をコードブロックに入れて返す
