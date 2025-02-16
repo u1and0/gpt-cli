@@ -1,4 +1,4 @@
-<img src="https://img.shields.io/badge/version-v0.9.0-FF7777.svg"></img>
+<img src="https://img.shields.io/badge/version-v0.9.1-FF7777.svg"></img>
 <img src="https://img.shields.io/badge/LICENSE-MIT-3388FF.svg"></img>
 <img src="https://shield.deno.dev/deno/%5E1.39"></img>
 <img src="https://github.com/u1and0/gpt-cli/actions/workflows/deno.yml/badge.svg"></img>
@@ -60,8 +60,8 @@ $ gpt -v
 Almost same command here.
 
 ```
-$ curl -LO https://github.com/u1and0/gpt-cli/releases/download/v0.9.0/gpt-cli-linux.zip
-$ unzip gpt-cli-linux.zip
+$ curl -LO https://github.com/u1and0/gpt-cli/releases/download/v0.9.1/gpt-cli-linux-x64.zip
+$ unzip gpt-cli-linux-x64.zip
 $ chmod 755 gpt
 $ sudo ln -s ./gpt /usr/bin
 $ gpt -v
@@ -79,7 +79,7 @@ Create link on your path like `~/.deno/bin` using `deno install`.
 ```
 $ git clone https://github.com/u1and0/gpt-cli
 $ cd gpt-cli
-$ deno install -f --allow-net --allow-env --name gpt gpt-cli.ts
+$ deno install -f --allow-net --allow-env --allow-read --name gpt gpt-cli.ts
 $ export PATH=$PATH:~/.deno/bin
 $ bash -l
 ```
@@ -93,7 +93,7 @@ Create binary by `deno compile`.
 ```
 $ git clone https://github.com/u1and0/gpt-cli
 $ cd gpt-cli
-$ deno compile --allow-net --allow-env --output gpt gpt-cli.ts
+$ deno compile --allow-net --allow-env --allow-read --output gpt gpt-cli.ts
 $ chmod 755 ./gpt
 $ sudo ln -s ./gpt /usr/bin
 ```
@@ -239,7 +239,7 @@ Help (@commands): Change model while asking.
 ## Test
 
 ```
-$ deno test --allow-env
+$ deno test --allow-env --allow-read --allow-write
 ```
 
 See [gpt-cli/test](https://github.com/u1and0/gpt-cli/tree/main/test)

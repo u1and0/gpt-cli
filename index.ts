@@ -37,7 +37,7 @@ import {
   modelStack,
 } from "./lib/command.ts";
 
-const VERSION = "v0.9.0";
+const VERSION = "v0.9.1";
 
 /** 灰色のテキストで表示 */
 function consoleInfoWithGrayText(s: string): void {
