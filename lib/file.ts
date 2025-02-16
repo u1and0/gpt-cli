@@ -3,7 +3,7 @@
 *  ユーザープロンプトとする
 * */
 
-import { expandGlob, GlobIterator } from "https://deno.land/std/fs/mod.ts";
+import { expandGlob } from "https://deno.land/std/fs/mod.ts";
 
 export type CodeBlock = string;
 
@@ -47,7 +47,7 @@ export async function* filesGenerator(
     if (!isGlobPattern(pattern)) {
       yield pattern;
     }
-    const globIterator: GlobIterator = expandGlob(pattern); // 明示的に型指定
+    const globIterator = expandGlob(pattern); // 明示的に型指定
     for await (const filePath of globIterator) {
       yield filePath.path; // filePathはGlobEntry型なので、.pathでstringを取り出す
     }
