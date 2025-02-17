@@ -50,9 +50,29 @@ in your PATH) to communicate with the LLM.
   the provided arguments. It's designed to work with arguments passed from a
   Vim command.
 
-  Usage:
+  Setting:
   ```vim
-  :GPTChat % # ~/your/any.txt 関西弁で話して
+  command! -nargs=* GPTChat call s:GPTWindow(<f-args>, {'model':'gpt-4o'})
+  ```
+
+  Usage:
+
+  ```vim
+    " Specify a system prompt:
+    `:GPTChat You are best programmer`
+
+    " Specify a single file:
+    `:GPTChat %`
+
+    " Specify multiple files:
+    `:GPTChat % ~/your/any.txt`
+
+    " Specify a glob pattern:
+    `:GPTChat ./lib/*.ts`
+
+    " Combine a system prompt with file paths:
+    `:GPTChat % # ~/your/any.txt "You are best programmer"`
+    `:GPTChat Talk in Kansai dialect % # ~/your/any.txt`
   ```
 
 *gptcli#_GetFileList*
