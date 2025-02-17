@@ -47,7 +47,7 @@ class InitialMessage {
   constructor(readonly content: string) {}
 
   public add(codeBlock: CodeBlock) {
-    return new InitialMessage(this.content + "\n" + codeBlock);
+    return new InitialMessage(this.content + "\n" + codeBlock.toString());
   }
 
   public getContent(): string {
@@ -77,8 +77,10 @@ async function userSession(
   if (isSlashCommand(humanMessage)) {
     messages = handleSlashCommand(humanMessage, messages);
     return;
-  } else if (isAtCommand(humanMessage)) {
-    // @Model名で始まるinput はllmモデルを再指定する
+  }
+
+  // @Model名で始まるinput はllmモデルを再指定する
+  if (isAtCommand(humanMessage)) {
     const { model, message } = extractAtModel(
       humanMessage.content.toString(),
     );

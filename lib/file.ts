@@ -5,7 +5,17 @@
 
 import { expandGlob } from "https://deno.land/std/fs/mod.ts";
 
-export type CodeBlock = string;
+export class CodeBlock {
+  constructor(private content: string, private filePath: string) {}
+
+  toString(): string {
+    return [
+      "```" + this.filePath, // 1行目はコードブロックとファイルパス
+      this.content, // ファイルの内容
+      "```", // 最終行はコードブロック
+    ].join("\n");
+  }
+}
 
 /** ファイルパスを引数に、
  * ファイルの内容をコードブロックに入れて返す
@@ -15,17 +25,12 @@ export async function parseFileContent(
 ): Promise<CodeBlock> {
   try {
     const content = await Deno.readTextFile(filePath);
-    const codeBlock: CodeBlock = [
-      "```" + filePath, // 1行目はコードブロックとファイルパス
-      content, // ファイルの内容
-      "```", // 最終行はコードブロック
-    ].join("\n");
-    return codeBlock;
+    return new CodeBlock(content, filePath);
   } catch (error) {
     // Skip the file and continue
     console.error(`Error reading file ${filePath}:`, error);
   }
-  return "";
+  return new CodeBlock("", filePath);
 }
 
 // Helper function to check if a string is a glob pattern
