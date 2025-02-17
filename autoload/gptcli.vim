@@ -74,17 +74,37 @@ endfunction
 " Usage:
 "   1. exモードから使う
 "
-"   `:GPTChat % # ~/your/any.txt 関西弁で話して`
+"   システムプロンプトを指定する
+"   `:GPTChat 関西弁で話して`
 "
-"   結果、gptコマンドにカレントバッファ、裏バッファ、~/your/any.txtを-fオプションで指定して、
+"   単一のファイルを指定する
+"   `:GPTChat %`
+"
+"   複数のファイルを指定する
+"   `:GPTChat % ~/your/any.txt `
+"
+"   globパターンを指定する
+"   `:GPTChat ./lib/*.ts
+"
+"   システムプロンプトとファイルパスを組み合わせる
+"   `:GPTChat % # ~/your/any.txt 関西弁で話して`
+"   `:GPTChat  関西弁で話して % # ~/your/any.txt``
+"
+"   結果として、
+"   gptコマンドにカレントバッファ、裏バッファ、~/your/any.txtを-fオプションで指定して、
 "   '関西弁で話して'というシステムプロンプトを送ります。
 "   システムプロンプトとファイルパスの区別は`filereadable()`で判定します。
+"   システムプロンプトの位置はどこでもかいまいませんが、
+"   filereadable() の結果がfalseのものは、system_prompt_listに入れられて
+"   最終的に一つのシステムプロンプトとして結合されてgptコマンドに渡されるため
+"   意図しないシステムプロンプトを構築してしまう可能性があります。
 "
 "   2. On-The-Fly にパラメータを決定しながら指定する
 "
 "   キーワード引数は辞書形式で指定できます。
-"   ただし、command!で設定したコマンドは使えず、
-"   `callgptcli#GPTWindow()`から使ってください。
+"
+"   ただし、command!で設定したコマンドは使えないため、
+"   `call gptcli#GPTWindow()`から使ってください。
 "
 "   ```
 "   :call gptcli#GPTWindow(

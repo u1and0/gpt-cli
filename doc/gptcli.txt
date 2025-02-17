@@ -1,0 +1,62 @@
+*gptcli.txt*  LLM AI Integration for Vim
+
+==============================================================================
+CONTENTS                                  *gptcli-contents*
+
+  1. Introduction           |gptcli-intro|
+  2. Functions              |gptcli-functions|
+      2.1 gptcli#GPT        |gptcli#GPT|
+      2.2 gptcli#GPTWindow  |gptcli#GPTWindow|
+      2.3 gptcli#_GetFileList|gptcli#_GetFileList|
+
+==============================================================================
+1. INTRODUCTION                                      *gptcli-intro*
+
+This plugin provides functions for integrating with LLM AI models from within
+Vim, allowing you to leverage AI for code completion, code generation, and
+other tasks.  It uses the `gpt` command-line tool (assumed to be available
+in your PATH) to communicate with the LLM.
+
+==============================================================================
+2. FUNCTIONS                                         *gptcli-functions*
+
+*gptcli#GPT*
+  `gptcli#GPT(system_prompt, kwargs={}) range`
+
+  This function takes a `system_prompt` and optional keyword arguments (`kwargs`)
+  to interact with the LLM. It uses the selected range of lines (or the current
+  line if no range is selected) as the user prompt. The LLM's response is
+  appended to the end of the selection.
+
+  Parameters:
+    - `system_prompt`: A string containing the system prompt for the LLM.
+    - `kwargs`: A dictionary of keyword arguments (optional):
+      - `model`: The name of the LLM model to use (default: "gpt-3.5-turbo").
+      - `max_tokens`: The maximum number of tokens to generate (default: 1000).
+      - `temperature`: The sampling temperature (default: 1.0).
+      - `url`: The URL of the LLM server (default: http://localhost:11434).
+      - `file`: A file path to include as context.
+
+  Example:
+  ```vim
+  :call gptcli#GPT("Write a concise summary")
+  :call gptcli#GPT("Translate this to French", {'model': 'gpt-4'})
+  ```
+
+*gptcli#GPTWindow*
+  `gptcli#GPTWindow(...)`
+
+  This function opens a new terminal window and executes the `gpt` command with
+  the provided arguments. It's designed to work with arguments passed from a
+  Vim command.
+
+  Usage:
+  ```vim
+  :GPTChat % # ~/your/any.txt 関西弁で話して
+  ```
+
+*gptcli#_GetFileList*
+  `gptcli#_GetFileList(args)`
+
+  This is a helper function that separates file paths from system prompts in the
+  argument list.  It is not intended to be called directly by the user.
