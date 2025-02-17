@@ -1,7 +1,6 @@
 import { HumanMessage, SystemMessage } from "npm:@langchain/core/messages";
 import { commandMessage } from "./help.ts";
-import { LLM, Message } from "./llm.ts";
-import { Params } from "./params.ts";
+import { Message } from "./llm.ts";
 
 /** この会話で使用したLLM モデルの履歴 */
 export const modelStack: string[] = [];
@@ -52,7 +51,7 @@ type ModelMessage = { model?: string; message?: HumanMessage };
  *  @param input {string} : ユーザーの入力
  *  @return {string} モデル名(@に続く文字列)
  */
-const extractAtModel = (input: string): ModelMessage => {
+export const extractAtModel = (input: string): ModelMessage => {
   const match = input.match(/^@[^\s\n\t]+/);
   const model = match ? match[0].substring(1) : undefined;
   // matchでマッチした@modelName を削除したinput を割り当てる
@@ -103,32 +102,3 @@ export const isAtCommand = (humanMessage: unknown): boolean => {
   }
   return content.startsWith("@");
 };
-
-export function handleAtCommandFlow(
-  params: Params,
-  humanMessage: HumanMessage,
-  messages: Message[],
-): ModelMessage | undefined {
-  // @Model名で始まるinput はllmモデルを再指定する
-  const { model, message } = extractAtModel(
-    humanMessage.content.toString(),
-  );
-  if (!model) return;
-
-  // @コマンドで指定したモデルのパースに成功したら
-  // モデルスタックに追加して新しいモデルで会話を始める。
-  // パースに失敗したら、以前のモデルを復元してエラー表示して
-  // 前のモデルに戻して会話を継続。
-  const modelBackup = params.model;
-  try {
-    // LLMのインスタンス化で
-    // 存在しないモデルはエラーが発生する
-    const newLLM = new LLM(params);
-    params.model = model;
-    modelStack.push(model);
-    return { model: newLLM, message };
-  } catch (error: unknown) {
-    console.error(error);
-    params.model = modelBackup;
-  }
-}
