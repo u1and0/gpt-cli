@@ -29,7 +29,7 @@ import { filesGenerator, parseFileContent } from "./lib/file.ts";
 import { CodeBlock } from "./lib/file.ts";
 import {
   Command,
-  extractAtModel,
+  handleAtCommandFlow,
   handleSlashCommand,
   isAtCommand,
   isSlashCommand,
@@ -77,32 +77,22 @@ async function userSession(
   if (isSlashCommand(humanMessage)) {
     messages = handleSlashCommand(humanMessage, messages);
     return;
-  } else if (isAtCommand(humanMessage)) {
-    // @Model名で始まるinput はllmモデルを再指定する
-    const { model, message } = extractAtModel(
-      humanMessage.content.toString(),
-    );
-    // モデル名指定以外のプロンプトがなければ前のプロンプトを引き継ぐ。
-    // 前のプロンプトもなければ空のHumanMessageを渡す
-    humanMessage = message || messages.at(-2) || new HumanMessage("");
-
-    // @コマンドで指定したモデルのパースに成功したら
-    // モデルスタックに追加して新しいモデルで会話を始める。
-    // パースに失敗したら、以前のモデルを復元してエラー表示して
-    // 前のモデルに戻して会話を継続。
-    if (model) {
-      const modelBackup = params.model;
-      params.model = model;
-      try {
-        llm = new LLM(params);
-      } catch (error: unknown) {
-        console.error(error);
-        params.model = modelBackup;
-        return;
-      }
-      modelStack.push(model);
-    }
   }
+
+  if (isAtCommand(humanMessage)) {
+    const { model, message } = await handleAtCommandFlow(
+      params,
+      humanMessage,
+      messages,
+    );
+    if (!newLLM) return;
+    llm = newLLM;
+  }
+
+  // モデル名指定以外のプロンプトがなければ前のプロンプトを引き継ぐ。
+  // 前のプロンプトもなければ空のHumanMessageを渡す
+  humanMessage = message || messages.at(-2) || new HumanMessage("");
+  // これはどこから？
 
   // ユーザーからの問いを追加
   messages.push(humanMessage as HumanMessage);
