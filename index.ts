@@ -36,19 +36,24 @@ import {
   modelStack,
 } from "./lib/command.ts";
 
-const VERSION = "v0.9.1";
+const VERSION = "v0.9.1r";
 
 class InitialMessage {
   constructor(private readonly content: string) {}
 
   public add(codeBlock: CodeBlock) {
-    return new InitialMessage(this.content + "\n" + codeBlock.toString());
+    return new InitialMessage(
+      `${this.content}
+${codeBlock}`,
+    );
   }
 
   public getContent(): string {
     return this.content;
   }
 }
+
+type AgentRecord = { llm: LLM; messages: Message[] };
 
 /** ユーザーからの入力により実行を分岐する
  * while loop内の処理
@@ -62,7 +67,7 @@ async function userSession(
   llm: LLM,
   params: Params,
   messages: Message[],
-): Promise<{ llm: LLM; messages: Message[] } | undefined> {
+): Promise<AgentRecord | undefined> {
   // ユーザーからの入力待ち
   let humanMessage: HumanMessage | Command = await getUserInputInMessage(
     messages,
@@ -71,7 +76,7 @@ async function userSession(
   // /commandを実行する
   if (isSlashCommand(humanMessage)) {
     messages = handleSlashCommand(humanMessage, messages);
-    return;
+    return { llm, messages };
   }
 
   // @Model名で始まるinput はllmモデルを再指定する
@@ -154,6 +159,7 @@ const llmAsk = async (params: Params) => {
     while (true) {
       const result = await userSession(llm, params, messages);
       if (result === undefined) continue;
+      params.debug && console.debug(result.messages);
       ({ llm, messages } = result);
     }
   } catch (error) {

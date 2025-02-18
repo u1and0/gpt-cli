@@ -66,50 +66,29 @@ function! gptcli#GPT(system_prompt, kwargs={}) range
     call append(a:lastline, l:result)
 endfunction
 
-function! gptcli#GPTWindow(system_prompt="", kwargs={})
-            " \ max_tokens=1000,
-            " \ temperature=1.0,
-            " \ model="gpt-3.5-turbo")
-    " gptを起動するコマンドを構築する
-    let l:args = ["gpt"]
-    " system_promptがあれば追加
-    if a:system_prompt != ""
-        call extend(l:args, [ "-s", a:system_prompt ])
-    endif
-    " gptのmodelのデフォルトはgpt-3.5-turbo
-    if has_key(a:kwargs, "model")
-        call add(l:args, "-m")
-        call add(l:args, a:kwargs["model"])
-    endif
+function! gptcli#GPTProChat(args) abort
+    let l:system_prompt = ""
+    let l:kwargs = {}
 
-    " gptのmax_tokensのデフォルトは1000
-    if has_key(a:kwargs, "max_tokens")
-        call add(l:args, "-x")
-        call add(l:args, a:kwargs["max_tokens"])
-    endif
+    " Parse all arguments, including -s as an option
+    while !empty(a:args)
+        let l:arg = remove(a:args, 0)
+        if l:arg == '-s'
+            if !empty(a:args)
+                let l:system_prompt = remove(a:args, 0)
+            endif
+        elseif l:arg == '-f'
+            let l:kwargs['file'] = remove(a:args, 0)
+        elseif l:arg == '-m'
+            let l:kwargs['model'] = remove(a:args, 0)
+        elseif l:arg == '-x'
+            let l:kwargs['max_tokens'] = remove(a:args, 0)
+        elseif l:arg == '-t'
+            let l:kwargs['temperature'] = remove(a:args, 0)
+        endif
+    endwhile
 
-    " gptのtemperatureのデフォルトは1.0
-    if has_key(a:kwargs, "temperature")
-        call add(l:args, "-t")
-        call add(l:args, a:kwargs["temperature"])
-    endif
-
-    if has_key(a:kwargs, "url")  " default http://localhost:11434
-        call add(l:args, "-u")
-        call add(l:args, a:kwargs["url"])
-    endif
-
-    if has_key(a:kwargs, "file")
-        call add(l:args, "-f")
-        call add(l:args, a:kwargs["file"])
-    endif
-
-    echo join(l:args)
-    " 新しいWindowでterminalでgptコマンドを実行する
-    let l:cmd = ["new", "|", "term"]
-    call extend(l:cmd, l:args)
-    execute join(l:cmd)
-    " call setline(1, l:user_prompt) " システムプロンプトを最初の行に設定
+    call gptcli#GPTWindow(l:system_prompt, l:kwargs)
 endfunction
 
 " " カスタム補完関数 C-X, C-U
