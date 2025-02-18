@@ -1,5 +1,5 @@
 import { HumanMessage, SystemMessage } from "npm:@langchain/core/messages";
-import { commandMessage } from "./help.ts";
+import { CommandLineInterface } from "./cli.ts";
 import { Message } from "./llm.ts";
 
 /** この会話で使用したLLM モデルの履歴 */
@@ -66,7 +66,7 @@ export function handleSlashCommand(
 ): Message[] {
   switch (command) {
     case Command.Help: {
-      console.log(commandMessage);
+      CommandLineInterface.showCommandMessage();
       break; // Slashコマンドを処理したら次のループへ
     }
     case Command.Clear: {

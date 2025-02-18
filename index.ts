@@ -21,10 +21,10 @@ $ gpt
 
 import { HumanMessage, SystemMessage } from "npm:@langchain/core/messages";
 
-import { commandMessage, helpMessage } from "./lib/help.ts";
+import { CommandLineInterface } from "./lib/cli.ts";
 import { LLM, Message } from "./lib/llm.ts";
 import { getUserInputInMessage, readStdin } from "./lib/input.ts";
-import { Params, parseArgs } from "./lib/params.ts";
+import { Params } from "./lib/params.ts";
 import { filesGenerator, parseFileContent } from "./lib/file.ts";
 import { CodeBlock } from "./lib/file.ts";
 import {
@@ -38,13 +38,8 @@ import {
 
 const VERSION = "v0.9.1";
 
-/** 灰色のテキストで表示 */
-function consoleInfoWithGrayText(s: string): void {
-  console.info(`\x1b[90m${s}\x1b[0m`);
-}
-
 class InitialMessage {
-  constructor(readonly content: string) {}
+  constructor(private readonly content: string) {}
 
   public add(codeBlock: CodeBlock) {
     return new InitialMessage(this.content + "\n" + codeBlock.toString());
@@ -155,7 +150,7 @@ const llmAsk = async (params: Params) => {
     }
 
     // 対話的回答
-    consoleInfoWithGrayText(commandMessage);
+    CommandLineInterface.showCommandMessage();
     while (true) {
       const result = await userSession(llm, params, messages);
       if (result === undefined) continue;
@@ -167,29 +162,28 @@ const llmAsk = async (params: Params) => {
 };
 
 const main = async () => {
-  // コマンドライン引数をパースして
-  const params: Params = parseArgs();
+  const cli = CommandLineInterface.getInstance();
   // help, version flagが指定されていればinitで終了
-  if (params.version) {
-    console.error(`gpt ${VERSION}`);
+  if (cli.params.version) {
+    CommandLineInterface.showVersion(VERSION);
     Deno.exit(0);
   }
-  if (params.help) {
-    console.error(helpMessage);
+  if (cli.params.help) {
+    CommandLineInterface.showHelp();
     Deno.exit(0);
   }
 
   // modelStackに使用した最初のモデルを追加
-  modelStack.push(params.model);
+  modelStack.push(cli.params.model);
   // 標準入力をチェック
   const stdinContent: string | null = await readStdin();
   if (stdinContent) {
-    params.content = stdinContent;
-    params.noChat = true; // 標準入力がある場合は対話モードに入らない
+    cli.params.content = stdinContent;
+    cli.params.noChat = true; // 標準入力がある場合は対話モードに入らない
   }
 
   // llm へ質問し回答を得る。
-  await llmAsk(params);
+  await llmAsk(cli.params);
 };
 
 await main();

@@ -11,7 +11,7 @@ Deno.test("Read file contents test", async () => {
     const fileContent = await parseFileContent(filePath);
 
     assertEquals(
-      fileContent,
+      fileContent.toString(),
       "```" + filePath + "\n" + expectedContent + "\n```",
     );
   } catch (error) {
