@@ -3,7 +3,7 @@ import { CommandLineInterface } from "./cli.ts";
 import { Message } from "./llm.ts";
 
 /** この会話で使用したLLM モデルの履歴 */
-export const modelStack: string[] = [];
+export const modelStack: Set<string> = new Set();
 
 export type _Command =
   | "/help"
@@ -45,18 +45,17 @@ export const newSlashCommand = (input: string): Command => {
   return command;
 };
 
-type ModelMessage = { model?: string; message?: HumanMessage };
+type ModelMessage = { model: string; message: string };
 
 /** ユーザーの入力が@から始まると、@に続くモデル名を返す
  *  @param input {string} : ユーザーの入力
  *  @return {string} モデル名(@に続く文字列)
  */
-export const extractAtModel = (input: string): ModelMessage => {
+const extractAtModel = (input: string): ModelMessage => {
   const match = input.match(/^@[^\s\n\t]+/);
-  const model = match ? match[0].substring(1) : undefined;
+  const model = match ? match[0].substring(1) : "";
   // matchでマッチした@modelName を削除したinput を割り当てる
-  const input1 = match ? input.substring(match[0].length).trim() : input;
-  const message = input1 ? new HumanMessage(input1) : undefined;
+  const message = match ? input.substring(match[0].length).trim() : input;
   return { model, message };
 };
 
@@ -80,7 +79,7 @@ export function handleSlashCommand(
     }
     // 使用したモデルの履歴を表示する
     case Command.ModelStack: {
-      console.log(`You were chat with them...\n${modelStack.join("\n")}`);
+      console.log(`You were chat with them...\n${[...modelStack].join("\n")}`);
       break;
     }
     case Command.Bye: {
@@ -102,3 +101,35 @@ export const isAtCommand = (humanMessage: unknown): boolean => {
   }
   return content.startsWith("@");
 };
+
+function getMessageFromHistory(
+  messages: Message[],
+  index: number = -2,
+): string | null {
+  return messages.length > Math.abs(index)
+    ? messages[messages.length + index]?.content.toString()
+    : null;
+}
+
+export function handleAtCommand(
+  humanMessage: HumanMessage,
+  messages: Message[],
+  model: string,
+): ModelMessage {
+  if (!isAtCommand(humanMessage)) {
+    return { message: humanMessage.content.toString(), model };
+  }
+
+  const extracted = extractAtModel(humanMessage.content.toString());
+
+  // モデル名指定以外のプロンプトがなければ前のプロンプトを引き継ぐ。
+  // 前のプロンプトもなければ空のHumanMessageを渡す
+  const newMessage: string = extracted.message ||
+    getMessageFromHistory(messages) ||
+    "";
+
+  return {
+    message: newMessage,
+    model: extracted.model || model,
+  };
+}

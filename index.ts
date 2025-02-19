@@ -29,7 +29,7 @@ import { filesGenerator, parseFileContent } from "./lib/file.ts";
 import { CodeBlock } from "./lib/file.ts";
 import {
   Command,
-  extractAtModel,
+  handleAtCommand,
   handleSlashCommand,
   isAtCommand,
   isSlashCommand,
@@ -81,20 +81,19 @@ async function userSession(
 
   // @Model名で始まるinput はllmモデルを再指定する
   if (isAtCommand(humanMessage)) {
-    const { model, message } = extractAtModel(
-      humanMessage.content.toString(),
+    const extractedAtModelMessage = handleAtCommand(
+      humanMessage,
+      messages,
+      params.model,
     );
-    // モデル名指定以外のプロンプトがなければ前のプロンプトを引き継ぐ。
-    // 前のプロンプトもなければ空のHumanMessageを渡す
-    humanMessage = message || messages.at(-2) || new HumanMessage("");
 
     // @コマンドで指定したモデルのパースに成功したら
     // モデルスタックに追加して新しいモデルで会話を始める。
     // パースに失敗したら、以前のモデルを復元してエラー表示して
     // 前のモデルに戻して会話を継続。
-    if (model) {
+    if (extractedAtModelMessage.model) {
       const modelBackup = params.model;
-      params.model = model;
+      params.model = extractedAtModelMessage.model;
       try {
         llm = new LLM(params);
       } catch (error: unknown) {
@@ -102,12 +101,13 @@ async function userSession(
         params.model = modelBackup;
         return;
       }
-      modelStack.push(model);
+      modelStack.add(extractedAtModelMessage.model);
     }
+    humanMessage = new HumanMessage(extractedAtModelMessage.message);
   }
 
   // ユーザーからの問いを追加
-  messages.push(humanMessage as HumanMessage);
+  messages.push(humanMessage);
   // console.debug(messages);
   // AIからの回答を追加
   const aiMessage = await llm.ask(messages);
@@ -181,7 +181,7 @@ const main = async () => {
   }
 
   // modelStackに使用した最初のモデルを追加
-  modelStack.push(cli.params.model);
+  modelStack.add(cli.params.model);
   // 標準入力をチェック
   const stdinContent: string | null = await readStdin();
   if (stdinContent) {
