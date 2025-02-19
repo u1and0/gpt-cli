@@ -51,7 +51,7 @@ type ModelMessage = { model: string; message: string };
  *  @param input {string} : ユーザーの入力
  *  @return {string} モデル名(@に続く文字列)
  */
-const extractAtModel = (input: string): ModelMessage => {
+export const extractAtModel = (input: string): ModelMessage => {
   const match = input.match(/^@[^\s\n\t]+/);
   const model = match ? match[0].substring(1) : "";
   // matchでマッチした@modelName を削除したinput を割り当てる
