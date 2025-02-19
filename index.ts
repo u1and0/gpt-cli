@@ -137,6 +137,7 @@ const llmAsk = async (params: Params) => {
       // 指定されたすべてのファイルをテキストにパースして
       // 最初のユーザープロンプトに含める
       const codeBlock = await parseFileContent(filePath);
+      if (!codeBlock.content) continue;
       initialMessage = initialMessage.add(codeBlock);
     }
   }
