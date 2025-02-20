@@ -71,54 +71,58 @@ endfunction
 " Usage:
 "   command! -nargs=* GPTChat call s:GPTChatFunction(<q-args>)
 function! gptcli#GPTWindow(args, kwargs={})
-    " 引数を解析して
+    " argsの解析
     " システムプロンプトかファイルか分岐する
     let l:system_prompt = ""
-    let l:file_path = []
+    let l:file_list = []
     for arg in a:args
       " ファイルとして読み込めるかどうかでファイルパスを判断
-      if filereadable(arg)
-          call extend(l:file_path, ["-f", arg])
+      let l:file_path = expand(arg)
+      if filereadable(l:file_path)
+          call extend(l:file_list, ["-f", l:file_path])
       else
         let l:system_prompt .= arg
       endif
     endfor
-    echo "System Prompt: " . l:system_prompt
-    echo "File Path: " . string(l:file_path)
+    " echo "System Prompt: " . l:system_prompt
+    " echo "File Path: " . string(l:file_list)
 
     " gptを起動するコマンドを構築する
-    let l:args = ["gpt"]
+    let l:gpt_command = ["gpt"]
     " system_promptがあれば追加
     if l:system_prompt != ""
-        call extend(l:args, [ "-s", l:system_prompt ])
+        call extend(l:gpt_command , [ "-s", l:system_prompt ])
     endif
-    " gptのmodelのデフォルトはgpt-3.5-turbo
+
+    if l:file_list != []
+        call extend(l:gpt_command , file_list)
+    endif
+
+    " kwargsの解析
     if has_key(a:kwargs, "model")
-        call add(l:args, "-m")
-        call add(l:args, a:kwargs["model"])
+        call add(l:gpt_command , "-m")
+        call add(l:gpt_command , a:kwargs["model"])
     endif
 
-    " gptのmax_tokensのデフォルトは1000
     if has_key(a:kwargs, "max_tokens")
-        call add(l:args, "-x")
-        call add(l:args, a:kwargs["max_tokens"])
+        call add(l:gpt_command , "-x")
+        call add(l:gpt_command , a:kwargs["max_tokens"])
     endif
 
-    " gptのtemperatureのデフォルトは1.0
     if has_key(a:kwargs, "temperature")
-        call add(l:args, "-t")
-        call add(l:args, a:kwargs["temperature"])
+        call add(l:gpt_command , "-t")
+        call add(l:gpt_command , a:kwargs["temperature"])
     endif
 
     if has_key(a:kwargs, "url")  " default http://localhost:11434
-        call add(l:args, "-u")
-        call add(l:args, a:kwargs["url"])
+        call add(l:gpt_command , "-u")
+        call add(l:gpt_command , a:kwargs["url"])
     endif
 
-    echo join(l:args)
+    echo join(l:gpt_command )
     " 新しいWindowでterminalでgptコマンドを実行する
     let l:cmd = ["new", "|", "term"]
-    call extend(l:cmd, l:args)
+    call extend(l:cmd, l:gpt_command )
     execute join(l:cmd)
     " call setline(1, l:user_prompt) " システムプロンプトを最初の行に設定
 endfunction
