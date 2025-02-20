@@ -66,30 +66,61 @@ function! gptcli#GPT(system_prompt, kwargs={}) range
     call append(a:lastline, l:result)
 endfunction
 
-function! gptcli#GPTProChat(args) abort
+
+" コマンドを定義
+" Usage:
+"   command! -nargs=* GPTChat call s:GPTChatFunction(<q-args>)
+function! gptcli#GPTWindow(args, kwargs={})
+    " 引数を解析して
+    " システムプロンプトかファイルか分岐する
     let l:system_prompt = ""
-    let l:kwargs = {}
+    let l:file_path = []
+    for arg in a:args
+      " ファイルとして読み込めるかどうかでファイルパスを判断
+      if filereadable(arg)
+          call extend(l:file_path, ["-f", arg])
+      else
+        let l:system_prompt = arg
+      endif
+    endfor
 
-    " Parse all arguments, including -s as an option
-    while !empty(a:args)
-        let l:arg = remove(a:args, 0)
-        if l:arg == '-s'
-            if !empty(a:args)
-                let l:system_prompt = remove(a:args, 0)
-            endif
-        elseif l:arg == '-f'
-            let l:kwargs['file'] = remove(a:args, 0)
-        elseif l:arg == '-m'
-            let l:kwargs['model'] = remove(a:args, 0)
-        elseif l:arg == '-x'
-            let l:kwargs['max_tokens'] = remove(a:args, 0)
-        elseif l:arg == '-t'
-            let l:kwargs['temperature'] = remove(a:args, 0)
-        endif
-    endwhile
+    " gptを起動するコマンドを構築する
+    let l:args = ["gpt"]
+    " system_promptがあれば追加
+    if l:system_prompt != ""
+        call extend(l:args, [ "-s", l:system_prompt ])
+    endif
+    " gptのmodelのデフォルトはgpt-3.5-turbo
+    if has_key(a:kwargs, "model")
+        call add(l:args, "-m")
+        call add(l:args, a:kwargs["model"])
+    endif
 
-    call gptcli#GPTWindow(l:system_prompt, l:kwargs)
+    " gptのmax_tokensのデフォルトは1000
+    if has_key(a:kwargs, "max_tokens")
+        call add(l:args, "-x")
+        call add(l:args, a:kwargs["max_tokens"])
+    endif
+
+    " gptのtemperatureのデフォルトは1.0
+    if has_key(a:kwargs, "temperature")
+        call add(l:args, "-t")
+        call add(l:args, a:kwargs["temperature"])
+    endif
+
+    if has_key(a:kwargs, "url")  " default http://localhost:11434
+        call add(l:args, "-u")
+        call add(l:args, a:kwargs["url"])
+    endif
+
+    echo join(l:args)
+    " 新しいWindowでterminalでgptコマンドを実行する
+    let l:cmd = ["new", "|", "term"]
+    call extend(l:cmd, l:args)
+    execute join(l:cmd)
+    " call setline(1, l:user_prompt) " システムプロンプトを最初の行に設定
 endfunction
+
 
 " " カスタム補完関数 C-X, C-U
 " fun! CompleteByGPT(findstart, base)
