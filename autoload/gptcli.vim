@@ -80,9 +80,11 @@ function! gptcli#GPTWindow(args, kwargs={})
       if filereadable(arg)
           call extend(l:file_path, ["-f", arg])
       else
-        let l:system_prompt = arg
+        let l:system_prompt .= arg
       endif
     endfor
+    echo "System Prompt: " . l:system_prompt
+    echo "File Path: " . string(l:file_path)
 
     " gptを起動するコマンドを構築する
     let l:args = ["gpt"]
