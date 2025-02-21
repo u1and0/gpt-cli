@@ -73,19 +73,9 @@ endfunction
 function! gptcli#GPTWindow(args, kwargs={})
     " argsの解析
     " システムプロンプトかファイルか分岐する
-    let l:system_prompt = ""
-    let l:file_list = []
-    for arg in a:args
-      " ファイルとして読み込めるかどうかでファイルパスを判断
-      let l:file_path = expand(arg)
-      if filereadable(l:file_path)
-          call extend(l:file_list, ["-f", l:file_path])
-      else
-        let l:system_prompt .= arg
-      endif
-    endfor
-    " echo "System Prompt: " . l:system_prompt
-    " echo "File Path: " . string(l:file_list)
+    let [l:file_list, l:system_prompt] = gptcli#_GetFileList(a:args)
+    echo "System Prompt: " . l:system_prompt
+    echo "File Path: " . string(l:file_list)
 
     " gptを起動するコマンドを構築する
     let l:gpt_command = ["gpt"]
@@ -127,6 +117,37 @@ function! gptcli#GPTWindow(args, kwargs={})
     " call setline(1, l:user_prompt) " システムプロンプトを最初の行に設定
 endfunction
 
+function! gptcli#_GetFileList(args)
+    let l:file_list = []
+    let l:system_prompt_list = [] " システムプロンプトをリストで管理
+
+    echo a:args
+    echo '引数の数:' . len(a:args)
+    for arg in a:args
+        let l:expanded_arg = expand(arg)
+        echo 'argの解釈:' . l:expanded_arg
+
+        if type(l:expanded_arg) == v:t_list
+            for file_path in l:expanded_arg
+                if filereadable(file_path)
+                    call extend(l:file_list, ["-f", file_path])
+                else
+                    call add(l:system_prompt_list, file_path) " リストに追加
+                endif
+            endfor
+        else
+            if filereadable(l:expanded_arg)
+                call extend(l:file_list, ["-f", l:expanded_arg])
+            else
+                call add(l:system_prompt_list, l:expanded_arg) " リストに追加
+            endif
+        endif
+    endfor
+
+    let l:system_prompt = join(l:system_prompt_list, ' ') " リストを結合して文字列に
+
+    return [l:file_list, l:system_prompt]
+endfunction
 
 " " カスタム補完関数 C-X, C-U
 " fun! CompleteByGPT(findstart, base)
