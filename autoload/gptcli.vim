@@ -68,12 +68,51 @@ endfunction
 
 
 " コマンドを定義
+" Setting:
+"   command! -nargs=* GPTChat call s:GPTWindow(<f-args>, {'model':'gpt-4o'})
+"
 " Usage:
-"   command! -nargs=* GPTChat call s:GPTChatFunction(<q-args>)
-function! gptcli#GPTWindow(args, kwargs={})
+"   1. exモードから使う
+"
+"   `:GPTChat % # ~/your/any.txt 関西弁で話して`
+"
+"   結果、gptコマンドにカレントバッファ、裏バッファ、~/your/any.txtを-fオプションで指定して、
+"   '関西弁で話して'というシステムプロンプトを送ります。
+"   システムプロンプトとファイルパスの区別は`filereadable()`で判定します。
+"
+"   2. On-The-Fly にパラメータを決定しながら指定する
+"
+"   キーワード引数は辞書形式で指定できます。
+"   ただし、command!で設定したコマンドは使えず、
+"   `callgptcli#GPTWindow()`から使ってください。
+"
+"   ```
+"   :call gptcli#GPTWindow(
+"       '関西弁で話して',
+"       '%',
+"       {
+"           'model': 'gemini-2.0-flash',
+"           'temperature': 0.3,
+"       })
+"   ```
+function! gptcli#GPTWindow(...)
     " argsの解析
+    " 最後の引数を辞書として扱い、それ以外を通常の引数として処理します
+    let l:args = a:000[:-2]     " 最後の引数を除いた全ての引数
+    let l:kwargs = a:000[-1]    " 最後の引数（辞書）
+
+    " 引数の検証
+    if a:0 < 1
+        throw "At least one argument is required"
+    endif
+
+    " 最後の引数が辞書であることを確認
+    if type(a:000[-1]) != v:t_dict
+        throw "last argument must be a dictionary"
+    endif
+
     " システムプロンプトかファイルか分岐する
-    let [l:file_list, l:system_prompt] = gptcli#_GetFileList(a:args)
+    let [l:file_list, l:system_prompt] = gptcli#_GetFileList(args)
     echo "System Prompt: " . l:system_prompt
     echo "File Path: " . string(l:file_list)
 
@@ -89,24 +128,24 @@ function! gptcli#GPTWindow(args, kwargs={})
     endif
 
     " kwargsの解析
-    if has_key(a:kwargs, "model")
+    if has_key(l:kwargs, "model")
         call add(l:gpt_command , "-m")
-        call add(l:gpt_command , a:kwargs["model"])
+        call add(l:gpt_command , l:kwargs["model"])
     endif
 
-    if has_key(a:kwargs, "max_tokens")
+    if has_key(l:kwargs, "max_tokens")
         call add(l:gpt_command , "-x")
-        call add(l:gpt_command , a:kwargs["max_tokens"])
+        call add(l:gpt_command , l:kwargs["max_tokens"])
     endif
 
-    if has_key(a:kwargs, "temperature")
+    if has_key(l:kwargs, "temperature")
         call add(l:gpt_command , "-t")
-        call add(l:gpt_command , a:kwargs["temperature"])
+        call add(l:gpt_command , l:kwargs["temperature"])
     endif
 
-    if has_key(a:kwargs, "url")  " default http://localhost:11434
+    if has_key(l:kwargs, "url")  " default http://localhost:11434
         call add(l:gpt_command , "-u")
-        call add(l:gpt_command , a:kwargs["url"])
+        call add(l:gpt_command , l:kwargs["url"])
     endif
 
     echo join(l:gpt_command )
@@ -121,8 +160,6 @@ function! gptcli#_GetFileList(args)
     let l:file_list = []
     let l:system_prompt_list = [] " システムプロンプトをリストで管理
 
-    echo a:args
-    echo '引数の数:' . len(a:args)
     for arg in a:args
         let l:expanded_arg = expand(arg)
         echo 'argの解釈:' . l:expanded_arg
