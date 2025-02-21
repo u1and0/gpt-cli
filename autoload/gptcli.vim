@@ -164,16 +164,19 @@ function! gptcli#_GetFileList(args)
         let l:expanded_arg = expand(arg)
         echo 'argの解釈:' . l:expanded_arg
 
+        " ##を受け取った場合
         if type(l:expanded_arg) == v:t_list
             for file_path in l:expanded_arg
                 if filereadable(file_path)
                     call extend(l:file_list, ["-f", file_path])
-                else
-                    call add(l:system_prompt_list, file_path) " リストに追加
                 endif
             endfor
         else
             if filereadable(l:expanded_arg)
+                call extend(l:file_list, ["-f", l:expanded_arg])
+            " arg に * が含まれる場合
+            " globパターンをgptコマンドが処理するのでそのままいれる
+            elseif l:arg =~# '\*' 
                 call extend(l:file_list, ["-f", l:expanded_arg])
             else
                 call add(l:system_prompt_list, l:expanded_arg) " リストに追加
