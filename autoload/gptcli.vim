@@ -2,7 +2,7 @@
 
 " Usage
 " call gptcli#GPT("your system prompt")
-" call gptcli#GPT("your system prompt", {model="gpt-3.5-turbo", max_tokens=1000, temperature=1.0})
+" call gptcli#GPT("your system prompt", {model="gpt-4o-mini", max_tokens=8192, temperature=1.0})
 " 上に挙げたkwargsはgptのデフォルト値なので指定しなければこの値でgptが実行される。
 function! gptcli#GPT(system_prompt, kwargs={}) range
             " \ max_tokens=1000,
@@ -177,36 +177,60 @@ function! gptcli#GPTWindow(...)
 endfunction
 
 function! gptcli#_GetFileList(args)
-    let l:file_list = []
-    let l:system_prompt_list = [] " システムプロンプトをリストで管理
+    " 引数をファイルパスとシステムプロンプトに分類する関数群を使用
+    let l:classification = s:ClassifyArguments(a:args)
 
-    for arg in a:args
-        let l:expanded_arg = expand(arg)
-        echo 'argの解釈:' . l:expanded_arg
+    " ファイルリストを構築
+    let l:file_list = s:BuildFileList(l:classification.files)
 
-        " ##を受け取った場合
-        if type(l:expanded_arg) == v:t_list
-            for file_path in l:expanded_arg
-                if filereadable(file_path)
-                    call extend(l:file_list, ["-f", file_path])
-                endif
-            endfor
-        else
-            if filereadable(l:expanded_arg)
-                call extend(l:file_list, ["-f", l:expanded_arg])
-            " arg に * が含まれる場合
-            " globパターンをgptコマンドが処理するのでそのままいれる
-            elseif l:arg =~# '\*' 
-                call extend(l:file_list, ["-f", l:expanded_arg])
-            else
-                call add(l:system_prompt_list, l:expanded_arg) " リストに追加
-            endif
-        endif
-    endfor
-
-    let l:system_prompt = join(l:system_prompt_list, ' ') " リストを結合して文字列に
+    " システムプロンプトを結合
+    let l:system_prompt = join(l:classification.prompts, ' ')
 
     return [l:file_list, l:system_prompt]
+endfunction
+
+" 引数を分類する関数
+function! s:ClassifyArguments(args)
+    let l:result = {
+        \ 'files': [],
+        \ 'prompts': []
+        \ }
+
+    for arg in a:args
+        call s:ClassifySingleArgument(arg, l:result)
+    endfor
+
+    return l:result
+endfunction
+
+" 単一の引数を分類する関数
+function! s:ClassifySingleArgument(arg, result)
+    " ファイルパスの判定と追加
+    if s:IsReadableFile(a:arg) || s:IsGlobPattern(a:arg)
+        call add(a:result.files, a:arg)
+    else
+        " ファイルパスでない場合はプロンプトとして追加
+        call add(a:result.prompts, a:arg)
+    endif
+endfunction
+
+" ファイルが読み取り可能かチェックする関数
+function! s:IsReadableFile(path)
+    return filereadable(a:path)
+endfunction
+
+" globパターンかどうかをチェックする関数
+function! s:IsGlobPattern(arg)
+    return a:arg =~# '\*'
+endfunction
+
+" ファイルリストを構築する関数
+function! s:BuildFileList(files)
+    let l:file_list = []
+    for file in a:files
+        call extend(l:file_list, ["-f", file])
+    endfor
+    return l:file_list
 endfunction
 
 " " カスタム補完関数 C-X, C-U
