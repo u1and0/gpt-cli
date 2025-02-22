@@ -179,13 +179,10 @@ endfunction
 function! gptcli#_GetFileList(args)
     " 引数をファイルパスとシステムプロンプトに分類する関数群を使用
     let l:classification = s:ClassifyArguments(a:args)
-
     " ファイルリストを構築
     let l:file_list = s:BuildFileList(l:classification.files)
-
     " システムプロンプトを結合
     let l:system_prompt = join(l:classification.prompts, ' ')
-
     return [l:file_list, l:system_prompt]
 endfunction
 
@@ -205,7 +202,23 @@ endfunction
 
 " 単一の引数を分類する関数
 function! s:ClassifySingleArgument(arg, result)
-    " ファイルパスの判定と追加
+    " 特別な変数（##）の場合は展開
+    if a:arg ==# '##'
+        let l:expanded = expand(a:arg)
+        if type(l:expanded) == v:t_list
+            for item in l:expanded
+                call s:AddFileToList(item, a:result)
+            endfor
+            return
+        endif
+    endif
+
+    " 通常のファイルパスやglobパターンの処理
+    call s:AddFileToList(a:arg, a:result)
+endfunction
+
+" ファイルをリストに追加する関数
+function! s:AddFileToList(arg, result)
     if s:IsReadableFile(a:arg) || s:IsGlobPattern(a:arg)
         call add(a:result.files, a:arg)
     else
