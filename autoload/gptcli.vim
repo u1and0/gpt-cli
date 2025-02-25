@@ -133,7 +133,7 @@ function! gptcli#GPTWindow(...)
 
     " システムプロンプトかファイルか分岐する
     let [l:file_list, l:system_prompt] = gptcli#_GetFileList(args)
-    echo "System Prompt: " . l:system_prompt
+    echo "System Prompt: " . string(l:system_prompt)
     echo "File Path: " . string(l:file_list)
 
     " gptを起動するコマンドを構築する
@@ -176,6 +176,9 @@ function! gptcli#GPTWindow(...)
     " call setline(1, l:user_prompt) " システムプロンプトを最初の行に設定
 endfunction
 
+" 与えられた引数argsを、ファイルのリストかプロンプトのリストへ振り分け、
+" ファイルのリストには、k'-f' をつけてファイルオプションとする
+" プロンプトのリストは、k半角スペースで結合してシステムプロンプトとする。
 function! gptcli#_GetFileList(args)
     " 引数をファイルパスとシステムプロンプトに分類する関数群を使用
     let l:classification = s:ClassifyArguments(a:args)
@@ -211,15 +214,18 @@ function! s:ClassifySingleArgument(arg, result)
             endfor
             return
         endif
+    else
+        " 通常のファイルパスやglobパターンの処理
+        call s:AddFileToList(a:arg, a:result)
     endif
-
-    " 通常のファイルパスやglobパターンの処理
-    call s:AddFileToList(a:arg, a:result)
 endfunction
 
 " ファイルをリストに追加する関数
 function! s:AddFileToList(arg, result)
-    if s:IsReadableFile(a:arg) || s:IsGlobPattern(a:arg)
+    let l:expanded = expand(a:arg)
+    if s:IsReadableFile(l:expanded)
+        call add(a:result.files, l:expanded)
+    elseif s:IsGlobPattern(a:arg)
         call add(a:result.files, a:arg)
     else
         " ファイルパスでない場合はプロンプトとして追加
