@@ -1,4 +1,6 @@
-export const commandMessage = `
+import { Params, parseArgs } from "./params.ts";
+
+const commandMessage = `
 Ctrl+D to confirm input.
 
 Help:
@@ -10,7 +12,7 @@ Help:
   ex)   @gemini-2.0-flash your question...
 `;
 
-export const helpMessage =
+const helpMessage =
   `Command-line interface  that enables interactive chat with LLMs.
 
     Usage:
@@ -70,3 +72,34 @@ export const helpMessage =
         - ollama/mixtral:8x7b-text-v0.1-q5_K_M...
 ${commandMessage}
 `;
+
+export class CommandLineInterface {
+  private static _instance: CommandLineInterface;
+  public readonly params: Params;
+
+  private constructor() {
+    // コマンドライン引数をパースして
+    // cli.paramsプロパティを作成する
+    this.params = parseArgs();
+  }
+
+  public static getInstance(): CommandLineInterface {
+    if (!CommandLineInterface._instance) {
+      CommandLineInterface._instance = new CommandLineInterface();
+    }
+    return CommandLineInterface._instance;
+  }
+
+  public static showVersion(version: string): void {
+    console.log(`gpt ${version}`);
+  }
+
+  public static showHelp(): void {
+    console.log(helpMessage);
+  }
+
+  /** 灰色のテキストで表示 */
+  public static showCommandMessage(): void {
+    console.info(`\x1b[90m${commandMessage}\x1b[0m`);
+  }
+}

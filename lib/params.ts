@@ -71,7 +71,7 @@ export function parseArgs(): Params {
 
 /** 引数となる配列の中から、
  * すべての-f フラグの次の引数を配列に格納する。
- * @params {string[]} - コマンドライン引数。通常Deno.args
+ * @param {string[]} args  - コマンドライン引数。通常Deno.args
  * @returns {string[]} - ファイルパスの配列
  * @throws - No file specified after -f option
  * @throws - Invalid file path after -f

@@ -17,10 +17,10 @@ Deno.test("SlashCommand constructor", () => {
 });
 
 Deno.test("ユーザーの入力が@から始まると、@に続くモデル名を返す", () => {
-  const testCases: [string, string | undefined][] = [
+  const testCases: [string, string][] = [
     ["@modelName arg1 arg2", "modelName"], // 行頭に@が入るとモデル名を返す
-    [" @modelName arg1 arg2", undefined], // 行頭にスペースが入ると@コマンドではない
-    ["plain text", undefined],
+    [" @modelName arg1 arg2", ""], // 行頭にスペースが入ると@コマンドではない
+    ["plain text", ""],
   ];
 
   for (const [args, expected] of testCases) {

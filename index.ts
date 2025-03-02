@@ -21,39 +21,39 @@ $ gpt
 
 import { HumanMessage, SystemMessage } from "npm:@langchain/core/messages";
 
-import { commandMessage, helpMessage } from "./lib/help.ts";
+import { CommandLineInterface } from "./lib/cli.ts";
 import { LLM, Message } from "./lib/llm.ts";
 import { getUserInputInMessage, readStdin } from "./lib/input.ts";
-import { Params, parseArgs } from "./lib/params.ts";
+import { Params } from "./lib/params.ts";
 import { filesGenerator, parseFileContent } from "./lib/file.ts";
 import { CodeBlock } from "./lib/file.ts";
 import {
   Command,
-  extractAtModel,
+  handleAtCommand,
   handleSlashCommand,
   isAtCommand,
   isSlashCommand,
   modelStack,
 } from "./lib/command.ts";
 
-const VERSION = "v0.9.1";
-
-/** 灰色のテキストで表示 */
-function consoleInfoWithGrayText(s: string): void {
-  console.info(`\x1b[90m${s}\x1b[0m`);
-}
+const VERSION = "v0.9.2";
 
 class InitialMessage {
-  constructor(readonly content: string) {}
+  constructor(private readonly content: string) {}
 
   public add(codeBlock: CodeBlock) {
-    return new InitialMessage(this.content + "\n" + codeBlock);
+    return new InitialMessage(
+      `${this.content}
+${codeBlock}`,
+    );
   }
 
   public getContent(): string {
     return this.content;
   }
 }
+
+type AgentRecord = { llm: LLM; messages: Message[] };
 
 /** ユーザーからの入力により実行を分岐する
  * while loop内の処理
@@ -67,7 +67,7 @@ async function userSession(
   llm: LLM,
   params: Params,
   messages: Message[],
-): Promise<{ llm: LLM; messages: Message[] } | undefined> {
+): Promise<AgentRecord | undefined> {
   // ユーザーからの入力待ち
   let humanMessage: HumanMessage | Command = await getUserInputInMessage(
     messages,
@@ -76,23 +76,24 @@ async function userSession(
   // /commandを実行する
   if (isSlashCommand(humanMessage)) {
     messages = handleSlashCommand(humanMessage, messages);
-    return;
-  } else if (isAtCommand(humanMessage)) {
-    // @Model名で始まるinput はllmモデルを再指定する
-    const { model, message } = extractAtModel(
-      humanMessage.content.toString(),
+    return { llm, messages };
+  }
+
+  // @Model名で始まるinput はllmモデルを再指定する
+  if (isAtCommand(humanMessage)) {
+    const extractedAtModelMessage = handleAtCommand(
+      humanMessage,
+      messages,
+      params.model,
     );
-    // モデル名指定以外のプロンプトがなければ前のプロンプトを引き継ぐ。
-    // 前のプロンプトもなければ空のHumanMessageを渡す
-    humanMessage = message || messages.at(-2) || new HumanMessage("");
 
     // @コマンドで指定したモデルのパースに成功したら
     // モデルスタックに追加して新しいモデルで会話を始める。
     // パースに失敗したら、以前のモデルを復元してエラー表示して
     // 前のモデルに戻して会話を継続。
-    if (model) {
+    if (extractedAtModelMessage.model) {
       const modelBackup = params.model;
-      params.model = model;
+      params.model = extractedAtModelMessage.model;
       try {
         llm = new LLM(params);
       } catch (error: unknown) {
@@ -100,12 +101,13 @@ async function userSession(
         params.model = modelBackup;
         return;
       }
-      modelStack.push(model);
+      modelStack.add(extractedAtModelMessage.model);
     }
+    humanMessage = new HumanMessage(extractedAtModelMessage.message);
   }
 
   // ユーザーからの問いを追加
-  messages.push(humanMessage as HumanMessage);
+  messages.push(humanMessage);
   // console.debug(messages);
   // AIからの回答を追加
   const aiMessage = await llm.ask(messages);
@@ -135,6 +137,7 @@ const llmAsk = async (params: Params) => {
       // 指定されたすべてのファイルをテキストにパースして
       // 最初のユーザープロンプトに含める
       const codeBlock = await parseFileContent(filePath);
+      if (!codeBlock.content) continue;
       initialMessage = initialMessage.add(codeBlock);
     }
   }
@@ -153,10 +156,11 @@ const llmAsk = async (params: Params) => {
     }
 
     // 対話的回答
-    consoleInfoWithGrayText(commandMessage);
+    CommandLineInterface.showCommandMessage();
     while (true) {
       const result = await userSession(llm, params, messages);
       if (result === undefined) continue;
+      params.debug && console.debug(result.messages);
       ({ llm, messages } = result);
     }
   } catch (error) {
@@ -165,29 +169,28 @@ const llmAsk = async (params: Params) => {
 };
 
 const main = async () => {
-  // コマンドライン引数をパースして
-  const params: Params = parseArgs();
+  const cli = CommandLineInterface.getInstance();
   // help, version flagが指定されていればinitで終了
-  if (params.version) {
-    console.error(`gpt ${VERSION}`);
+  if (cli.params.version) {
+    CommandLineInterface.showVersion(VERSION);
     Deno.exit(0);
   }
-  if (params.help) {
-    console.error(helpMessage);
+  if (cli.params.help) {
+    CommandLineInterface.showHelp();
     Deno.exit(0);
   }
 
   // modelStackに使用した最初のモデルを追加
-  modelStack.push(params.model);
+  modelStack.add(cli.params.model);
   // 標準入力をチェック
   const stdinContent: string | null = await readStdin();
   if (stdinContent) {
-    params.content = stdinContent;
-    params.noChat = true; // 標準入力がある場合は対話モードに入らない
+    cli.params.content = stdinContent;
+    cli.params.noChat = true; // 標準入力がある場合は対話モードに入らない
   }
 
   // llm へ質問し回答を得る。
-  await llmAsk(params);
+  await llmAsk(cli.params);
 };
 
 await main();
