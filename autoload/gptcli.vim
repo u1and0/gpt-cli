@@ -117,24 +117,20 @@ endfunction
 "   ```
 function! gptcli#GPTWindow(...)
     " argsの解析
-    " 最後の引数を辞書として扱い、それ以外を通常の引数として処理します
-    let l:args = a:000[:-2]     " 最後の引数を除いた全ての引数
-    let l:kwargs = a:000[-1]    " 最後の引数（辞書）
+    " Handle arguments passed to the function
+    let l:args = copy(a:000)  " Copy the arguments to a mutable list
 
-    " 引数の検証
-    if a:0 < 1
-        throw "At least one argument is required"
+    " Extract the kwargs (dictionary) if it exists as the last argument
+    let l:kwargs = {}
+    if len(l:args) > 0 && type(l:args[-1]) == v:t_dict
+        let l:kwargs = remove(l:args, -1)  " Remove and get the last argument
     endif
 
-    " 最後の引数が辞書であることを確認
-    if type(a:000[-1]) != v:t_dict
-        throw "last argument must be a dictionary"
-    endif
 
     " システムプロンプトかファイルか分岐する
     let [l:file_list, l:system_prompt] = gptcli#_GetFileList(args)
-    echo "System Prompt: " . string(l:system_prompt)
-    echo "File Path: " . string(l:file_list)
+    echom "System Prompt: " . string(l:system_prompt)
+    echom "File Path: " . string(l:file_list)
 
     " gptを起動するコマンドを構築する
     let l:gpt_command = ["gpt"]
