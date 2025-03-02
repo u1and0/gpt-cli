@@ -11,7 +11,7 @@ import {
 
 import { filesGenerator, parseFileContent } from "../lib/file.ts";
 
-describe("create test directory", async () => {
+describe("create test directory", () => {
   const tempDir = new URL("./temp/", import.meta.url);
   beforeAll(async () => {
     // 絶対パスで一時ディレクトリを作成
