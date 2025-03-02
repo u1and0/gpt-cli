@@ -45,25 +45,35 @@ function! gptcli#GPTWindow(...)
         let l:kwargs = remove(l:all_args, -1)
     endif
 
-    " 残りの引数をargsとする（空でも可）
-    let l:args = l:all_args
+    " 残りの引数をargsとして処理
+    " <f-args>で空のリストが渡された場合の対応
+    let l:args = []
+
+    " 残りの引数がある場合
+    if !empty(l:all_args)
+        " 引数がひとつだけで、かつそれがリストの場合（:call gptcli#GPTWindow(['関西弁で話して'], {..}）のケース
+        if len(l:all_args) == 1 && type(l:all_args[0]) == v:t_list
+            let l:args = l:all_args[0]
+        else
+            " 通常の引数リスト（:GPTChat 引数1 引数2...のケース）
+            let l:args = l:all_args
+        endif
+    endif
 
     " gptコマンドの構築
     let l:gpt_command = ["gpt"]
 
-    " ファイルとプロンプトを処理（引数が空でも動作する）
-    if !empty(l:args)
-        let [l:file_list, l:system_prompt] = gptcli#_GetFileList(l:args)
+    " ファイルとプロンプトの処理
+    let [l:file_list, l:system_prompt] = s:ProcessArgs(l:args)
 
-        " システムプロンプトがあれば追加
-        if l:system_prompt != ""
-            call extend(l:gpt_command, ["-s", l:system_prompt])
-        endif
+    " システムプロンプトがあれば追加
+    if l:system_prompt != ""
+        call extend(l:gpt_command, ["-s", '"' . l:system_prompt . '"'])
+    endif
 
-        " ファイルリストがあれば追加
-        if !empty(l:file_list)
-            call extend(l:gpt_command, l:file_list)
-        endif
+    " ファイルリストがあれば追加
+    if !empty(l:file_list)
+        call extend(l:gpt_command, l:file_list)
     endif
 
     " kwargsをコマンド引数に追加
@@ -84,20 +94,38 @@ function! gptcli#GPTWindow(...)
     execute join(l:cmd)
 endfunction
 
-" 引数をファイルとプロンプトに分類
-function! gptcli#_GetFileList(args)
+" 引数を処理する新しいヘルパー関数
+function! s:ProcessArgs(args)
+    " 引数が空でもエラーにならないよう対応
+    if empty(a:args)
+        return [[], ""]
+    endif
+
+    " 引数をファイルパスとプロンプトに分類
     let l:classification = s:ClassifyArguments(a:args)
     let l:file_list = s:BuildFileList(l:classification.files)
     let l:system_prompt = join(l:classification.prompts, ' ')
+
     return [l:file_list, l:system_prompt]
 endfunction
 
 " 引数を分類
 function! s:ClassifyArguments(args)
     let l:result = {'files': [], 'prompts': []}
+
+    " argsが有効なリストでない場合は空のresultを返す
+    if type(a:args) != v:t_list
+        return l:result
+    endif
+
+    " 通常の処理
     for arg in a:args
-        call s:ClassifySingleArgument(arg, l:result)
+        " argが有効値かチェック（nil や無効な型でないか）
+        if type(arg) == v:t_string
+            call s:ClassifySingleArgument(arg, l:result)
+        endif
     endfor
+
     return l:result
 endfunction
 
