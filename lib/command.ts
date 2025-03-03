@@ -1,7 +1,7 @@
 import { HumanMessage, SystemMessage } from "npm:@langchain/core/messages";
 import { CommandLineInterface } from "./cli.ts";
 import { Message } from "./llm.ts";
-import { parseFileContent } from "./file.ts";
+import { parseFileContent, filesGenerator } from "./file.ts";
 
 /** この会話で使用したLLM モデルの履歴 */
 export const modelStack: Set<string> = new Set();
@@ -82,20 +82,39 @@ export async function handleSlashCommand(
   if (typeof commandInput === 'object' && 'command' in commandInput) {
     // Handle /file command
     if (commandInput.command === Command.File) {
-      const filePath = commandInput.path;
+      const filePattern = commandInput.path;
       try {
-        console.log(`Attaching file: ${filePath}`);
-        const codeBlock = await parseFileContent(filePath);
-        if (codeBlock.content) {
-          // Add file content as a human message
-          const fileMessage = new HumanMessage(`Here's the file I'm attaching:\n${codeBlock.toString()}`);
+        // グレーアウトしたテキストを表示
+        CommandLineInterface.printGray(`Attaching file(s) matching pattern: ${filePattern}...`);
+        
+        // ファイルパターンを解釈して全てのマッチするファイルを処理
+        let fileCount = 0;
+        let allContent = "";
+        
+        for await (const filePath of filesGenerator([filePattern])) {
+          try {
+            const codeBlock = await parseFileContent(filePath);
+            if (codeBlock.content) {
+              // 各ファイルのコンテンツを追加
+              allContent += `${codeBlock.toString()}\n\n`;
+              fileCount++;
+              CommandLineInterface.printGray(`Attached: ${filePath}`);
+            }
+          } catch (error) {
+            CommandLineInterface.printGrayError(`Error processing file ${filePath}: ${error}`);
+          }
+        }
+        
+        if (fileCount > 0) {
+          // ファイルが1つ以上添付された場合
+          const fileMessage = new HumanMessage(`Here are the file(s) I'm attaching (${fileCount} file(s)):\n${allContent.trim()}`);
           messages.push(fileMessage);
-          return messages;
+          CommandLineInterface.printGray(`Successfully attached ${fileCount} file(s)`);
         } else {
-          console.error(`Could not read file: ${filePath}`);
+          CommandLineInterface.printGray(`No files found matching pattern: ${filePattern}`);
         }
       } catch (error) {
-        console.error(`Error processing file ${filePath}:`, error);
+        CommandLineInterface.printGrayError(`Error processing file pattern ${filePattern}: ${error}`);
       }
       return messages;
     }

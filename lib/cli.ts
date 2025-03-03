@@ -98,8 +98,22 @@ export class CommandLineInterface {
     console.log(helpMessage);
   }
 
-  /** 灰色のテキストで表示 */
+  // 定数
+  private static readonly GRAY_COLOR_CODE = "\x1b[90m";
+  private static readonly RESET_COLOR_CODE = "\x1b[0m";
+
+  /** コマンドヘルプを灰色のテキストで表示 */
   public static showCommandMessage(): void {
-    console.info(`\x1b[90m${commandMessage}\x1b[0m`);
+    CommandLineInterface.printGray(commandMessage);
+  }
+  
+  /** テキストをグレーアウトして表示 */
+  public static printGray(text: string): void {
+    console.info(`${CommandLineInterface.GRAY_COLOR_CODE}${text}${CommandLineInterface.RESET_COLOR_CODE}`);
+  }
+  
+  /** エラーメッセージをグレーアウトして表示 */
+  public static printGrayError(text: string): void {
+    console.error(`${CommandLineInterface.GRAY_COLOR_CODE}${text}${CommandLineInterface.RESET_COLOR_CODE}`);
   }
 }
