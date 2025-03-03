@@ -69,13 +69,13 @@ async function userSession(
   messages: Message[],
 ): Promise<AgentRecord | undefined> {
   // ユーザーからの入力待ち
-  let humanMessage: HumanMessage | Command = await getUserInputInMessage(
+  let humanMessage = await getUserInputInMessage(
     messages,
   );
 
   // /commandを実行する
-  if (isSlashCommand(humanMessage)) {
-    messages = handleSlashCommand(humanMessage, messages);
+  if (isSlashCommand(humanMessage) || (typeof humanMessage === 'object' && 'command' in humanMessage)) {
+    messages = await handleSlashCommand(humanMessage, messages);
     return { llm, messages };
   }
 

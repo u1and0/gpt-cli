@@ -12,11 +12,11 @@ import { Command, newSlashCommand } from "./command.ts";
  * - 最後のメッセージがユーザーからのものの場合: そのHumanMessageを返す
  *
  * @param {Message[]}: messages - 会話履歴のメッセージ配列
- * @returns {HumanMessage | Command} - ユーザーの入力、またはSlash Command
+ * @returns {HumanMessage | Command | { command: Command; path: string }} - ユーザーの入力、またはSlash Command
  */
 export async function getUserInputInMessage(
   messages: Message[],
-): Promise<HumanMessage | Command> {
+): Promise<HumanMessage | Command | { command: Command; path: string }> {
   // 最後のMessageがユーザーからのメッセージではない場合、
   // endlessInput()でユーザーからの質問を待ち受ける
   const lastMessage: Message | undefined = messages.at(-1);
@@ -35,6 +35,7 @@ export async function getUserInputInMessage(
   // / から始まる入力はコマンド解釈を試みる
   try {
     const cmd = newSlashCommand(input);
+    // オブジェクト形式の場合（/fileコマンドなど）もそのまま返す
     return cmd;
   } catch {
     // Invalid command errorの場合は、
