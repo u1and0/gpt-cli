@@ -1,7 +1,7 @@
 import { HumanMessage, SystemMessage } from "npm:@langchain/core/messages";
 import { CommandLineInterface } from "./cli.ts";
 import { Message } from "./llm.ts";
-import { parseFileContent, filesGenerator } from "./file.ts";
+import { filesGenerator, parseFileContent } from "./file.ts";
 
 /** この会話で使用したLLM モデルの履歴 */
 export const modelStack: Set<string> = new Set();
@@ -26,7 +26,7 @@ export enum Command {
 
 // Command 型の型ガード
 export const isSlashCommand = (value: unknown): value is Command => {
-  if (typeof value === 'object' && value !== null && 'command' in value) {
+  if (typeof value === "object" && value !== null && "command" in value) {
     // { command: Command; path: string } の形式の場合は true
     return true;
   }
@@ -34,7 +34,9 @@ export const isSlashCommand = (value: unknown): value is Command => {
 };
 
 // Commandに指定したいずれかの数値を返す
-export const newSlashCommand = (input: string): Command | { command: Command; path: string } => {
+export const newSlashCommand = (
+  input: string,
+): Command | { command: Command; path: string } => {
   const inputParts = input.trim().split(/[\s\n\t]+/);
   const input0 = inputParts[0];
   const commandMap: Record<_Command, Command> = {
@@ -51,12 +53,12 @@ export const newSlashCommand = (input: string): Command | { command: Command; pa
   if (!command) {
     throw new Error(`Invalid command. ${input0}`);
   }
-  
+
   // Handle special cases for commands that need additional arguments
   if (command === Command.File && inputParts.length > 1) {
     return { command, path: inputParts[1] };
   }
-  
+
   return command;
 };
 
@@ -79,18 +81,20 @@ export async function handleSlashCommand(
   messages: Message[],
 ): Promise<Message[]> {
   // Handle case where commandInput is a command object with path
-  if (typeof commandInput === 'object' && 'command' in commandInput) {
+  if (typeof commandInput === "object" && "command" in commandInput) {
     // Handle /file command
     if (commandInput.command === Command.File) {
       const filePattern = commandInput.path;
       try {
         // グレーアウトしたテキストを表示
-        CommandLineInterface.printGray(`Attaching file(s) matching pattern: ${filePattern}...`);
-        
+        CommandLineInterface.printGray(
+          `Attaching file(s) matching pattern: ${filePattern}...`,
+        );
+
         // ファイルパターンを解釈して全てのマッチするファイルを処理
         let fileCount = 0;
         let allContent = "";
-        
+
         for await (const filePath of filesGenerator([filePattern])) {
           try {
             const codeBlock = await parseFileContent(filePath);
@@ -101,28 +105,38 @@ export async function handleSlashCommand(
               CommandLineInterface.printGray(`Attached: ${filePath}`);
             }
           } catch (error) {
-            CommandLineInterface.printGrayError(`Error processing file ${filePath}: ${error}`);
+            CommandLineInterface.printGrayError(
+              `Error processing file ${filePath}: ${error}`,
+            );
           }
         }
-        
+
         if (fileCount > 0) {
           // ファイルが1つ以上添付された場合
-          const fileMessage = new HumanMessage(`Here are the file(s) I'm attaching (${fileCount} file(s)):\n${allContent.trim()}`);
+          const fileMessage = new HumanMessage(
+            `Here are the file(s) I'm attaching (${fileCount} file(s)):\n${allContent.trim()}`,
+          );
           messages.push(fileMessage);
-          CommandLineInterface.printGray(`Successfully attached ${fileCount} file(s)`);
+          CommandLineInterface.printGray(
+            `Successfully attached ${fileCount} file(s)`,
+          );
         } else {
-          CommandLineInterface.printGray(`No files found matching pattern: ${filePattern}`);
+          CommandLineInterface.printGray(
+            `No files found matching pattern: ${filePattern}`,
+          );
         }
       } catch (error) {
-        CommandLineInterface.printGrayError(`Error processing file pattern ${filePattern}: ${error}`);
+        CommandLineInterface.printGrayError(
+          `Error processing file pattern ${filePattern}: ${error}`,
+        );
       }
       return messages;
     }
-    
+
     // Extract just the command enum for other command types
     commandInput = commandInput.command;
   }
-  
+
   // Handle standard commands
   switch (commandInput) {
     case Command.Help: {
