@@ -87,6 +87,7 @@ export class LLM {
    *
    * @param : Message[] - 対話の流れの配列
    * @returns : Promise<IterableReadableStream<BaseMessageChunk>> AIからのメッセージストリーム
+   * @throws : Invalid reference to model version: "${model}". Expected format: owner/name or owner/name:version
    *
    * Replicateクラスでない場合はLLMの標準的なストリームを返します。
    * Replicateクラスである場合は、Replicate.stream()に渡すためのinputを作成してから、渡します。
@@ -96,15 +97,20 @@ export class LLM {
   ): Promise<AsyncGenerator<BaseMessageChunk | ServerSentEvent>> {
     if (!this.transrator) {
       throw new Error("undefined transrator");
-    }
-    if (!(this.transrator instanceof Replicate)) {
-      return await this.transrator.stream(messages); // 回答を取得
-    } else {
+    } else if (this.transrator instanceof Replicate) { // Replicateのみ別処理
       const input = this.generateInput(messages);
-      return (this.transrator as Replicate).stream(
-        this.params.model as ReplicateModel,
-        { input },
-      ) as AsyncGenerator<ServerSentEvent>;
+      // 頭文字のreplicate/ を削除する
+      const { platform: _, model } = parsePlatform(this.params.model);
+      if (!isReplicateModel(model)) {
+        throw new Error(
+          `Invalid reference to model version: "${model}". Expected format: owner/name or owner/name:version `,
+        );
+      }
+      return this.transrator.stream(model, { input }) as AsyncGenerator<
+        ServerSentEvent
+      >;
+    } else { // Replicate 以外の場合
+      return await this.transrator.stream(messages); // 回答を取得
     }
   }
 
