@@ -38,6 +38,7 @@ const helpMessage =
         - o1
         - o3-mini...
       - [Anthropic](https://docs.anthropic.com/claude/docs/models-overview)
+        - claude-3-7-sonnet-latest
         - claude-3-5-sonnet-20241022
         - claude-3-5-sonnet-latest
         - claude-3-opus-20240229
@@ -60,9 +61,8 @@ const helpMessage =
         - togetherai/google/gemma-2-27b-it
         - togetherai/mistralai/Mistral-7B-Instruct-v0.3...
       - [Replicate](https://replicate.com/models)
+        - replicate/deepseek-ai/deepseek-r1
         - replicate/meta/meta-llama-3-70b-instruct
-        - replicate/meta/llama-2-7b-chat
-        - replicate/mistralai/mistral-7b-instruct-v0.2
         - replicate/mistralai/mixtral-8x7b-instruct-v0.1
         - replicate/snowflake/snowflake-arctic-instruct
         - replicate/replicate/flan-t5-xl...
@@ -106,14 +106,18 @@ export class CommandLineInterface {
   public static showCommandMessage(): void {
     CommandLineInterface.printGray(commandMessage);
   }
-  
+
   /** テキストをグレーアウトして表示 */
   public static printGray(text: string): void {
-    console.info(`${CommandLineInterface.GRAY_COLOR_CODE}${text}${CommandLineInterface.RESET_COLOR_CODE}`);
+    console.info(
+      `${CommandLineInterface.GRAY_COLOR_CODE}${text}${CommandLineInterface.RESET_COLOR_CODE}`,
+    );
   }
-  
+
   /** エラーメッセージをグレーアウトして表示 */
   public static printGrayError(text: string): void {
-    console.error(`${CommandLineInterface.GRAY_COLOR_CODE}${text}${CommandLineInterface.RESET_COLOR_CODE}`);
+    console.error(
+      `${CommandLineInterface.GRAY_COLOR_CODE}${text}${CommandLineInterface.RESET_COLOR_CODE}`,
+    );
   }
 }
