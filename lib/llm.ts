@@ -13,6 +13,7 @@ import {
   SystemMessage,
 } from "npm:@langchain/core/messages";
 import { BaseMessageChunk } from "npm:@langchain/core/messages";
+import { JsonOutputParser } from "npm:@langchain/core/output_parsers";
 
 import { Spinner } from "./spinner.ts";
 import { Params } from "./params.ts";
@@ -60,9 +61,36 @@ export class LLM {
   async query(messages: Message[]) {
     const stream = await this.streamGenerator(messages);
     for await (const _ of streamEncoder(stream)) {
-      //出力のために何もしない
+      // 出力のために何もしない
     }
   }
+
+  // /** AI へ一回限りの質問をし、JSON形式で回答を出力して終了する */
+  // private async queryJson(messages: Message[]) {
+  //   const parser = new JsonOutputParser();
+  //   const formattedMessages = [
+  //     ...messages,
+  //     new HumanMessage("Format your entire response as a valid JSON object."),
+  //   ];
+  //
+  //   const spinner = new Spinner([".", "..", "..."], 100, 30000);
+  //   spinner.start();
+  //
+  //   if (!this.transrator) {
+  //     throw new Error("undefined transrator");
+  //   }
+  //
+  //   const response = await this.transrator.invoke(formattedMessages);
+  //   spinner.stop();
+  //
+  //   try {
+  //     const parsedResponse = parser.parse(response.content);
+  //     console.log(JSON.stringify(parsedResponse));
+  //   } catch (error) {
+  //     console.error("Failed to parse response as JSON:", error);
+  //     console.log(JSON.stringify({ response: response.content }));
+  //   }
+  // }
 
   /** AI へ対話形式に質問し、回答を得る */
   async ask(messages: Message[]): Promise<AIMessage> {
@@ -292,6 +320,7 @@ const createOpenAIInstance = (params: Params): ChatOpenAI => {
     modelName: params.model,
     temperature: params.temperature,
     maxTokens: params.maxTokens,
+    response_format: { type: "json_object" },
   });
 };
 
@@ -300,6 +329,7 @@ const createOpenAIOModelInstance = (params: Params): ChatOpenAI => {
     modelName: params.model,
     temperature: params.temperature,
     // max_completion_tokens: params.maxTokens,
+    format: params.json ? "json" : undefined,
   });
 };
 
@@ -308,6 +338,7 @@ const createAnthropicInstance = (params: Params): ChatAnthropic => {
     modelName: params.model,
     temperature: params.temperature,
     maxTokens: params.maxTokens,
+    format: params.json ? "json" : undefined,
   });
 };
 
@@ -318,6 +349,7 @@ const createGoogleGenerativeAIInstance = (
     model: params.model,
     temperature: params.temperature,
     maxOutputTokens: params.maxTokens,
+    format: params.json ? "json" : undefined,
   });
 };
 
@@ -335,6 +367,7 @@ const createGroqInstance = (params: Params): ChatGroq => {
     model: model,
     temperature: params.temperature,
     maxTokens: params.maxTokens,
+    format: params.json ? "json" : undefined,
   });
 };
 
@@ -344,6 +377,7 @@ const createTogetherAIInstance = (params: Params): ChatTogetherAI => {
     model: model,
     temperature: params.temperature,
     maxTokens: params.maxTokens,
+    format: params.json ? "json" : undefined,
   });
 };
 
@@ -360,6 +394,7 @@ const createOllamaInstance = (params: Params): ChatOllama => {
     model: model, // "llama2:7b-chat", codellama:13b-fast-instruct, elyza:13b-fast-instruct ...
     temperature: params.temperature,
     // maxTokens: params.maxTokens, // Not implemented yet on Langchain
+    format: params.json ? "json" : undefined,
   });
 };
 
