@@ -4,6 +4,7 @@ import { ChatOllama } from "npm:@langchain/community/chat_models/ollama";
 import { ChatGoogleGenerativeAI } from "npm:@langchain/google-genai";
 import { ChatGroq } from "npm:@langchain/groq";
 import { ChatTogetherAI } from "npm:@langchain/community/chat_models/togetherai";
+import { ChatXAI } from "npm:@langchain/xai";
 import Replicate from "npm:replicate";
 import ServerSentEvent from "npm:replicate";
 import {
@@ -44,7 +45,7 @@ const isReplicateModel = (value: unknown): value is ReplicateModel => {
 };
 
 type OpenModel = ChatGroq | ChatTogetherAI | ChatOllama | Replicate;
-type CloseModel = ChatOpenAI | ChatAnthropic | ChatGoogleGenerativeAI;
+type CloseModel = ChatOpenAI | ChatAnthropic | ChatGoogleGenerativeAI | ChatXAI;
 
 /** Chatインスタンスを作成する
  * @param: Params - LLMのパラメータ、モデル */
@@ -241,6 +242,7 @@ function llmConstructor(params: Params): OpenModel | CloseModel {
     "^o[0-9]": createOpenAIOModelInstance,
     "^claude": createAnthropicInstance,
     "^gemini": createGoogleGenerativeAIInstance,
+    "^grok": createXAIInstance,
   } as const;
 
   const platformMap: PlatformMap = {
@@ -316,6 +318,14 @@ const createGoogleGenerativeAIInstance = (
     model: params.model,
     temperature: params.temperature,
     maxOutputTokens: params.maxTokens,
+  });
+};
+
+const createXAIInstance = (params: Params): ChatXAI => {
+  return new ChatXAI({
+    modelName: params.model,
+    temperature: params.temperature,
+    maxTokens: params.maxTokens,
   });
 };
 
