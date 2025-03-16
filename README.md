@@ -43,6 +43,14 @@ $ echo "hi" | gpt
 Hello! How can I assist you today?
 ```
 
+Forced output in single mode. (It does not shift to conversation mode.)
+
+
+## Command Integration Examples
+
+For practical examples of how to integrate `gpt-cli` with other command-line tools, see the [example.md](https://github.com/u1and0/gpt-cli/tree/main/doc/example.md) file.
+This demonstrates piping data from tools like `ddgr`, `w3m`, `jq`, and others into `gpt-cli` for enhanced analysis and processing.
+
 
 # Installation
 You have 3 options.

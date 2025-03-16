@@ -6,6 +6,7 @@ Ctrl+D to confirm input.
 Help:
   /?, /help         Help for a command
   /clear            Clear session context
+  /file             Attach readable text file
   /modelStack       Show model's history
   /bye,/exit,/quit  Exit
   @ModelName      Change LLM model
