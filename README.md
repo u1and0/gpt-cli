@@ -198,6 +198,10 @@ A Questions for Model
     - gemini-1.5-pro-latest
     - gemini-2.0-flash...
     - gemini-2.0-flash-thinking-exp...
+- [Grok](https://docs.x.ai/docs/models)
+    - grok-3-latest
+    - grok-2-latest
+    - grok-2-1212
 - [Groq](https://console.groq.com/docs/models)
     - groq/llama3.1-70b-specdec
     - groq/llama-3.3-70b-specdec
