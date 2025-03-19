@@ -19,6 +19,7 @@ import {
   isReplicateModel,
   OpenModel,
   parsePlatform,
+  platformList,
   platformMap,
 } from "./platform.ts";
 
@@ -103,7 +104,9 @@ export class LLM {
         ServerSentEvent
       >;
     } else { // Replicate 以外の場合
-      return await this.transrator.stream(messages); // 回答を取得
+      return await this.transrator.stream(messages) as AsyncGenerator<
+        BaseMessageChunk
+      >;
     }
   }
 

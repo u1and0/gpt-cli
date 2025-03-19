@@ -14,12 +14,8 @@ import {
   SystemMessage,
 } from "npm:@langchain/core/messages";
 
-import {
-  generatePrompt,
-  LLM,
-  parsePlatform,
-  platformList,
-} from "../lib/llm.ts";
+import { generatePrompt, LLM } from "../lib/llm.ts";
+import { platformList } from "../lib/platform.ts";
 
 Deno.test("Should create a ChatOpenAI instance for a GPT model", () => {
   Deno.env.set("OPENAI_API_KEY", "sk-11111");
@@ -207,28 +203,4 @@ hello, how can I help you?
 [INST] what is your name? [/INST]
 I have no name, just an AI`,
   );
-});
-
-Deno.test("parsePlatform - valid model string", () => {
-  const { platform, model } = parsePlatform("replicate/meta/llama3.3-70b");
-  assertEquals(platform, "replicate");
-  assertEquals(model, "meta/llama3.3-70b");
-});
-
-Deno.test("parsePlatform - model string with only one part", () => {
-  const { platform, model } = parsePlatform("modelonly");
-  assertEquals(platform, "");
-  assertEquals(model, "modelonly");
-});
-
-Deno.test("parsePlatform - model string with multiple slashes", () => {
-  const { platform, model } = parsePlatform("a/b/c/d");
-  assertEquals(platform, "a");
-  assertEquals(model, "b/c/d");
-});
-
-Deno.test("parsePlatform - model string starts with slash", () => {
-  const { platform, model } = parsePlatform("/a/b/c");
-  assertEquals(platform, "");
-  assertEquals(model, "a/b/c");
 });
