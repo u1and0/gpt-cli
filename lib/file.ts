@@ -11,6 +11,22 @@ export interface CodeBlock {
   toString(): string;
 }
 
+export const newCodeBlock = (
+  content: string,
+  filePath: string = "",
+): CodeBlock => {
+  return {
+    content,
+    filePath,
+    toString: () => {
+      return [
+        "```" + filePath, // 1行目はコードブロックとファイルパス
+        content, // ファイルの内容
+        "```", // 最終行はコードブロック
+      ].join("\n");
+    },
+  };
+};
 /** ファイルパスを引数に、
  * ファイルの内容をコードブロックに入れて返す
  */
@@ -19,18 +35,7 @@ export async function parseFileContent(
 ): Promise<CodeBlock> {
   try {
     const content = await Deno.readTextFile(filePath);
-    const codeBlock: CodeBlock = {
-      content,
-      filePath,
-      toString: () => {
-        return [
-          "```" + filePath, // 1行目はコードブロックとファイルパス
-          content, // ファイルの内容
-          "```", // 最終行はコードブロック
-        ].join("\n");
-      },
-    };
-    return codeBlock;
+    return newCodeBlock(content, filePath);
   } catch (error) {
     console.error(`Error reading file ${filePath}:`, error);
     // エラーを re-throw することで、呼び出し元にエラーを伝播する

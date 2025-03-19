@@ -20,6 +20,7 @@ $ gpt
 */
 
 import { HumanMessage, SystemMessage } from "npm:@langchain/core/messages";
+import { ChatOpenAI } from "npm:@langchain/openai";
 
 import { CommandLineInterface } from "./lib/cli.ts";
 import { LLM, Message } from "./lib/llm.ts";
@@ -37,7 +38,7 @@ import {
 
 const VERSION = "v0.9.2r";
 
-class InitialMessage {
+export class InitialMessage {
   constructor(private readonly content: string) {}
 
   public add(codeBlock: CodeBlock) {
@@ -164,6 +165,55 @@ const llmAsk = async (params: Params) => {
       await llm.query(messages);
       return;
     }
+
+    // if (params.json) {
+    //   if (!(llm.transrator instanceof ChatOpenAI)) {
+    //     return;
+    //   }
+    //   // const jsonSchemaString = `{
+    //   //   "name": "カタログ",
+    //   //   "descripttion": "カタログテスト",
+    //   //   "parameters": {
+    //   //     "name": "商品名",
+    //   //     "type": "object",
+    //   //     "properties": {
+    //   //       "price":{
+    //   //         "type": "number",
+    //   //         "description": "価格"
+    //   //       },
+    //   //       "features": {
+    //   //         "type": "array",
+    //   //         "descripttion": "特徴"
+    //   //       },
+    //   //       "colors": {
+    //   //         "type": "array",
+    //   //         "descripttion": "色"
+    //   //       },
+    //   //       "stock_status": {
+    //   //         "type": "string",
+    //   //         "descripttion": "在庫状況"
+    //   //       }
+    //   //     },
+    //   //     "required": [
+    //   //       "price",
+    //   //       "features",
+    //   //       "colors"
+    //   //     ]
+    //   //   }
+    //   // }`;
+    //   // const jsonSchema = JSON.parse(jsonSchemaString);
+    //   // console.debug("jsonSchema: ", jsonSchema);
+    //
+    //   // const llmStructured = llm.transrator.withStructuredOutput(jsonSchema);
+    //
+    //   const llmStructured = llm.transrator.bind({
+    //     response_format: { type: "json_object" },
+    //   });
+    //   // await llm.query(messages);
+    //   const result = await llmStructured.invoke(initContent);
+    //   console.log(result);
+    //   return;
+    // }
 
     // 対話的回答
     CommandLineInterface.showCommandMessage();

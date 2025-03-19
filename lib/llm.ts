@@ -320,7 +320,6 @@ const createOpenAIInstance = (params: Params): ChatOpenAI => {
     modelName: params.model,
     temperature: params.temperature,
     maxTokens: params.maxTokens,
-    response_format: { type: "json_object" },
   });
 };
 
@@ -329,7 +328,8 @@ const createOpenAIOModelInstance = (params: Params): ChatOpenAI => {
     modelName: params.model,
     temperature: params.temperature,
     // max_completion_tokens: params.maxTokens,
-    format: params.json ? "json" : undefined,
+    // format: params.json ? "json_object" : undefined,
+    type: params.json ? "json_object" : undefined,
   });
 };
 
