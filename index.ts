@@ -35,7 +35,7 @@ import {
   modelStack,
 } from "./lib/command.ts";
 
-const VERSION = "v0.9.2r";
+const VERSION = "v0.9.3";
 
 class InitialMessage {
   constructor(private readonly content: string) {}
