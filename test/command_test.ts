@@ -1,5 +1,4 @@
 import { assertEquals } from "https://deno.land/std@0.224.0/assert/assert_equals.ts";
-import { assertExists } from "https://deno.land/std@0.224.0/assert/assert_exists.ts";
 import { assert } from "https://deno.land/std@0.224.0/assert/assert.ts";
 import { Command, extractAtModel, newSlashCommand } from "../lib/command.ts";
 // Focus on command parsing functionality only - no message handling
@@ -28,22 +27,33 @@ Deno.test("SlashCommand constructor - file command", () => {
   const testCases = [
     { input: "/file /path/to/test.ts", expectedPath: "/path/to/test.ts" },
     { input: "/file ./relative/path.js", expectedPath: "./relative/path.js" },
-    { input: "/file  multiple/spaces.txt", expectedPath: "multiple/spaces.txt" },
+    {
+      input: "/file  multiple/spaces.txt",
+      expectedPath: "multiple/spaces.txt",
+    },
     { input: "/file\ttab.py", expectedPath: "tab.py" },
   ];
-  
+
   for (const { input, expectedPath } of testCases) {
     const result = newSlashCommand(input);
-    
+
     // Check if result is an object with command and path properties
-    assert(typeof result === 'object' && 'command' in result, 
-      `Expected object with command property for input: "${input}"`);
+    assert(
+      typeof result === "object" && "command" in result,
+      `Expected object with command property for input: "${input}"`,
+    );
     const fileCommand = result as { command: Command; path: string };
-    
-    assertEquals(fileCommand.command, Command.File, 
-      `Expected Command.File for input: "${input}"`);
-    assertEquals(fileCommand.path, expectedPath, 
-      `Expected path "${expectedPath}" for input: "${input}"`);
+
+    assertEquals(
+      fileCommand.command,
+      Command.File,
+      `Expected Command.File for input: "${input}"`,
+    );
+    assertEquals(
+      fileCommand.path,
+      expectedPath,
+      `Expected path "${expectedPath}" for input: "${input}"`,
+    );
   }
 });
 
@@ -59,4 +69,3 @@ Deno.test("ユーザーの入力が@から始まると、@に続くモデル名�
     assertEquals(actual.model, expected);
   }
 });
-

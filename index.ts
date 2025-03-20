@@ -35,7 +35,7 @@ import {
   modelStack,
 } from "./lib/command.ts";
 
-const VERSION = "v0.9.2r";
+const VERSION = "v0.9.3";
 
 class InitialMessage {
   constructor(private readonly content: string) {}
@@ -107,7 +107,10 @@ async function userSession(
     }
 
     // ユーザーからの問いを追加
-    messages.push(humanMessage);
+    if (isSlashCommand(humanMessage)) {
+      throw new Error(`not a Human message, is this command?: ${humanMessage}`);
+    }
+    messages.push(humanMessage as HumanMessage);
     // console.debug(messages);
     // AIからの回答を追加
     const aiMessage = await llm.ask(messages);

@@ -1,11 +1,5 @@
-import { ChatOpenAI } from "npm:@langchain/openai";
-import { ChatAnthropic } from "npm:@langchain/anthropic";
-import { ChatOllama } from "npm:@langchain/community/chat_models/ollama";
-import { ChatGoogleGenerativeAI } from "npm:@langchain/google-genai";
-import { ChatGroq } from "npm:@langchain/groq";
-import { ChatTogetherAI } from "npm:@langchain/community/chat_models/togetherai";
-import { ChatXAI } from "npm:@langchain/xai";
 import Replicate from "npm:replicate";
+
 import ServerSentEvent from "npm:replicate";
 import {
   AIMessage,
@@ -17,9 +11,18 @@ import { JsonOutputParser } from "npm:@langchain/core/output_parsers";
 
 import { Spinner } from "./spinner.ts";
 import { Params } from "./params.ts";
+// import {
+//   isPlatform,
+//   platformMap,
+// } from "./platform.ts";
+import * as openModel from "./platform.ts";
+import * as closedModel from "./model.ts";
 
 /** AIMessage */
 export type Message = AIMessage | HumanMessage | SystemMessage; //{ role: Role; content: string };
+
+/** 定義されているすべてのLLM モデルインスタンスの型 */
+type Model = openModel.OpenModel | closedModel.CloseModel;
 
 /** LLMParam
  * LLM モデルに渡すパラメータ
@@ -33,25 +36,10 @@ export type LLMParam = {
   maxTokens: number;
 };
 
-/** replicateで使うモデルは以下の形式
- * owner/name or owner/name:version
- */
-type ReplicateModel = `${string}/${string}`;
-
-/** ReplicateModel型であることを保証する */
-const isReplicateModel = (value: unknown): value is ReplicateModel => {
-  return typeof value === "string" &&
-    value.includes("/") &&
-    value.split("/").length === 2;
-};
-
-type OpenModel = ChatGroq | ChatTogetherAI | ChatOllama | Replicate;
-type CloseModel = ChatOpenAI | ChatAnthropic | ChatGoogleGenerativeAI | ChatXAI;
-
 /** Chatインスタンスを作成する
  * @param: Params - LLMのパラメータ、モデル */
 export class LLM {
-  public readonly transrator?: OpenModel | CloseModel;
+  public readonly transrator?: Model;
 
   constructor(private readonly params: Params) {
     this.transrator = llmConstructor(params);
@@ -129,8 +117,8 @@ export class LLM {
     } else if (this.transrator instanceof Replicate) { // Replicateのみ別処理
       const input = this.generateInput(messages);
       // 頭文字のreplicate/ を削除する
-      const { platform: _, model } = parsePlatform(this.params.model);
-      if (!isReplicateModel(model)) {
+      const { platform: _, model } = openModel.split(this.params.model);
+      if (!openModel.isReplicateModel(model)) {
         throw new Error(
           `Invalid reference to model version: "${model}". Expected format: owner/name or owner/name:version `,
         );
@@ -139,7 +127,10 @@ export class LLM {
         ServerSentEvent
       >;
     } else { // Replicate 以外の場合
-      return await this.transrator.stream(messages); // 回答を取得
+      // @ts-ignore: exportされていない型だからasが使えないため
+      return await this.transrator.stream(messages) as AsyncGenerator<
+        BaseMessageChunk
+      >;
     }
   }
 
@@ -235,60 +226,22 @@ async function* streamEncoder(
   }
 }
 
-type ModelMap = { [key: string]: (params: Params) => CloseModel };
-
-// Platformオプション
-// llamaモデルは共通のオープンモデルなので、
-// どこで実行するかをオプションで決める必要がある
-export const platformList = [
-  "ollama",
-  "groq",
-  "togetherai",
-  "replicate",
-] as const;
-
-export type Platform = (typeof platformList)[number];
-
-/** Platform型であることを保証する */
-export function isPlatform(value: unknown): value is Platform {
-  return typeof value === "string" &&
-    platformList.includes(value as Platform);
-}
-
-/** Platformごとに返すモデルのインスタンスを返す関数 */
-type PlatformMap = { [key in Platform]: (params: Params) => OpenModel };
-
 /** LLM クラスのtransratorプロパティをparamsから判定し、
  * LLM インスタンスを生成して返す。
  * @param{Params} params - command line arguments parsed by parseArgs()
  * @return : LLM model
  * @throws{Error} model not found "${params.model}"
  */
-function llmConstructor(params: Params): OpenModel | CloseModel {
-  const modelMap: ModelMap = {
-    "^gpt": createOpenAIInstance,
-    "^o[0-9]": createOpenAIOModelInstance,
-    "^claude": createAnthropicInstance,
-    "^gemini": createGoogleGenerativeAIInstance,
-    "^grok": createXAIInstance,
-  } as const;
-
-  const platformMap: PlatformMap = {
-    "groq": createGroqInstance,
-    "togetherai": createTogetherAIInstance,
-    "ollama": createOllamaInstance,
-    "replicate": createReplicateInstance,
-  } as const;
-
+function llmConstructor(params: Params): Model {
   // Closed modelがインスタンス化できるか
   // 正規表現でマッチング
-  const createInstance = Object.keys(modelMap).find((regex) =>
+  const createInstance = Object.keys(closedModel.modelMap).find((regex) =>
     new RegExp(regex).test(params.model)
   );
 
   // Closed modelが見つかればそれをインスタンス化して返す
   if (createInstance !== undefined) {
-    return modelMap[createInstance](params);
+    return closedModel.modelMap[createInstance](params);
   }
 
   // Closed modelでマッチするモデルが見つからなかった場合、
@@ -298,129 +251,21 @@ function llmConstructor(params: Params): OpenModel | CloseModel {
   // platform名で判定する
 
   // platformが特定できないときは空文字が返る
-  const { platform, model } = parsePlatform(params.model);
+  const { platform, model } = openModel.split(params.model);
   // platformがオプションに指定されていなければエラー
-  if (!isPlatform(platform)) {
+  if (!openModel.isPlatform(platform)) {
     throw new Error(
-      `unknown platform "${platform}", choose from ${platformList.join(", ")}`,
+      `unknown platform "${platform}", choose from ${
+        openModel.platforms.join(", ")
+      }`,
     );
   }
 
   // platformMap からオプションに指定したものがなければエラー
-  const createInstanceFromPlatform = platformMap[platform];
+  const createInstanceFromPlatform = openModel.modelMap[platform];
   if (createInstanceFromPlatform === undefined) {
     throw new Error(`unknown model ${model}`);
   }
 
   return createInstanceFromPlatform(params);
-}
-
-const createOpenAIInstance = (params: Params): ChatOpenAI => {
-  return new ChatOpenAI({
-    modelName: params.model,
-    temperature: params.temperature,
-    maxTokens: params.maxTokens,
-    response_format: { type: "json_object" },
-  });
-};
-
-const createOpenAIOModelInstance = (params: Params): ChatOpenAI => {
-  return new ChatOpenAI({
-    modelName: params.model,
-    temperature: params.temperature,
-    // max_completion_tokens: params.maxTokens,
-    format: params.json ? "json" : undefined,
-  });
-};
-
-const createAnthropicInstance = (params: Params): ChatAnthropic => {
-  return new ChatAnthropic({
-    modelName: params.model,
-    temperature: params.temperature,
-    maxTokens: params.maxTokens,
-    format: params.json ? "json" : undefined,
-  });
-};
-
-const createGoogleGenerativeAIInstance = (
-  params: Params,
-): ChatGoogleGenerativeAI => {
-  return new ChatGoogleGenerativeAI({
-    model: params.model,
-    temperature: params.temperature,
-    maxOutputTokens: params.maxTokens,
-    format: params.json ? "json" : undefined,
-  });
-};
-
-const createXAIInstance = (params: Params): ChatXAI => {
-  return new ChatXAI({
-    modelName: params.model,
-    temperature: params.temperature,
-    maxTokens: params.maxTokens,
-  });
-};
-
-const createGroqInstance = (params: Params): ChatGroq => {
-  const { platform: _, model } = parsePlatform(params.model);
-  return new ChatGroq({
-    model: model,
-    temperature: params.temperature,
-    maxTokens: params.maxTokens,
-    format: params.json ? "json" : undefined,
-  });
-};
-
-const createTogetherAIInstance = (params: Params): ChatTogetherAI => {
-  const { platform: _, model } = parsePlatform(params.model);
-  return new ChatTogetherAI({
-    model: model,
-    temperature: params.temperature,
-    maxTokens: params.maxTokens,
-    format: params.json ? "json" : undefined,
-  });
-};
-
-const createOllamaInstance = (params: Params): ChatOllama => {
-  // ollamaの場合は、ollamaが動作するサーバーのbaseUrlが必須
-  if (params.url === undefined) {
-    throw new Error(
-      "ollama needs URL parameter with `--url http://your.host:11434`",
-    );
-  }
-  const { platform: _, model } = parsePlatform(params.model);
-  return new ChatOllama({
-    baseUrl: params.url, // http://yourIP:11434
-    model: model, // "llama2:7b-chat", codellama:13b-fast-instruct, elyza:13b-fast-instruct ...
-    temperature: params.temperature,
-    // maxTokens: params.maxTokens, // Not implemented yet on Langchain
-    format: params.json ? "json" : undefined,
-  });
-};
-
-const createReplicateInstance = (params: Params): Replicate => {
-  const { platform: _, model } = parsePlatform(params.model);
-  if (isReplicateModel(model)) {
-    return new Replicate();
-  } else {
-    throw new Error(
-      `Invalid reference to model version: "${model}". Expected format: owner/name or owner/name:version `,
-    );
-  }
-};
-
-/** １つ目の"/"で引数を分割して、
- * １つ目をplatformとして、
- * 2つめ移行をmodelとして返す
- */
-export function parsePlatform(
-  model: string,
-): { platform: string; model: string } {
-  const parts = model.split("/");
-  if (parts.length < 2) {
-    return { platform: "", model: model };
-  }
-  const platform = parts[0];
-  const modelName = parts.slice(1).join("/");
-  return { platform, model: modelName };
 }
