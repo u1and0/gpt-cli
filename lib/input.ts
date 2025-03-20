@@ -2,7 +2,6 @@ import { HumanMessage } from "npm:@langchain/core/messages";
 
 import { Message } from "./llm.ts";
 import { Command, newSlashCommand } from "./command.ts";
-
 /** ユーザーの入力を返す
  * メッセージ配列から最後のユーザー入力を取得、もしくは新しいユーザー入力を待ち受ける
  *
