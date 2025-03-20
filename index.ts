@@ -28,7 +28,6 @@ import { Params } from "./lib/params.ts";
 import { filesGenerator, parseFileContent } from "./lib/file.ts";
 import { CodeBlock } from "./lib/file.ts";
 import {
-  Command,
   handleAtCommand,
   handleSlashCommand,
   isAtCommand,
@@ -36,7 +35,7 @@ import {
   modelStack,
 } from "./lib/command.ts";
 
-const VERSION = "v0.9.2";
+const VERSION = "v0.9.3";
 
 class InitialMessage {
   constructor(private readonly content: string) {}
@@ -68,55 +67,63 @@ async function userSession(
   params: Params,
   messages: Message[],
 ): Promise<AgentRecord | undefined> {
-  // ユーザーからの入力待ち
-  let humanMessage: HumanMessage | Command = await getUserInputInMessage(
-    messages,
-  );
-
-  // /commandを実行する
-  if (isSlashCommand(humanMessage)) {
-    messages = handleSlashCommand(humanMessage, messages);
-    return { llm, messages };
-  }
-
-  // @Model名で始まるinput はllmモデルを再指定する
-  if (isAtCommand(humanMessage)) {
-    const extractedAtModelMessage = handleAtCommand(
-      humanMessage,
+  try {
+    // ユーザーからの入力待ち
+    let humanMessage = await getUserInputInMessage(
       messages,
-      params.model,
     );
 
-    // @コマンドで指定したモデルのパースに成功したら
-    // モデルスタックに追加して新しいモデルで会話を始める。
-    // パースに失敗したら、以前のモデルを復元してエラー表示して
-    // 前のモデルに戻して会話を継続。
-    if (extractedAtModelMessage.model) {
-      const modelBackup = params.model;
-      params.model = extractedAtModelMessage.model;
-      try {
-        llm = new LLM(params);
-      } catch (error: unknown) {
-        console.error(error);
-        params.model = modelBackup;
-        return;
-      }
-      modelStack.add(extractedAtModelMessage.model);
+    // /commandを実行する
+    if (isSlashCommand(humanMessage)) {
+      messages = await handleSlashCommand(humanMessage, messages);
+      return { llm, messages };
     }
-    humanMessage = new HumanMessage(extractedAtModelMessage.message);
-  }
 
-  // ユーザーからの問いを追加
-  messages.push(humanMessage);
-  // console.debug(messages);
-  // AIからの回答を追加
-  const aiMessage = await llm.ask(messages);
-  if (!aiMessage) {
-    throw new Error("LLM can not answer your question");
-  }
-  messages.push(aiMessage);
+    // @Model名で始まるinput はllmモデルを再指定する
+    if (isAtCommand(humanMessage)) {
+      const extractedAtModelMessage = handleAtCommand(
+        humanMessage as HumanMessage,
+        messages,
+        params.model,
+      );
 
-  return { llm, messages };
+      // @コマンドで指定したモデルのパースに成功したら
+      // モデルスタックに追加して新しいモデルで会話を始める。
+      // パースに失敗したら、以前のモデルを復元してエラー表示して
+      // 前のモデルに戻して会話を継続。
+      if (extractedAtModelMessage.model) {
+        const modelBackup = params.model;
+        params.model = extractedAtModelMessage.model;
+        try {
+          llm = new LLM(params);
+        } catch (error: unknown) {
+          console.error(error);
+          params.model = modelBackup;
+          return;
+        }
+        modelStack.add(extractedAtModelMessage.model);
+      }
+      humanMessage = new HumanMessage(extractedAtModelMessage.message);
+    }
+
+    // ユーザーからの問いを追加
+    if (isSlashCommand(humanMessage)) {
+      throw new Error(`not a Human message, is this command?: ${humanMessage}`);
+    }
+    messages.push(humanMessage as HumanMessage);
+    // console.debug(messages);
+    // AIからの回答を追加
+    const aiMessage = await llm.ask(messages);
+    if (!aiMessage) {
+      throw new Error("LLM can not answer your question");
+    }
+    messages.push(aiMessage);
+
+    return { llm, messages };
+  } catch (error) {
+    console.error("Error in userSession:", error);
+    return { llm, messages };
+  }
 }
 
 const llmAsk = async (params: Params) => {
@@ -136,9 +143,14 @@ const llmAsk = async (params: Params) => {
     for await (const filePath of filesGenerator(params.files)) {
       // 指定されたすべてのファイルをテキストにパースして
       // 最初のユーザープロンプトに含める
-      const codeBlock = await parseFileContent(filePath);
-      if (!codeBlock.content) continue;
-      initialMessage = initialMessage.add(codeBlock);
+      try {
+        const codeBlock = await parseFileContent(filePath);
+        if (!codeBlock.content) continue;
+        initialMessage = initialMessage.add(codeBlock);
+      } catch (error) {
+        // エラーを表示するのみ。終了しない
+        console.error("Error: parse file content:", error);
+      }
     }
   }
 

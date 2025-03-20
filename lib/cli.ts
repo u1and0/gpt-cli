@@ -6,6 +6,7 @@ Ctrl+D to confirm input.
 Help:
   /?, /help         Help for a command
   /clear            Clear session context
+  /file             Attach readable text file
   /modelStack       Show model's history
   /bye,/exit,/quit  Exit
   @ModelName      Change LLM model
@@ -38,6 +39,7 @@ const helpMessage =
         - o1
         - o3-mini...
       - [Anthropic](https://docs.anthropic.com/claude/docs/models-overview)
+        - claude-3-7-sonnet-latest
         - claude-3-5-sonnet-20241022
         - claude-3-5-sonnet-latest
         - claude-3-opus-20240229
@@ -46,6 +48,10 @@ const helpMessage =
         - gemini-1.5-pro-latest
         - gemini-2.0-flash...
         - gemini-2.0-flash-thinking-exp...
+      - [Grok](https://docs.x.ai/docs/models)
+        - grok-3-latest
+        - grok-2-latest
+        - grok-2-1212
       - [Groq](https://console.groq.com/docs/models)
         - groq/llama3.1-70b-specdec
         - groq/llama-3.3-70b-specdec
@@ -60,9 +66,8 @@ const helpMessage =
         - togetherai/google/gemma-2-27b-it
         - togetherai/mistralai/Mistral-7B-Instruct-v0.3...
       - [Replicate](https://replicate.com/models)
+        - replicate/deepseek-ai/deepseek-r1
         - replicate/meta/meta-llama-3-70b-instruct
-        - replicate/meta/llama-2-7b-chat
-        - replicate/mistralai/mistral-7b-instruct-v0.2
         - replicate/mistralai/mixtral-8x7b-instruct-v0.1
         - replicate/snowflake/snowflake-arctic-instruct
         - replicate/replicate/flan-t5-xl...
@@ -98,8 +103,26 @@ export class CommandLineInterface {
     console.log(helpMessage);
   }
 
-  /** 灰色のテキストで表示 */
+  // 定数
+  private static readonly GRAY_COLOR_CODE = "\x1b[90m";
+  private static readonly RESET_COLOR_CODE = "\x1b[0m";
+
+  /** コマンドヘルプを灰色のテキストで表示 */
   public static showCommandMessage(): void {
-    console.info(`\x1b[90m${commandMessage}\x1b[0m`);
+    CommandLineInterface.printGray(commandMessage);
+  }
+
+  /** テキストをグレーアウトして表示 */
+  public static printGray(text: string): void {
+    console.info(
+      `${CommandLineInterface.GRAY_COLOR_CODE}${text}${CommandLineInterface.RESET_COLOR_CODE}`,
+    );
+  }
+
+  /** エラーメッセージをグレーアウトして表示 */
+  public static printGrayError(text: string): void {
+    console.error(
+      `${CommandLineInterface.GRAY_COLOR_CODE}${text}${CommandLineInterface.RESET_COLOR_CODE}`,
+    );
   }
 }

@@ -32,10 +32,10 @@ export async function parseFileContent(
     };
     return codeBlock;
   } catch (error) {
-    // Skip the file and continue
     console.error(`Error reading file ${filePath}:`, error);
+    // エラーを re-throw することで、呼び出し元にエラーを伝播する
+    throw error;
   }
-  return { content: "", filePath };
 }
 
 // Helper function to check if a string is a glob pattern
@@ -56,10 +56,17 @@ export async function* filesGenerator(
   for (const pattern of patterns) {
     if (!isGlobPattern(pattern)) {
       yield pattern;
+      continue; // glob パターンでない場合は、expandGlob をスキップする
     }
-    const globIterator = expandGlob(pattern); // 明示的に型指定
-    for await (const filePath of globIterator) {
-      yield filePath.path; // filePathはGlobEntry型なので、.pathでstringを取り出す
+    try {
+      const globIterator = expandGlob(pattern); // 明示的に型指定
+      for await (const filePath of globIterator) {
+        yield filePath.path; // filePathはGlobEntry型なので、.pathでstringを取り出す
+      }
+    } catch (error) {
+      console.error(`Error expanding glob pattern ${pattern}:`, error);
+      // エラー処理 (例: ユーザーに警告を表示)
+      continue; // 次のパターンに進む
     }
   }
 }
