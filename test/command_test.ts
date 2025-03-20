@@ -1,5 +1,4 @@
 import { assertEquals } from "https://deno.land/std@0.224.0/assert/assert_equals.ts";
-import { assertExists } from "https://deno.land/std@0.224.0/assert/assert_exists.ts";
 import { assert } from "https://deno.land/std@0.224.0/assert/assert.ts";
 import { Command, extractAtModel, newSlashCommand } from "../lib/command.ts";
 // Focus on command parsing functionality only - no message handling
