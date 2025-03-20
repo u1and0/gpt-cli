@@ -107,7 +107,10 @@ async function userSession(
     }
 
     // ユーザーからの問いを追加
-    messages.push(humanMessage);
+    if (isSlashCommand(humanMessage)) {
+      throw new Error(`not a Human message, is this command?: ${humanMessage}`);
+    }
+    messages.push(humanMessage as HumanMessage);
     // console.debug(messages);
     // AIからの回答を追加
     const aiMessage = await llm.ask(messages);

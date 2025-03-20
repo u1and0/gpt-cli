@@ -1,5 +1,6 @@
 /**
- * Open modelの動作プラットフォームに関する型や処理を定義する
+ * 特定企業に依存しないオープンモデルのLLMインスタンスを生成する関数を定義します。
+ * その呼出元modelMapを公開します。
  */
 
 import { ChatGroq } from "npm:@langchain/groq";
@@ -9,17 +10,20 @@ import Replicate from "npm:replicate";
 
 import { Params } from "./params.ts";
 
-// Platformオプション
-// llamaモデルは共通のオープンモデルなので、
-// どこで実行するかをオプションで決める必要がある
-export const platformList = [
+/** Platformオプション
+ * open model を公開している企業名など。
+ *
+ * llamaモデルは共通のオープンモデルなので、
+ * どのプラットフォームで実行するかを決める必要がある
+ */
+export const models = [
   "groq",
   "togetherai",
   "ollama",
   "replicate",
 ];
 
-export type Platform = (typeof platformList)[number];
+export type Platform = (typeof models)[number];
 export type OpenModel = ChatGroq | ChatTogetherAI | ChatOllama | Replicate;
 
 /** Platformごとに返すモデルのインスタンスを返す関数 */
@@ -33,7 +37,7 @@ type ReplicateModel = `${string}/${string}`;
 /** Platform型であることを保証する */
 export function isPlatform(value: unknown): value is Platform {
   return typeof value === "string" &&
-    platformList.includes(value as Platform);
+    models.includes(value as Platform);
 }
 
 /** ReplicateModel型であることを保証する */
@@ -44,7 +48,7 @@ export function isReplicateModel(value: unknown): value is ReplicateModel {
 }
 
 const createGroqInstance = (params: Params): ChatGroq => {
-  const { platform: _, model } = parsePlatform(params.model);
+  const { platform: _, model } = split(params.model);
   return new ChatGroq({
     model: model,
     temperature: params.temperature,
@@ -53,7 +57,7 @@ const createGroqInstance = (params: Params): ChatGroq => {
 };
 
 const createTogetherAIInstance = (params: Params): ChatTogetherAI => {
-  const { platform: _, model } = parsePlatform(params.model);
+  const { platform: _, model } = split(params.model);
   return new ChatTogetherAI({
     model: model,
     temperature: params.temperature,
@@ -68,7 +72,7 @@ const createOllamaInstance = (params: Params): ChatOllama => {
       "ollama needs URL parameter with `--url http://your.host:11434`",
     );
   }
-  const { platform: _, model } = parsePlatform(params.model);
+  const { platform: _, model } = split(params.model);
   return new ChatOllama({
     baseUrl: params.url, // http://yourIP:11434
     model: model, // "llama2:7b-chat", codellama:13b-fast-instruct, elyza:13b-fast-instruct ...
@@ -78,7 +82,7 @@ const createOllamaInstance = (params: Params): ChatOllama => {
 };
 
 const createReplicateInstance = (params: Params): Replicate => {
-  const { platform: _, model } = parsePlatform(params.model);
+  const { platform: _, model } = split(params.model);
   if (isReplicateModel(model)) {
     return new Replicate();
   } else {
@@ -92,7 +96,7 @@ const createReplicateInstance = (params: Params): Replicate => {
  * １つ目をplatformとして、
  * 2つめ移行をmodelとして返す
  */
-export function parsePlatform(
+export function split(
   model: string,
 ): { platform: string; model: string } {
   const parts = model.split("/");
@@ -105,11 +109,11 @@ export function parsePlatform(
 }
 
 /** 各プラットフォーム毎にインスタンス化する関数を定義したマップ
- * PlatformMapのキーは platformList で
+ * PlatformMapのキーは models で
  * type Platform 定義されているので、
- * platformListとことなるマップのキーはコンパイルエラーになる
+ * modelsとことなるマップのキーはコンパイルエラーになる
  */
-export const platformMap: PlatformMap = {
+export const modelMap: PlatformMap = {
   "groq": createGroqInstance,
   "togetherai": createTogetherAIInstance,
   "ollama": createOllamaInstance,
