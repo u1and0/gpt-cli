@@ -228,7 +228,7 @@ function llmConstructor(params: Params): Model {
   if (!openModel.isPlatform(platform)) {
     throw new Error(
       `unknown platform "${platform}", choose from ${
-        openModel.models.join(", ")
+        openModel.platforms.join(", ")
       }`,
     );
   }

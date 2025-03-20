@@ -15,7 +15,7 @@ import {
 } from "npm:@langchain/core/messages";
 
 import { generatePrompt, LLM } from "../lib/llm.ts";
-import { platformList } from "../lib/platform.ts";
+import * as openModel from "../lib/platform.ts";
 
 Deno.test("Should create a ChatOpenAI instance for a GPT model", () => {
   Deno.env.set("OPENAI_API_KEY", "sk-11111");
@@ -162,7 +162,7 @@ Deno.test("Should throw an error for an unknown model", () => {
   assertThrows(
     () => new LLM(params),
     Error,
-    `unknown platform "", choose from ${platformList.join(", ")}`,
+    `unknown platform "", choose from ${openModel.platforms.join(", ")}`,
   );
 });
 

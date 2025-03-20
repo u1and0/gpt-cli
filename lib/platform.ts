@@ -38,14 +38,14 @@ import { Params } from "./params.ts";
  * llamaモデルは共通のオープンモデルなので、
  * どのプラットフォームで実行するかを決める必要がある
  */
-export const models = [
+export const platforms = [
   "groq",
   "togetherai",
   "ollama",
   "replicate",
 ];
 
-export type Platform = (typeof models)[number];
+export type Platform = (typeof platforms)[number];
 export type OpenModel = ChatGroq | ChatTogetherAI | ChatOllama | Replicate;
 
 /** Platformごとに返すモデルのインスタンスを返す関数 */
@@ -59,7 +59,7 @@ type ReplicateModel = `${string}/${string}`;
 /** Platform型であることを保証する */
 export function isPlatform(value: unknown): value is Platform {
   return typeof value === "string" &&
-    models.includes(value as Platform);
+    platforms.includes(value as Platform);
 }
 
 /** ReplicateModel型であることを保証する */
@@ -131,9 +131,9 @@ export function split(
 }
 
 /** 各プラットフォーム毎にインスタンス化する関数を定義したマップ
- * PlatformMapのキーは models で
+ * PlatformMapのキーは platforms で
  * type Platform 定義されているので、
- * modelsとことなるマップのキーはコンパイルエラーになる
+ * platformsとことなるマップのキーはコンパイルエラーになる
  */
 export const modelMap: PlatformMap = {
   "groq": createGroqInstance,
