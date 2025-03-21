@@ -110,27 +110,6 @@ export class InitialPrompt {
   }
 
   /**
-   * 複数のファイルを一括で追加するメソッド
-   * @param patterns ファイルパスまたはグロブパターンの配列
-   * @returns 新しいInitialPromptインスタンス
-   */
-  public async addContents(...patterns: string[]): Promise<InitialPrompt> {
-    let currentPrompt = this; // 初期値は this
-
-    for await (const filePath of filesGenerator(patterns)) {
-      try {
-        // addContent を呼び出す際に this を使用
-        currentPrompt = await currentPrompt.addContent(filePath);
-      } catch (error) {
-        console.error(`Error processing file ${filePath}:`, error);
-        // エラー処理を適切に行う
-      }
-    }
-
-    return currentPrompt;
-  }
-
-  /**
    * 現在のプロンプトの内容を返す。
    * @returns プロンプトの内容
    */

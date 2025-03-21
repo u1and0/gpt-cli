@@ -25,7 +25,7 @@ import { CommandLineInterface } from "./lib/cli.ts";
 import { LLM, Message } from "./lib/llm.ts";
 import { getUserInputInMessage, readStdin } from "./lib/input.ts";
 import { Params } from "./lib/params.ts";
-import { filesGenerator, InitialPrompt } from "./lib/file.ts";
+import { filesGenerator, InitialPrompt, parseFileContent } from "./lib/file.ts";
 import {
   handleAtCommand,
   handleSlashCommand,
@@ -117,8 +117,24 @@ const llmAsk = async (params: Params) => {
   // コマンドライン引数systemPromptとcontentがあれば
   // システムプロンプトとユーザープロンプトを含めたMessageの生成
   // params.content があった場合は、コンテンツからメッセージを作成
-  const initialPrompt = await new InitialPrompt(params.content || "")
-    .addContents(...params.files);
+  let initialPrompt = new InitialPrompt(params.content || "");
+
+  // params.files が1つ以上あれば、readFileした内容をinitialMessageに追加
+  // params.files のstring[]と、
+  // expandGlobのパターンのiteratorを合わせて
+  // forループに渡す
+  if (params.files && params.files.length > 0) {
+    for await (const filePath of filesGenerator(params.files)) {
+      // 指定されたすべてのファイルをテキストにパースして
+      // 最初のユーザープロンプトに含める
+      try {
+        initialPrompt = await initialPrompt.addContent(filePath);
+      } catch (error) {
+        // エラーを表示するのみ。終了しない
+        console.error("Error: parse file content:", error);
+      }
+    }
+  }
 
   const initContent = initialPrompt.getContent();
   let messages = [

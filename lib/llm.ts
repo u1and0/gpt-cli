@@ -7,7 +7,6 @@ import {
   SystemMessage,
 } from "npm:@langchain/core/messages";
 import { BaseMessageChunk } from "npm:@langchain/core/messages";
-import { JsonOutputParser } from "npm:@langchain/core/output_parsers";
 
 import { Spinner } from "./spinner.ts";
 import { Params } from "./params.ts";
