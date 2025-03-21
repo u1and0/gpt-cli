@@ -1,5 +1,6 @@
 // deno test --allow-read --allow-write
 import { assertEquals } from "https://deno.land/std/testing/asserts.ts";
+import { assert } from "https://deno.land/std@0.224.0/assert/assert.ts";
 import { exists } from "jsr:@std/fs/exists";
 import { expect } from "jsr:@std/expect";
 import {
@@ -9,8 +10,14 @@ import {
   it,
 } from "https://deno.land/std/testing/bdd.ts";
 
-import { filesGenerator, parseFileContent } from "../lib/file.ts";
-import { InitialPrompt, newCodeBlock } from "../lib/file.ts";
+import { HumanMessage } from "npm:@langchain/core/messages";
+
+import {
+  filesGenerator,
+  InitialPrompt,
+  newCodeBlock,
+  parseFileContent,
+} from "../lib/file.ts";
 
 describe("create test directory", () => {
   const tempDir = new URL("./temp/", import.meta.url);
@@ -155,4 +162,42 @@ function test() {}
       expect(message.getContent()).toBe(content);
     });
   });
+});
+
+// Just test the file attachment functionality directly
+Deno.test("File Command - parseFileContent", async () => {
+  // Create a temporary file for testing
+  const tempFileName = await Deno.makeTempFile({ suffix: ".txt" });
+  try {
+    // Write test content to the file
+    const testContent = "This is a test file content.";
+    await Deno.writeTextFile(tempFileName, testContent);
+
+    // Test parsing the file content
+    const codeBlock = await parseFileContent(tempFileName);
+
+    // Verify the content was read correctly
+    assertEquals(codeBlock.content, testContent);
+
+    // Verify the file path was stored
+    assertEquals(codeBlock.filePath, tempFileName);
+
+    // Verify toString formats correctly with markdown code block
+    const formatted = codeBlock.toString();
+    assert(formatted.startsWith("```" + tempFileName));
+    assert(formatted.includes(testContent));
+    assert(formatted.endsWith("```"));
+
+    // Test creating a human message with the file content
+    const fileMessage = new HumanMessage(
+      `Here's the file I'm attaching:\n${codeBlock.toString()}`,
+    );
+    // Convert content to string for comparison
+    const messageContent = String(fileMessage.content);
+    assert(messageContent.includes(testContent));
+    assert(messageContent.includes("```"));
+  } finally {
+    // Clean up the temporary file
+    await Deno.remove(tempFileName);
+  }
 });
