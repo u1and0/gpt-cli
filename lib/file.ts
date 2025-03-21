@@ -3,22 +3,16 @@
 *  ユーザープロンプトとする
 * */
 
-import { expandGlob } from "https://deno.land/std@0.208.0/fs/expand_glob.ts";
+import { expandGlob } from "https://deno.land/std/fs/mod.ts";
 
-/**
- * コードブロックを表すインターフェース。
- */
 export interface CodeBlock {
   content: string;
   filePath: string;
-  toString: () => string;
+  toString(): string;
 }
 
-/**
- * ファイルパスを引数に、ファイルの内容をコードブロックに入れて返す。
- * @param filePath ファイルパス
- * @returns ファイル内容を含むCodeBlock
- * @throws ファイル読み込みエラーが発生した場合
+/** ファイルパスを引数に、
+ * ファイルの内容をコードブロックに入れて返す
  */
 export async function parseFileContent(
   filePath: string,
@@ -39,25 +33,22 @@ export async function parseFileContent(
     return codeBlock;
   } catch (error) {
     console.error(`Error reading file ${filePath}:`, error);
+    // エラーを re-throw することで、呼び出し元にエラーを伝播する
     throw error;
   }
 }
 
-/**
- * Helper function to check if a string is a glob pattern
- * @param pattern チェックするパターン
- * @returns グロブパターンか否か
- */
-function isGlobPattern(pattern: string): boolean {
+// Helper function to check if a string is a glob pattern
+function isGlobPattern(pattern: string) {
+  // Simple check for common glob wildcards
   return /\*|\?|\[|\]/.test(pattern);
 }
 
-/**
- * 与えられたパターンに応じてパスを返すジェネレーター。
- * globパターンが含まれている場合はexpandGlob()を使用し、含まれていない場合はパター
-ンをそのままyieldする。
- * @param patterns ファイルパスまたはグロブパターンの配列
- * @yields ファイルパス
+/** 与えられたパターンに応じてパスを返すジェネレーター
+ * globパターンが含まれている場合:
+ *  expandGlob()を使ってファイル名をyieldする
+ * globパターンが含まれていない場合:
+ *  patternをそのままyieldする
  */
 export async function* filesGenerator(
   patterns: string[],
@@ -65,76 +56,17 @@ export async function* filesGenerator(
   for (const pattern of patterns) {
     if (!isGlobPattern(pattern)) {
       yield pattern;
-      continue; // グロブパターンでない場合は、expandGlob をスキップ
+      continue; // glob パターンでない場合は、expandGlob をスキップする
     }
     try {
-      const globIterator = expandGlob(pattern);
+      const globIterator = expandGlob(pattern); // 明示的に型指定
       for await (const filePath of globIterator) {
-        yield filePath.path;
+        yield filePath.path; // filePathはGlobEntry型なので、.pathでstringを取り出す
       }
     } catch (error) {
       console.error(`Error expanding glob pattern ${pattern}:`, error);
+      // エラー処理 (例: ユーザーに警告を表示)
       continue; // 次のパターンに進む
     }
-  }
-}
-
-/**
- * コマンドラインパラメータからの初期プロンプトを管理するクラス。
- */
-export class InitialPrompt {
-  constructor(private readonly content: string) {}
-
-  /**
-   * コードブロックを改行区切りでプロンプトに追加する。
-   * @param codeBlock 追加するコードブロック
-   * @returns 新しいInitialPromptインスタンス
-   */
-  private add(codeBlock: CodeBlock): InitialPrompt {
-    return new InitialPrompt(this.content + "\n" + codeBlock);
-  }
-
-  /**
-   * ファイルの内容を解釈してコードブロックを追加する。
-   * @param filePath ファイルパス
-   * @returns 新しいInitialPromptインスタンス
-   */
-  public async addContent(filePath: string): Promise<InitialPrompt> {
-    try {
-      const codeBlock = await parseFileContent(filePath);
-      return this.add(codeBlock);
-    } catch (error) {
-      console.error("Error: parse file content:", error);
-      return this; // エラー時は現在のインスタンスを返す
-    }
-  }
-
-  /**
-   * 複数のファイルを一括で追加するメソッド
-   * @param patterns ファイルパスまたはグロブパターンの配列
-   * @returns 新しいInitialPromptインスタンス
-   */
-  public async addContents(...patterns: string[]): Promise<InitialPrompt> {
-    let currentPrompt = this; // 初期値は this
-
-    for await (const filePath of filesGenerator(patterns)) {
-      try {
-        // addContent を呼び出す際に this を使用
-        currentPrompt = await currentPrompt.addContent(filePath);
-      } catch (error) {
-        console.error(`Error processing file ${filePath}:`, error);
-        // エラー処理を適切に行う
-      }
-    }
-
-    return currentPrompt;
-  }
-
-  /**
-   * 現在のプロンプトの内容を返す。
-   * @returns プロンプトの内容
-   */
-  public getContent(): string {
-    return this.content;
   }
 }
