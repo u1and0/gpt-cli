@@ -15,6 +15,29 @@ export interface CodeBlock {
 }
 
 /**
+ * ファイルの内容とファイルパスを引数にして、コードブロック型を返す関数
+ * @param {string} content ファイルの内容
+ * @param {string} filePath ファイルパス
+ * @returns {CodeBlock} toString()メソッドがコードブロック形式のCodeBlock型
+ */
+export const newCodeBlock = (
+  content: string,
+  filePath: string = "",
+): CodeBlock => {
+  return {
+    content,
+    filePath,
+    toString: () => {
+      return [
+        "```" + filePath, // 1行目はコードブロックとファイルパス
+        content, // ファイルの内容
+        "```", // 最終行はコードブロック
+      ].join("\n");
+    },
+  };
+};
+
+/**
  * ファイルパスを引数に、ファイルの内容をコードブロックに入れて返す。
  * @param filePath ファイルパス
  * @returns ファイル内容を含むCodeBlock
@@ -90,23 +113,11 @@ export class InitialPrompt {
    * @param codeBlock 追加するコードブロック
    * @returns 新しいInitialPromptインスタンス
    */
-  private add(codeBlock: CodeBlock): InitialPrompt {
-    return new InitialPrompt(this.content + "\n" + codeBlock);
-  }
-
-  /**
-   * ファイルの内容を解釈してコードブロックを追加する。
-   * @param filePath ファイルパス
-   * @returns 新しいInitialPromptインスタンス
-   */
-  public async addContent(filePath: string): Promise<InitialPrompt> {
-    try {
-      const codeBlock = await parseFileContent(filePath);
-      return this.add(codeBlock);
-    } catch (error) {
-      console.error("Error: parse file content:", error);
-      return this; // エラー時は現在のインスタンスを返す
-    }
+  public addContent(codeBlock: CodeBlock): InitialPrompt {
+    return new InitialPrompt(
+      `${this.content}
+${codeBlock}`,
+    );
   }
 
   /**

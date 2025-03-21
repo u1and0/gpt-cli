@@ -126,9 +126,10 @@ const llmAsk = async (params: Params) => {
   if (params.files && params.files.length > 0) {
     for await (const filePath of filesGenerator(params.files)) {
       // 指定されたすべてのファイルをテキストにパースして
-      // 最初のユーザープロンプトに含める
+      // 最初のユーザープロンプトにコードブロックを追加する。
       try {
-        initialPrompt = await initialPrompt.addContent(filePath);
+        const codeBlock = await parseFileContent(filePath);
+        initialPrompt = await initialPrompt.addContent(codeBlock);
       } catch (error) {
         // エラーを表示するのみ。終了しない
         console.error("Error: parse file content:", error);
