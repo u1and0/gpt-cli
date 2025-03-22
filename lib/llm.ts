@@ -52,33 +52,6 @@ export class LLM {
     }
   }
 
-  // /** AI へ一回限りの質問をし、JSON形式で回答を出力して終了する */
-  // private async queryJson(messages: Message[]) {
-  //   const parser = new JsonOutputParser();
-  //   const formattedMessages = [
-  //     ...messages,
-  //     new HumanMessage("Format your entire response as a valid JSON object."),
-  //   ];
-  //
-  //   const spinner = new Spinner([".", "..", "..."], 100, 30000);
-  //   spinner.start();
-  //
-  //   if (!this.transrator) {
-  //     throw new Error("undefined transrator");
-  //   }
-  //
-  //   const response = await this.transrator.invoke(formattedMessages);
-  //   spinner.stop();
-  //
-  //   try {
-  //     const parsedResponse = parser.parse(response.content);
-  //     console.log(JSON.stringify(parsedResponse));
-  //   } catch (error) {
-  //     console.error("Failed to parse response as JSON:", error);
-  //     console.log(JSON.stringify({ response: response.content }));
-  //   }
-  // }
-
   /** AI へ対話形式に質問し、回答を得る */
   async ask(messages: Message[]): Promise<AIMessage> {
     const spinner = new Spinner([".", "..", "..."], 100, 30000);

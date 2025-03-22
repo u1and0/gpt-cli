@@ -28,7 +28,6 @@ const helpMessage =
       -u, --url: string URL and port number for ollama server
       -s, --system-prompt: string The first instruction given to guide the AI model's response
       -f, --file: string  Attachment file path.
-      -j, --json: boolean   Output responses in JSON format.
       -n, --no-chat: boolean   No chat mode. Just one time question and answer.
     PROMPT:
       string A Questions for Model

@@ -6,7 +6,6 @@ export type Params = {
   help: boolean;
   noChat: boolean;
   debug: boolean;
-  json: boolean;
   url?: string;
   files?: string[];
   systemPrompt?: string;
@@ -25,8 +24,6 @@ export function parseArgs(): Params {
       "no-chat",
       "d",
       "debug",
-      "j",
-      "json",
     ],
     string: [
       "m",
@@ -59,7 +56,6 @@ export function parseArgs(): Params {
     help: args.h || args.help || false,
     noChat: args.n || args["no-chat"] || false,
     debug: args.d || args.debug || false,
-    json: args.j || args.json || false,
     // string option
     model: args.m || args.model || "gpt-4o-mini",
     maxTokens: parseInt(String(args.x || args["max-tokens"])),

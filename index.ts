@@ -144,9 +144,9 @@ const llmAsk = async (params: Params) => {
   ].filter(Boolean) as Message[]; // truty のものだけ残す
 
   try {
-    // --no-chat または --jsonが指定された場合
+    // --no-chat が指定された場合
     // 一回限りの回答
-    if (params.noChat || params.json) {
+    if (params.noChat) {
       await llm.query(messages);
       return;
     }
