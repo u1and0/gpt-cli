@@ -157,6 +157,22 @@ export GROQ_API_KEY='*****'
 export TOGETHER_AI_API_KEY='*****'
 ```
 
+### Fireworks API
+
+[Get Fireworks API key](https://fireworks.ai/account/api-keys), then set environment argument.
+
+```
+export FIREWORKS_API_KEY='*****'
+```
+
+### MistralAI API
+
+[Get MistralAI API key](https://console.mistral.ai/home), then set environment argument.
+
+```
+export MISTRAL_API_KEY='*****'
+```
+
 ### Replicate API
 
 [Get Replicate API token](https://replicate.com/account/api-tokens), then set environment argument.
@@ -230,6 +246,14 @@ A Questions for Model
     - togetherai/meta-llama/Llama-3.1-405B-Instruct-Turbo
     - togetherai/google/gemma-2-27b-it
     - togetherai/mistralai/Mistral-7B-Instruct-v0.3...
+- [Fireworks](https://fireworks.ai/models)
+    - fireworks/accounts/fireworks/models/deepseek-r1
+    - fireworks/accounts/fireworks/models/llama-v3p1-405b-instruct
+    - fireworks/accounts/fireworks/models/deepseek-v3
+- [MistralAI](https://docs.mistral.ai/getting-started/models/models_overview/)
+    - mistralai/codestral-latest
+    - mistralai/mistral-large-latest
+    - mistralai/mistral-small-latest
 - [Replicate](https://replicate.com/models)
     - replicate/deepseek-ai/deepseek-r1
     - replicate/meta/meta-llama-3-70b-instruct
@@ -237,8 +261,8 @@ A Questions for Model
     - replicate/snowflake/snowflake-arctic-instruct
     - replicate/replicate/flan-t5-xl...
 - [Ollama](https://ollama.com/library)  **Use before `$ ollama serve` locally**
-    - ollama/phi3
-    - ollama/llama3:70b
+    - ollama/phi4
+    - ollama/llama3.3:70b
     - ollama/mixtral:8x7b-text-v0.1-q5_K_M...
 
 ## / command
@@ -348,8 +372,11 @@ This section compares `gpt-cli` with other popular LLM terminal clients to help 
 | OpenAI Models | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ |
 | Anthropic Models | ✅ | ❌ | ✅ | ✅ | ❌ | ✅ |
 | Google Models | ✅ | ❌ | ❌ | ✅ | ❌ | ✅ |
+| Grok Models | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | Groq Models | ✅ | ❌ | ❌ | ✅ | ❌ | ✅ |
 | Together AI Models | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Fireworks Models | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| MistralAI Models | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ |
 | Replicate Models | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ |
 | Local Models | ✅ | ✅ | ❌ | ✅ | ❌ | ✅ |
 | **Core Features** |
