@@ -20,7 +20,7 @@ import { ChatXAI } from "npm:@langchain/xai";
 import { ChatOllama } from "npm:@langchain/community/chat_models/ollama";
 import { ChatGroq } from "npm:@langchain/groq";
 import { ChatTogetherAI } from "npm:@langchain/community/chat_models/togetherai";
-import { ChatFireworks } from "@langchain/community/chat_models/fireworks";
+import { ChatFireworks } from "npm:@langchain/community/chat_models/fireworks";
 import Replicate from "npm:replicate";
 
 Deno.test("Should create a ChatOpenAI instance for a GPT model", () => {
@@ -173,14 +173,14 @@ Deno.test("Should create a TogetherAI instance for an TogetherAI model", () => {
   assertEquals(llm.transrator.model, "google/gemma-2-27b-it");
 });
 
-Deno.test("Should create a TogetherAI instance for an TogetherAI model", () => {
+Deno.test("Should create a Fireworks instance for an TogetherAI model", () => {
   Deno.env.set("FIREWORKS_API_KEY", "sk-11111");
   const params = {
     version: false,
     help: false,
     noChat: false,
     debug: false,
-    model: "accounts/fireworks/models/llama-v3p1-70b-instruct",
+    model: "fireworks/deepseek-r1",
     url: undefined,
     temperature: 0.7,
     maxTokens: 2048,
@@ -190,7 +190,7 @@ Deno.test("Should create a TogetherAI instance for an TogetherAI model", () => {
     llm.transrator instanceof ChatFireworks,
     `Expected LLM instance to be ChatFireworks, but got ${llm.constructor.name}`,
   );
-  assertEquals(llm.transrator.model, "llama-v3p1-70b-instruct");
+  assertEquals(llm.transrator.model, "accounts/fireworks/models/deepseek-r1");
 });
 
 Deno.test("Should throw an error for an unknown model", () => {
