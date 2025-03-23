@@ -21,6 +21,7 @@ import { ChatOllama } from "npm:@langchain/community/chat_models/ollama";
 import { ChatGroq } from "npm:@langchain/groq";
 import { ChatTogetherAI } from "npm:@langchain/community/chat_models/togetherai";
 import { ChatFireworks } from "npm:@langchain/community/chat_models/fireworks";
+import { ChatMistralAI } from "npm:@langchain/mistralai";
 import Replicate from "npm:replicate";
 
 Deno.test("Should create a ChatOpenAI instance for a GPT model", () => {
@@ -191,6 +192,26 @@ Deno.test("Should create a Fireworks instance for an TogetherAI model", () => {
     `Expected LLM instance to be ChatFireworks, but got ${llm.constructor.name}`,
   );
   assertEquals(llm.transrator.model, "accounts/fireworks/models/deepseek-r1");
+});
+
+Deno.test("Should create a MistralAI instance for an TogetherAI model", () => {
+  Deno.env.set("MISTRAL_API_KEY", "sk-11111");
+  const params = {
+    version: false,
+    help: false,
+    noChat: false,
+    debug: false,
+    model: "mistralai/mistral-large-latest",
+    url: undefined,
+    temperature: 0.7,
+    maxTokens: 2048,
+  };
+  const llm = new LLM(params);
+  assert(
+    llm.transrator instanceof ChatMistralAI,
+    `Expected LLM instance to be ChatMistralAI, but got ${llm.constructor.name}`,
+  );
+  assertEquals(llm.transrator.model, "mistral-large-latest");
 });
 
 Deno.test("Should throw an error for an unknown model", () => {
