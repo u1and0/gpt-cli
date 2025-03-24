@@ -88,23 +88,21 @@ jobs:
           deno-version: v2.x.x
 
       - name: Build binary
-        run: deno compile --allow-read --allow-net --allow-env --target ${{ matrix.target }} --output gpt index.ts
+        run: deno compile --allow-read --allow-net --allow-env --target ${{ matrix.target }} --output gpt-${{ matrix.name }} index.ts
 
       - name: Binary upload (Unix, MacOS)
         if: runner.os != 'Windows'
         uses: actions/upload-artifact@v4
         with:
           name: gpt-cli-${{ matrix.name }}
-          path: gpt
-          rename: gpt-cli-${{ matrix.name }}
+          path: gpt-${{ matrix.name }}
 
       - name: Binary upload (Windows)
         if: runner.os == 'Windows'
         uses: actions/upload-artifact@v4
         with:
           name: gpt-cli-${{ matrix.name }}
-          path: gpt.exe
-          rename: gpt-cli-${{ matrix.name }}.exe
+          path: gpt-${{ matrix.name }}.exe
 
   create_release:
     name: Create Release
@@ -144,6 +142,4 @@ jobs:
           body_path: ./CHANGELOG.md
           draft: false
           prerelease: ${{ steps.get_version.outputs.is_prerelease }}
-          files: |
-            artifacts/gpt-cli-*
-            artifacts/gpt.exe
+          files: artifacts/**/gpt-*
