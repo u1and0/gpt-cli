@@ -132,8 +132,8 @@ jobs:
             echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
             echo "is_prerelease=false" >> $GITHUB_OUTPUT  # タグの場合はfalse
           else
-            echo "version=${GITHUB_REF#refs/heads/release/}" >> $GITHUB_OUTPUT
-            echo "is_prerelease=true" >> $GITHUB_OUTPUT   # releaseブランチの場合はtrue
+            echo "version=${GITHUB_REF#refs/heads/}" >> $GITHUB_OUTPUT
+            echo "is_prerelease=true" >> $GITHUB_OUTPUT   # release or mainブランチの場合はtrue
           fi
 
       - name: Download all artifacts
