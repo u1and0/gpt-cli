@@ -109,6 +109,7 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
+          name: gpt-cli-${{ matrix.name }}
           path: |
             gpt-cli-${{ matrix.name }}.zip
             gpt-cli-${{ matrix.name }}-windows.zip
@@ -141,7 +142,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: artifacts
-          pattern: '*'
+          pattern: '*.zip'
           merge-multiple: true
 
       - name: Create Release
