@@ -12,8 +12,7 @@ Command-line interface  that enables interactive chat with LLMs.
 ```
 # Install binary
 $ bash -c "$(curl -fsSL https://raw.githubusercontent.com/u1and0/gpt-cli/refs/heads/main/install.sh)"
-$ chmod 755 gpt
-$ sudo ln -s ./gpt /usr/bin
+$ sudo ln -s ./release-package/gpt /usr/bin
 
 # Setup API key
 $ export OPENAI_API_KEY='sk-*****'
@@ -60,8 +59,7 @@ The simplest way.
 
 ```
 $ bash -c "$(curl -fsSL https://raw.githubusercontent.com/u1and0/gpt-cli/refs/heads/main/install.sh)"
-$ chmod 755 gpt
-$ sudo ln -s ./gpt /usr/bin
+$ sudo ln -s ./release-package/gpt /usr/bin
 $ gpt -v
 ```
 
@@ -70,8 +68,7 @@ Almost same command here.
 ```
 $ curl -LO https://github.com/u1and0/gpt-cli/releases/download/v0.9.4/gpt-cli-linux-x64.zip
 $ unzip gpt-cli-linux-x64.zip
-$ chmod 755 gpt
-$ sudo ln -s ./gpt /usr/bin
+$ sudo ln -s ./release-package/gpt /usr/bin
 $ gpt -v
 ```
 
@@ -102,8 +99,7 @@ Create binary by `deno compile`.
 $ git clone https://github.com/u1and0/gpt-cli
 $ cd gpt-cli
 $ deno compile --allow-net --allow-env --allow-read --output gpt gpt-cli.ts
-$ chmod 755 ./gpt
-$ sudo ln -s ./gpt /usr/bin
+$ sudo ln -s ./release-package/gpt /usr/bin
 ```
 
 
