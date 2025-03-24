@@ -65,6 +65,14 @@ const helpMessage =
         - togetherai/meta-llama/Llama-3.1-405B-Instruct-Turbo
         - togetherai/google/gemma-2-27b-it
         - togetherai/mistralai/Mistral-7B-Instruct-v0.3...
+      - [Fireworks](https://fireworks.ai/models)
+        - fireworks/accounts/fireworks/models/deepseek-r1
+        - fireworks/accounts/fireworks/models/llama-v3p1-405b-instruct
+        - fireworks/accounts/fireworks/models/deepseek-v3
+      - [MistralAI](https://docs.mistral.ai/getting-started/models/models_overview/)
+        - mistralai/codestral-latest
+        - mistralai/mistral-large-latest
+        - mistralai/mistral-small-latest
       - [Replicate](https://replicate.com/models)
         - replicate/deepseek-ai/deepseek-r1
         - replicate/meta/meta-llama-3-70b-instruct
@@ -72,8 +80,8 @@ const helpMessage =
         - replicate/snowflake/snowflake-arctic-instruct
         - replicate/replicate/flan-t5-xl...
       - [Ollama](https://ollama.com/library)  ** Using before "$ ollama serve" locally **
-        - ollama/phi3
-        - ollama/llama3:70b
+        - ollama/phi4
+        - ollama/llama3.3:70b
         - ollama/mixtral:8x7b-text-v0.1-q5_K_M...
 ${commandMessage}
 `;

@@ -1,5 +1,6 @@
 // deno test --allow-read --allow-write
 import { assertEquals } from "https://deno.land/std/testing/asserts.ts";
+import { assert } from "https://deno.land/std@0.224.0/assert/assert.ts";
 import { exists } from "jsr:@std/fs/exists";
 import { expect } from "jsr:@std/expect";
 import {
@@ -9,7 +10,14 @@ import {
   it,
 } from "https://deno.land/std/testing/bdd.ts";
 
-import { filesGenerator, parseFileContent } from "../lib/file.ts";
+import { HumanMessage } from "npm:@langchain/core/messages";
+
+import {
+  filesGenerator,
+  InitialPrompt,
+  newCodeBlock,
+  parseFileContent,
+} from "../lib/file.ts";
 
 describe("create test directory", () => {
   const tempDir = new URL("./temp/", import.meta.url);
@@ -79,4 +87,117 @@ describe("create test directory", () => {
     expect(result).toContain(Deno.cwd() + "/test/temp/file.txt");
     expect(result).toContain(Deno.cwd() + "/test/temp/test.js");
   });
+});
+
+describe("InitialPrompt", () => {
+  // Test constructor and initial content
+  describe("constructor", () => {
+    it("should create an InitialPrompt with the given content", () => {
+      const content = "Initial content";
+      const message = new InitialPrompt(content);
+      expect(message.getContent()).toBe(content);
+    });
+
+    it("should handle empty string content", () => {
+      const message = new InitialPrompt("");
+      expect(message.getContent()).toBe("");
+    });
+  });
+
+  describe("addContent() method", () => {
+    it("既存のコンテンツにコードブロックを追加する", () => {
+      const codeBlock = newCodeBlock("function test() {}", "test.txt");
+      const message = new InitialPrompt("Initial message");
+
+      const updatedPrompt = message.addContent(codeBlock);
+
+      expect(updatedPrompt.getContent()).toBe(`Initial message
+\`\`\`test.txt
+function test() {}
+\`\`\``);
+    });
+
+    it("should create a new InitialPrompt instance without modifying the original", () => {
+      const initialContent = "Initial message";
+      const codeBlock = newCodeBlock("function test() {}");
+      const message = new InitialPrompt(initialContent);
+
+      const updatedPrompt = message.addContent(codeBlock);
+
+      expect(message.getContent()).toBe(initialContent);
+      expect(updatedPrompt.getContent()).not.toBe(message.getContent());
+    });
+
+    it("should handle adding multiple code blocks", () => {
+      const initialContent = "Initial message";
+      const codeBlock1 = newCodeBlock("function test1() {}");
+      const codeBlock2 = newCodeBlock("function test2() {}");
+
+      const message = new InitialPrompt(initialContent)
+        .addContent(codeBlock1)
+        .addContent(codeBlock2);
+
+      expect(message.getContent()).toBe(`${initialContent}
+${codeBlock1}
+${codeBlock2}`);
+    });
+
+    it("空の初期メッセージにコードブロックを追加する処理を行う必要がある。", () => {
+      const codeBlock = newCodeBlock("function test() {}");
+      const message = new InitialPrompt("").addContent(codeBlock);
+
+      expect(message.getContent()).toBe(`
+\`\`\`
+function test() {}
+\`\`\``);
+    });
+  });
+
+  // Test getContent method
+  describe("getContent method", () => {
+    it("should return the exact content of the message", () => {
+      const content = "Test content with special characters: !@#$%^&*()";
+      const message = new InitialPrompt(content);
+
+      expect(message.getContent()).toBe(content);
+    });
+  });
+});
+
+// Just test the file attachment functionality directly
+Deno.test("File Command - parseFileContent", async () => {
+  // Create a temporary file for testing
+  const tempFileName = await Deno.makeTempFile({ suffix: ".txt" });
+  try {
+    // Write test content to the file
+    const testContent = "This is a test file content.";
+    await Deno.writeTextFile(tempFileName, testContent);
+
+    // Test parsing the file content
+    const codeBlock = await parseFileContent(tempFileName);
+
+    // Verify the content was read correctly
+    assertEquals(codeBlock.content, testContent);
+
+    // Verify the file path was stored
+    assertEquals(codeBlock.filePath, tempFileName);
+
+    // Verify toString formats correctly with markdown code block
+    const formatted = codeBlock.toString();
+    assert(formatted.startsWith("```" + tempFileName));
+    assert(formatted.includes(testContent));
+    assert(formatted.endsWith("```"));
+
+    // Test creating a human message with the file content
+    const fileMessage = new HumanMessage(
+      `Here's the file I'm attaching:\n${codeBlock.toString()}`,
+    );
+    // Convert content to string for comparison
+    const messageContent = String(fileMessage.content);
+    assert(messageContent.includes(testContent));
+    assert(messageContent.includes("```"));
+  } finally {
+    // Clean up the temporary file
+    await Deno.remove(tempFileName);
+  }
 });

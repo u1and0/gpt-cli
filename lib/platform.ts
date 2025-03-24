@@ -27,6 +27,8 @@
 
 import { ChatGroq } from "npm:@langchain/groq";
 import { ChatTogetherAI } from "npm:@langchain/community/chat_models/togetherai";
+import { ChatFireworks } from "npm:@langchain/community/chat_models/fireworks";
+import { ChatMistralAI } from "npm:@langchain/mistralai";
 import { ChatOllama } from "npm:@langchain/community/chat_models/ollama";
 import Replicate from "npm:replicate";
 
@@ -41,12 +43,29 @@ import { Params } from "./params.ts";
 export const platforms = [
   "groq",
   "togetherai",
+  "fireworks",
+  "mistralai",
   "ollama",
   "replicate",
 ];
 
+/**
+ * Platform 型は platformsのarrayから生成される型
+ * これ以外のPlatformを入れるとエラー
+ */
 export type Platform = (typeof platforms)[number];
-export type OpenModel = ChatGroq | ChatTogetherAI | ChatOllama | Replicate;
+
+/**
+ * OpenModel 型は 各プラットフォームのChatインスタンスに
+ * Repliceteインスタンスを加えたもの
+ */
+export type OpenModel =
+  | ChatGroq
+  | ChatTogetherAI
+  | ChatFireworks
+  | ChatMistralAI
+  | ChatOllama
+  | Replicate;
 
 /** Platformごとに返すモデルのインスタンスを返す関数 */
 type PlatformMap = { [key in Platform]: (params: Params) => OpenModel };
@@ -82,6 +101,24 @@ const createTogetherAIInstance = (params: Params): ChatTogetherAI => {
   const { platform: _, model } = split(params.model);
   return new ChatTogetherAI({
     model: model,
+    temperature: params.temperature,
+    maxTokens: params.maxTokens,
+  });
+};
+
+const createFireworksInstance = (params: Params): ChatFireworks => {
+  const { platform: _, model } = split(params.model);
+  return new ChatFireworks({
+    model: `accounts/fireworks/models/${model}`,
+    temperature: params.temperature,
+    maxTokens: params.maxTokens,
+  });
+};
+
+const createMistralAIInstance = (params: Params): ChatMistralAI => {
+  const { platform: _, model } = split(params.model);
+  return new ChatMistralAI({
+    model,
     temperature: params.temperature,
     maxTokens: params.maxTokens,
   });
@@ -138,6 +175,8 @@ export function split(
 export const modelMap: PlatformMap = {
   "groq": createGroqInstance,
   "togetherai": createTogetherAIInstance,
+  "fireworks": createFireworksInstance,
+  "mistralai": createMistralAIInstance,
   "ollama": createOllamaInstance,
   "replicate": createReplicateInstance,
 } as const;

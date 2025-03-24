@@ -48,7 +48,7 @@ export class LLM {
   async query(messages: Message[]) {
     const stream = await this.streamGenerator(messages);
     for await (const _ of streamEncoder(stream)) {
-      //出力のために何もしない
+      // 出力のために何もしない
     }
   }
 

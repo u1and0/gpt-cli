@@ -25,8 +25,7 @@ import { CommandLineInterface } from "./lib/cli.ts";
 import { LLM, Message } from "./lib/llm.ts";
 import { getUserInputInMessage, readStdin } from "./lib/input.ts";
 import { Params } from "./lib/params.ts";
-import { filesGenerator, parseFileContent } from "./lib/file.ts";
-import { CodeBlock } from "./lib/file.ts";
+import { filesGenerator, InitialPrompt, parseFileContent } from "./lib/file.ts";
 import {
   handleAtCommand,
   handleSlashCommand,
@@ -35,22 +34,7 @@ import {
   modelStack,
 } from "./lib/command.ts";
 
-const VERSION = "v0.9.3";
-
-class InitialMessage {
-  constructor(private readonly content: string) {}
-
-  public add(codeBlock: CodeBlock) {
-    return new InitialMessage(
-      `${this.content}
-${codeBlock}`,
-    );
-  }
-
-  public getContent(): string {
-    return this.content;
-  }
-}
+const VERSION = "v0.9.4";
 
 type AgentRecord = { llm: LLM; messages: Message[] };
 
@@ -133,7 +117,7 @@ const llmAsk = async (params: Params) => {
   // コマンドライン引数systemPromptとcontentがあれば
   // システムプロンプトとユーザープロンプトを含めたMessageの生成
   // params.content があった場合は、コンテンツからメッセージを作成
-  let initialMessage = new InitialMessage(params.content || "");
+  let initialPrompt = new InitialPrompt(params.content || "");
 
   // params.files が1つ以上あれば、readFileした内容をinitialMessageに追加
   // params.files のstring[]と、
@@ -142,11 +126,10 @@ const llmAsk = async (params: Params) => {
   if (params.files && params.files.length > 0) {
     for await (const filePath of filesGenerator(params.files)) {
       // 指定されたすべてのファイルをテキストにパースして
-      // 最初のユーザープロンプトに含める
+      // 最初のユーザープロンプトにコードブロックを追加する。
       try {
         const codeBlock = await parseFileContent(filePath);
-        if (!codeBlock.content) continue;
-        initialMessage = initialMessage.add(codeBlock);
+        initialPrompt = await initialPrompt.addContent(codeBlock);
       } catch (error) {
         // エラーを表示するのみ。終了しない
         console.error("Error: parse file content:", error);
@@ -154,13 +137,14 @@ const llmAsk = async (params: Params) => {
     }
   }
 
-  const initContent = initialMessage.getContent();
+  const initContent = initialPrompt.getContent();
   let messages = [
     params.systemPrompt && new SystemMessage(params.systemPrompt),
     initContent && new HumanMessage(initContent),
   ].filter(Boolean) as Message[]; // truty のものだけ残す
 
   try {
+    // --no-chat が指定された場合
     // 一回限りの回答
     if (params.noChat) {
       await llm.query(messages);
