@@ -109,7 +109,6 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: gpt-cli-${{ matrix.name }}
           path: |
             gpt-cli-${{ matrix.name }}.zip
             gpt-cli-${{ matrix.name }}-windows.zip
