@@ -91,7 +91,6 @@ jobs:
         run: deno compile --allow-read --allow-net --allow-env --target ${{ matrix.target }} --output gpt index.ts
 
       - name: Create ZIP package
-        if: runner.os != 'Windows'
         run: |
           mkdir -p release-package
           if [ "${{ runner.os }}" = "Windows" ]; then
@@ -99,7 +98,7 @@ jobs:
           else
             cp gpt release-package/gpt
           fi
-          zip -r gpt-cli-${{ matrix.name }}.zip
+          zip -r gpt-cli-${{ matrix.name }}.zip release-package/*
           rm -rf release-package
 
       - name: Upload Artifact
