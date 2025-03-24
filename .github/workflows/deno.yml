@@ -90,30 +90,24 @@ jobs:
       - name: Build binary
         run: deno compile --allow-read --allow-net --allow-env --target ${{ matrix.target }} --output gpt index.ts
 
-      - name: Create ZIP package (Unix/MacOS)
+      - name: Create ZIP package
         if: runner.os != 'Windows'
         run: |
-          mkdir -p package
-          cp gpt package/gpt
-          zip -r gpt-cli-${{ matrix.name }}.zip package/
-          rm -rf package
-
-      - name: Create ZIP package (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          mkdir package
-          copy gpt.exe package\gpt.exe
-          Compress-Archive -Path package\* -DestinationPath gpt-cli-${{ matrix.name }}-windows.zip
-          Remove-Item -Recurse -Force package
+          mkdir -p release-package
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            cp gpt.exe release-package/gpt.exe
+          else
+            cp gpt release-package/gpt
+          fi
+          zip -r gpt-cli-${{ matrix.name }}.${{ matrix.ext }} release-package/*
+          rm -rf release-package
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: gpt-cli-${{ matrix.name }}
-          path: |
-            gpt-cli-${{ matrix.name }}.zip
-            gpt-cli-${{ matrix.name }}-windows.zip
-          if-no-files-found: error
+          path: gpt-cli-${{ matrix.name }}.${{ matrix.ext }}
+          overwrite: true
 
   create_release:
     name: Create Release
