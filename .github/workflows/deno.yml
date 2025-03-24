@@ -140,7 +140,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: artifacts
-          pattern: '*.zip'
+          pattern: '*'
           merge-multiple: true
 
       - name: Create Release
