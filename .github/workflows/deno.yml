@@ -96,6 +96,7 @@ jobs:
         with:
           name: gpt-cli-${{ matrix.name }}
           path: gpt
+          rename: gpt-cli-${{ matrix.name }}
 
       - name: Binary upload (Windows)
         if: runner.os == 'Windows'
@@ -103,6 +104,7 @@ jobs:
         with:
           name: gpt-cli-${{ matrix.name }}
           path: gpt.exe
+          rename: gpt-cli-${{ matrix.name }}.exe
 
   create_release:
     name: Create Release
@@ -131,14 +133,17 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: artifacts
+          pattern: '*'
+          merge-multiple: true
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.get_version.outputs.version }}
           name: Release ${{ steps.get_version.outputs.version }}
-          # Change this to your changelog file path if you have one. If not you can remove.
           body_path: ./CHANGELOG.md
           draft: false
           prerelease: ${{ steps.get_version.outputs.is_prerelease }}
-          files: artifacts/**/* # Upload all artifacts from the artifact directory
+          files: |
+            artifacts/gpt-cli-*
+            artifacts/gpt.exe
