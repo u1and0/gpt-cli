@@ -103,8 +103,7 @@ jobs:
         run: |
           mkdir release-package
           copy gpt.exe release-package\gpt.exe
-          Compress-Archive -Path release-package\* -DestinationPath gpt-cli-${{ matrix.name }}-windows.
-zip
+          Compress-Archive -Path release-package\* -DestinationPath gpt-cli-${{ matrix.name }}-windows.zip
           Remove-Item -Recurse -Force release-package
 
       - name: Upload Artifact
