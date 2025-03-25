@@ -260,3 +260,53 @@ $ gpt -n -s "you are python interpreter. generate efficiently excutable code"\
 ```
 
 In addition, the generated code is piped to Python interpreter.
+
+## Tool use like
+
+### No tool
+
+```
+$ gpt -n -m gemini-2.0-flash-lite -f doc/example.md このファイルの中に出てくる's'の文字数を数え上げて、最後に数値のみ表示してください
+1021
+```
+
+### Use Python
+
+```
+$ gpt -n -m gemini-2.0-flash-lite -f doc/example.md -s "you are python interpreter. generate effectivly excutable code" このファイルの中に出てくる's'の文字数を数え上げて、最後に数値のみ表示してください | ./tools/extract_codeblock.sh | ./tools/safe_execution.sh | python
+Generated code:
+
+ import re
+
+with open('doc/example.md', 'r') as f:
+    content = f.read()
+
+s_count = content.lower().count('s')
+print(s_count)
+
+Execute? (y/N): y
+import re
+
+with open('doc/example.md', 'r') as f:
+    content = f.read()
+
+s_count = content.lower().count('s')
+print(s_count)
+530
+```
+
+### Use bash (`grep` and `wc`)
+
+```
+$ gpt -n -m gemini-2.0-flash-lite -f doc/example.md -s "you are bash. generate effectivly excutable code" このファイルの中に出てくる's'の文字数を数え上げて、最後に数値のみ表示してください | ./tools/extract_codeblock.sh | ./tools/safe_execution.sh | bash
+Generated code:
+
+ grep -o 's' doc/example.md | wc -l
+
+Execute? (y/N): y
+grep -o 's' doc/example.md | wc -l
+498
+```
+
+正解はbashを使った場合。
+質問が悪く、ケース・センシティブかが明確ではなかったので、ケース・センシティブならbashが正解。ケース・インセンシティブならPythonが正解。ツールなしは不正解だった。

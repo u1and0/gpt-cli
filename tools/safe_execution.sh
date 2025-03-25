@@ -8,7 +8,7 @@
 
 code=$(cat)
 # Display the generated code
-echo -e "Generated code:\n\n $code\n" >&2
+echo -e "Generated code:\n\n$code\n" >&2
 # Check the user's response and act accordingly
 read -n1 -p "Execute? (y/N): " yn < /dev/tty
 [[ $yn =~ [yY] ]] &&
