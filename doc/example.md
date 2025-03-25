@@ -170,3 +170,81 @@ ddgr "blockchain environmental impact" --np --num=5 --json | gpt -s "Synthesize 
 ```
 
 These examples demonstrate how `gpt-cli` can be integrated with various command-line tools to enhance productivity and extract insights from different data sources. Feel free to adapt these examples to your specific needs and workflows.
+
+
+## Code execution
+
+```
+$ gpt -nm gemini-2.0-flash-lite -s "you are bash. generate efficiently excutable code"\
+    "find .ts files on lib directory" |
+    grep -ozP '```[\s\S]*?```' |
+    sed '/^```/d;'
+find lib -name "*.ts"
+```
+
+Generate code. It uses `grep` and `sed` to remove backquotes.
+
+
+```
+$ gpt -nm gemini-2.0-flash-lite -s "you are bash. generate efficiently excutable code"\
+    "find .ts files on lib directory" |
+    grep -ozP '```[\s\S]*?```' |
+    sed '/^```/d;' |
+    bash
+lib/cli.ts
+lib/command.ts
+lib/file.ts
+lib/input.ts
+lib/llm.ts
+lib/model.ts
+lib/params.ts
+lib/platform.ts
+lib/spinner.ts
+```
+
+In addition, the generated code is piped to bash.
+
+```
+$ gpt -nm gemini-2.0-flash-lite\
+    -s "you are python interpreter. generate efficiently excutable code"\
+    "List prime numbers from 1 to 100" |
+    grep -ozP '```[\s\S]*?```' |
+    sed '/^```/d;'
+def is_prime(n):
+    """Function to determine if a given number is prime."""
+    if n <= 1:
+        return False
+    if n <= 3:
+        return True
+    if n % 2 == 0 or n % 3 == 0:
+        return False
+    i = 5
+    while i * i <= n:
+        if n % i == 0 or n % (i + 2) == 0:
+            return False
+        i += 6
+    return True
+
+def generate_primes(limit):
+    """Function to generate a list of prime numbers from 1 to limit""""
+    primes = [number for number in range(2, limit + 1) if is_prime(number)]
+    return primes
+
+# 1から100までの素数を生成
+primes_1_to_100 = generate_primes(100)
+print(primes_1_to_100)
+```
+
+Generate code. It uses `grep` and `sed` to remove backquotes.
+
+```
+$ gpt -nm gemini-2.0-flash-lite\
+    -s "you are python interpreter. generate efficiently excutable code"\
+    "List prime numbers from 1 to 100" |
+    grep -ozP '```[\s\S]*?```' |
+    sed '/^```/d;' |
+    python
+[2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97]
+```
+
+In addition, the generated code is piped to Python interpreter.
