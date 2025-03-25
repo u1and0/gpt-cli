@@ -11,8 +11,14 @@ Pipe search results from DuckDuckGo directly to `gpt-cli` for summarization and 
 # Summarize search results about quantum computing
 ddgr "quantum computing basics" --np --num=5 --json | gpt -s "Summarize these search results in a concise and understandable manner"
 
+# Also include search results in system prompts to create a simple FAQ chatbot
+gpt -s $( ddgr 'quantum computing basics' --np --num=5 --json ) "Summarize these search results in a concise and understandable manner"
+
 # Get technical explanations from search results
 ddgr "kubernetes pod networking" --np --num=3 --json | gpt -s "Explain these technical concepts for a beginner"
+
+# Also include search results in system prompts to create a technical lecturer
+gpt -s "$( ddgr 'kubernetes pod networking' --np --num=3 --json )" "Explain these technical concepts for a beginner"
 ```
 
 ### Web Browsing with w3m
@@ -21,9 +27,11 @@ Extract and analyze content from websites:
 ```bash
 # Get updates about Linux kernel from kernel.org
 w3m -dump "https://www.kernel.org" | gpt -s "Extract and explain the latest Linux kernel version and changes"
+gpt -s "$(w3m -dump 'https://www.kernel.org')" "Extract and explain the latest Linux kernel version and changes"
 
 # Summarize documentation pages
 w3m -dump "https://docs.docker.com/engine/reference/commandline/run/" | gpt -s "Summarize the key points of this Docker command documentation"
+gpt -s "$(w3m -dump 'https://docs.docker.com/engine/reference/commandline/run/')" "Summarize the key points of this Docker command documentation"
 ```
 
 ## Data Processing Tools
@@ -69,9 +77,11 @@ Extract and analyze text from PDF documents:
 ```bash
 # Summarize PDF documents
 pdftotext document.pdf - | gpt -s "Summarize the main points and conclusions of this document in three key points"
+gpt -s "$(pdftotext document.pdf -)" "Summarize the main points and conclusions of this document in three key points"
 
 # Extract specific information from technical PDFs
 pdftotext technical_spec.pdf - | gpt -s "Extract the technical requirements and specifications from this document"
+gpt -s "$(pdftotext technical_spec.pdf -)" "Extract the technical requirements and specifications from this document"
 ```
 
 ### Log File Analysis
@@ -122,6 +132,8 @@ cat foreign_document.txt | gpt -s "Translate this text to Japanese while preserv
 cat draft.txt | gpt -s "Edit this text to improve clarity and conciseness while maintaining the core message"
 ```
 
+Using the `-f` option is functionally similar.
+
 ### Code Analysis
 Analyze and improve code:
 
@@ -132,6 +144,8 @@ cat source_code.py | gpt -s "Review this Python code and suggest improvements fo
 # Documentation generation
 cat implementation.js | gpt -s "Generate comprehensive documentation for this JavaScript code"
 ```
+
+Using the `-f` option is functionally similar.
 
 ## Weather and External Data
 
@@ -175,7 +189,7 @@ These examples demonstrate how `gpt-cli` can be integrated with various command-
 ## Code execution
 
 ```
-$ gpt -nm gemini-2.0-flash-lite -s "you are bash. generate efficiently excutable code"\
+$ gpt -n -s "you are bash. generate efficiently excutable code"\
     "find .ts files on lib directory" |
     grep -ozP '```[\s\S]*?```' |
     sed '/^```/d;'
@@ -186,7 +200,7 @@ Generate code. It uses `grep` and `sed` to remove backquotes.
 
 
 ```
-$ gpt -nm gemini-2.0-flash-lite -s "you are bash. generate efficiently excutable code"\
+$ gpt -n -s "you are bash. generate efficiently excutable code"\
     "find .ts files on lib directory" |
     grep -ozP '```[\s\S]*?```' |
     sed '/^```/d;' |
@@ -205,8 +219,7 @@ lib/spinner.ts
 In addition, the generated code is piped to bash.
 
 ```
-$ gpt -nm gemini-2.0-flash-lite\
-    -s "you are python interpreter. generate efficiently excutable code"\
+$ gpt -n -s "you are python interpreter. generate efficiently excutable code"\
     "List prime numbers from 1 to 100" |
     grep -ozP '```[\s\S]*?```' |
     sed '/^```/d;'
@@ -230,7 +243,7 @@ def generate_primes(limit):
     primes = [number for number in range(2, limit + 1) if is_prime(number)]
     return primes
 
-# 1から100までの素数を生成
+# Generate prime numbers from 1 to 100
 primes_1_to_100 = generate_primes(100)
 print(primes_1_to_100)
 ```
@@ -238,8 +251,7 @@ print(primes_1_to_100)
 Generate code. It uses `grep` and `sed` to remove backquotes.
 
 ```
-$ gpt -nm gemini-2.0-flash-lite\
-    -s "you are python interpreter. generate efficiently excutable code"\
+$ gpt -n -s "you are python interpreter. generate efficiently excutable code"\
     "List prime numbers from 1 to 100" |
     grep -ozP '```[\s\S]*?```' |
     sed '/^```/d;' |
