@@ -15,10 +15,6 @@ else
   code=$(cat)
 fi
 
-# Get code block surrounded by triple back quotes
-# and remove triple back quotes.
-code=$(echo "$code" | grep -ozP '```[\s\S]*?```' | sed '/^```/d;')
-
 # Display the generated code
 # echo -e "\nGenerated code:"
 echo -e "Generated code:\n\n $code\n" >&2
