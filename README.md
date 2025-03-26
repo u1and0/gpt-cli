@@ -205,8 +205,8 @@ $ gpt -m gpt-4o-mini -x 8192 -t 1.0 [OPTIONS] PROMPT
 
 
 ## PROMPT
-A Questions for Model
-
+A Questions for Model.
+Using regular expressions to match and generate the appropriate LLM instance allows you to use new models in 0 days after a new API is released.
 
 ## Models
 - [OpenAI](https://platform.openai.com/docs/models)
