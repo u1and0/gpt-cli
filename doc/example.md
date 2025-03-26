@@ -188,11 +188,15 @@ These examples demonstrate how `gpt-cli` can be integrated with various command-
 
 ## Code execution
 
+I've added short shell scripts to [tools](https://github.com/u1and0/gpt-cli/tree/main/tools) to help with code execution.
+
+*   `tools/extract_code.sh`: Extracts code from within code blocks.
+*   `tools/are_you_ready.sh`: Displays the code and shows a confirmation prompt asking if you want to execute it.
+
 ```
 $ gpt -n -s "you are bash. generate efficiently excutable code"\
     "find .ts files on lib directory" |
-    grep -ozP '```[\s\S]*?```' |
-    sed '/^```/d;'
+    ./tools/extract_code.sh
 find lib -name "*.ts"
 ```
 
@@ -202,8 +206,8 @@ Generate code. It uses `grep` and `sed` to remove backquotes.
 ```
 $ gpt -n -s "you are bash. generate efficiently excutable code"\
     "find .ts files on lib directory" |
-    grep -ozP '```[\s\S]*?```' |
-    sed '/^```/d;' |
+    ./tools/extract_code.sh |
+    ./tools/are_you_ready.sh |
     bash
 lib/cli.ts
 lib/command.ts
@@ -221,8 +225,7 @@ In addition, the generated code is piped to bash.
 ```
 $ gpt -n -s "you are python interpreter. generate efficiently excutable code"\
     "List prime numbers from 1 to 100" |
-    grep -ozP '```[\s\S]*?```' |
-    sed '/^```/d;'
+    ./tools/extract_code.sh
 def is_prime(n):
     """Function to determine if a given number is prime."""
     if n <= 1:
@@ -253,8 +256,8 @@ Generate code. It uses `grep` and `sed` to remove backquotes.
 ```
 $ gpt -n -s "you are python interpreter. generate efficiently excutable code"\
     "List prime numbers from 1 to 100" |
-    grep -ozP '```[\s\S]*?```' |
-    sed '/^```/d;' |
+    ./tools/extract_code.sh |
+    ./tools/are_you_ready.sh |
     python
 [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97]
 ```
@@ -266,14 +269,20 @@ In addition, the generated code is piped to Python interpreter.
 ### No tool
 
 ```
-$ gpt -n -m gemini-2.0-flash-lite -f doc/example.md このファイルの中に出てくる's'の文字数を数え上げて、最後に数値のみ表示してください
+$ gpt -n -m gemini-2.0-flash-lite -f doc/example.md\
+    'count the number of "s" characters in the provided file and display only the numerical count.'
 1021
 ```
 
 ### Use Python
 
 ```
-$ gpt -n -m gemini-2.0-flash-lite -f doc/example.md -s "you are python interpreter. generate effectivly excutable code" このファイルの中に出てくる's'の文字数を数え上げて、最後に数値のみ表示してください | ./tools/extract_codeblock.sh | ./tools/safe_execution.sh | python
+$ gpt -n -m gemini-2.0-flash-lite -f doc/example.md\
+    -s "you are python interpreter. generate effectivly excutable code"\
+    'count the number of "s" characters in the provided file and display only the numerical count.' |
+    ./tools/extract_code.sh |
+    ./tools/are_you_ready.sh |
+    python
 Generated code:
 
  import re
@@ -298,7 +307,12 @@ print(s_count)
 ### Use bash (`grep` and `wc`)
 
 ```
-$ gpt -n -m gemini-2.0-flash-lite -f doc/example.md -s "you are bash. generate effectivly excutable code" このファイルの中に出てくる's'の文字数を数え上げて、最後に数値のみ表示してください | ./tools/extract_codeblock.sh | ./tools/safe_execution.sh | bash
+$ gpt -n -m gemini-2.0-flash-lite -f doc/example.md\
+    -s "you are bash. generate effectivly excutable code"\
+    'count the number of "s" characters in the provided file and display only the numerical count.' |
+    ./tools/extract_code.sh |
+    ./tools/are_you_ready.sh |
+    bash
 Generated code:
 
  grep -o 's' doc/example.md | wc -l
@@ -308,4 +322,8 @@ grep -o 's' doc/example.md | wc -l
 498
 ```
 
-質問が悪く、ケース・センシティブかが明確ではなかったので、ケース・センシティブならbashが正解。ケース・インセンシティブならPythonが正解。ツールなしは不正解だった。
+The question was poorly worded, specifically regarding case sensitivity.
+
+*   **"No Tools" Answer:**  Incorrect.
+*   **If Case-Insensitive:** Python would have been the correct answer.
+*   **If Case-Sensitive:** Bash would have been the correct answer.

@@ -1,4 +1,4 @@
-<img src="https://img.shields.io/badge/version-v0.9.4-FF7777.svg"></img>
+<img src="https://img.shields.io/badge/version-v0.9.5-FF7777.svg"></img>
 <img src="https://img.shields.io/badge/LICENSE-MIT-3388FF.svg"></img>
 <img src="https://shield.deno.dev/deno/%5E1.39"></img>
 <img src="https://github.com/u1and0/gpt-cli/actions/workflows/deno.yml/badge.svg"></img>
@@ -66,7 +66,7 @@ $ gpt -v
 Almost same command here.
 
 ```
-$ curl -LO https://github.com/u1and0/gpt-cli/releases/download/v0.9.4/gpt-cli-linux-x64.zip
+$ curl -LO https://github.com/u1and0/gpt-cli/releases/download/v0.9.5/gpt-cli-linux-x64.zip
 $ unzip gpt-cli-linux-x64.zip
 $ sudo ln -s ./release-package/gpt /usr/bin
 $ gpt -v
@@ -205,8 +205,8 @@ $ gpt -m gpt-4o-mini -x 8192 -t 1.0 [OPTIONS] PROMPT
 
 
 ## PROMPT
-A Questions for Model
-
+A Questions for Model.
+Using regular expressions to match and generate the appropriate LLM instance allows you to use new models in 0 days after a new API is released.
 
 ## Models
 - [OpenAI](https://platform.openai.com/docs/models)
