@@ -222,9 +222,11 @@ A Questions for Model
     - claude-3-opus-20240229
     - claude-3-haiku-20240307
 - [Gemini](https://ai.google.dev/gemini-api/docs/models/gemini)
-    - gemini-1.5-pro-latest
+    - gemini-2.5-pro-exp-03-25
     - gemini-2.0-flash...
     - gemini-2.0-flash-thinking-exp...
+- [Gemma](https://ai.google.dev/gemma/docs/core/gemma_on_gemini_api)
+    - gemma-3-27b-it...
 - [Grok](https://docs.x.ai/docs/models)
     - grok-3-latest
     - grok-2-latest

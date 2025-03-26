@@ -78,6 +78,24 @@ Deno.test("Should create a ChatGoogleGenerativeAI instance for a Claude model", 
   );
 });
 
+Deno.test("Should create a ChatGoogleGenerativeAI instance for a Claude model", () => {
+  Deno.env.set("GOOGLE_API_KEY", "11111");
+  const params = {
+    version: false,
+    help: false,
+    noChat: false,
+    debug: false,
+    model: "gemma-3-27b-it",
+    temperature: 0.7,
+    maxTokens: 2048,
+  };
+  const llm = new LLM(params);
+  assert(
+    llm.transrator instanceof ChatGoogleGenerativeAI,
+    `Expected LLM instance to be ChatGoogleGenerativeAI, but got ${llm.constructor.name}`,
+  );
+});
+
 Deno.test("Should create a ChatXAI instance for a X model", () => {
   Deno.env.set("XAI_API_KEY", "11111");
   const params = {
