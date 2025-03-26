@@ -11,8 +11,14 @@ Pipe search results from DuckDuckGo directly to `gpt-cli` for summarization and 
 # Summarize search results about quantum computing
 ddgr "quantum computing basics" --np --num=5 --json | gpt -s "Summarize these search results in a concise and understandable manner"
 
+# Also include search results in system prompts to create a simple FAQ chatbot
+gpt -s $( ddgr 'quantum computing basics' --np --num=5 --json ) "Summarize these search results in a concise and understandable manner"
+
 # Get technical explanations from search results
 ddgr "kubernetes pod networking" --np --num=3 --json | gpt -s "Explain these technical concepts for a beginner"
+
+# Also include search results in system prompts to create a technical lecturer
+gpt -s "$( ddgr 'kubernetes pod networking' --np --num=3 --json )" "Explain these technical concepts for a beginner"
 ```
 
 ### Web Browsing with w3m
@@ -21,9 +27,11 @@ Extract and analyze content from websites:
 ```bash
 # Get updates about Linux kernel from kernel.org
 w3m -dump "https://www.kernel.org" | gpt -s "Extract and explain the latest Linux kernel version and changes"
+gpt -s "$(w3m -dump 'https://www.kernel.org')" "Extract and explain the latest Linux kernel version and changes"
 
 # Summarize documentation pages
 w3m -dump "https://docs.docker.com/engine/reference/commandline/run/" | gpt -s "Summarize the key points of this Docker command documentation"
+gpt -s "$(w3m -dump 'https://docs.docker.com/engine/reference/commandline/run/')" "Summarize the key points of this Docker command documentation"
 ```
 
 ## Data Processing Tools
@@ -69,9 +77,11 @@ Extract and analyze text from PDF documents:
 ```bash
 # Summarize PDF documents
 pdftotext document.pdf - | gpt -s "Summarize the main points and conclusions of this document in three key points"
+gpt -s "$(pdftotext document.pdf -)" "Summarize the main points and conclusions of this document in three key points"
 
 # Extract specific information from technical PDFs
 pdftotext technical_spec.pdf - | gpt -s "Extract the technical requirements and specifications from this document"
+gpt -s "$(pdftotext technical_spec.pdf -)" "Extract the technical requirements and specifications from this document"
 ```
 
 ### Log File Analysis
@@ -122,6 +132,8 @@ cat foreign_document.txt | gpt -s "Translate this text to Japanese while preserv
 cat draft.txt | gpt -s "Edit this text to improve clarity and conciseness while maintaining the core message"
 ```
 
+Using the `-f` option is functionally similar.
+
 ### Code Analysis
 Analyze and improve code:
 
@@ -132,6 +144,8 @@ cat source_code.py | gpt -s "Review this Python code and suggest improvements fo
 # Documentation generation
 cat implementation.js | gpt -s "Generate comprehensive documentation for this JavaScript code"
 ```
+
+Using the `-f` option is functionally similar.
 
 ## Weather and External Data
 
@@ -170,3 +184,146 @@ ddgr "blockchain environmental impact" --np --num=5 --json | gpt -s "Synthesize 
 ```
 
 These examples demonstrate how `gpt-cli` can be integrated with various command-line tools to enhance productivity and extract insights from different data sources. Feel free to adapt these examples to your specific needs and workflows.
+
+
+## Code execution
+
+I've added short shell scripts to [tools](https://github.com/u1and0/gpt-cli/tree/main/tools) to help with code execution.
+
+*   `tools/extract_code.sh`: Extracts code from within code blocks.
+*   `tools/are_you_ready.sh`: Displays the code and shows a confirmation prompt asking if you want to execute it.
+
+```
+$ gpt -n -s "you are bash. generate efficiently excutable code"\
+    "find .ts files on lib directory" |
+    ./tools/extract_code.sh
+find lib -name "*.ts"
+```
+
+Generate code. It uses `grep` and `sed` to remove backquotes.
+
+
+```
+$ gpt -n -s "you are bash. generate efficiently excutable code"\
+    "find .ts files on lib directory" |
+    ./tools/extract_code.sh |
+    ./tools/are_you_ready.sh |
+    bash
+lib/cli.ts
+lib/command.ts
+lib/file.ts
+lib/input.ts
+lib/llm.ts
+lib/model.ts
+lib/params.ts
+lib/platform.ts
+lib/spinner.ts
+```
+
+In addition, the generated code is piped to bash.
+
+```
+$ gpt -n -s "you are python interpreter. generate efficiently excutable code"\
+    "List prime numbers from 1 to 100" |
+    ./tools/extract_code.sh
+def is_prime(n):
+    """Function to determine if a given number is prime."""
+    if n <= 1:
+        return False
+    if n <= 3:
+        return True
+    if n % 2 == 0 or n % 3 == 0:
+        return False
+    i = 5
+    while i * i <= n:
+        if n % i == 0 or n % (i + 2) == 0:
+            return False
+        i += 6
+    return True
+
+def generate_primes(limit):
+    """Function to generate a list of prime numbers from 1 to limit""""
+    primes = [number for number in range(2, limit + 1) if is_prime(number)]
+    return primes
+
+# Generate prime numbers from 1 to 100
+primes_1_to_100 = generate_primes(100)
+print(primes_1_to_100)
+```
+
+Generate code. It uses `grep` and `sed` to remove backquotes.
+
+```
+$ gpt -n -s "you are python interpreter. generate efficiently excutable code"\
+    "List prime numbers from 1 to 100" |
+    ./tools/extract_code.sh |
+    ./tools/are_you_ready.sh |
+    python
+[2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97]
+```
+
+In addition, the generated code is piped to Python interpreter.
+
+## Tool use like
+
+### No tool
+
+```
+$ gpt -n -m gemini-2.0-flash-lite -f doc/example.md\
+    'count the number of "s" characters in the provided file and display only the numerical count.'
+1021
+```
+
+### Use Python
+
+```
+$ gpt -n -m gemini-2.0-flash-lite -f doc/example.md\
+    -s "you are python interpreter. generate effectivly excutable code"\
+    'count the number of "s" characters in the provided file and display only the numerical count.' |
+    ./tools/extract_code.sh |
+    ./tools/are_you_ready.sh |
+    python
+Generated code:
+
+ import re
+
+with open('doc/example.md', 'r') as f:
+    content = f.read()
+
+s_count = content.lower().count('s')
+print(s_count)
+
+Execute? (y/N): y
+import re
+
+with open('doc/example.md', 'r') as f:
+    content = f.read()
+
+s_count = content.lower().count('s')
+print(s_count)
+530
+```
+
+### Use bash (`grep` and `wc`)
+
+```
+$ gpt -n -m gemini-2.0-flash-lite -f doc/example.md\
+    -s "you are bash. generate effectivly excutable code"\
+    'count the number of "s" characters in the provided file and display only the numerical count.' |
+    ./tools/extract_code.sh |
+    ./tools/are_you_ready.sh |
+    bash
+Generated code:
+
+ grep -o 's' doc/example.md | wc -l
+
+Execute? (y/N): y
+grep -o 's' doc/example.md | wc -l
+498
+```
+
+The question was poorly worded, specifically regarding case sensitivity.
+
+*   **"No Tools" Answer:**  Incorrect.
+*   **If Case-Insensitive:** Python would have been the correct answer.
+*   **If Case-Sensitive:** Bash would have been the correct answer.

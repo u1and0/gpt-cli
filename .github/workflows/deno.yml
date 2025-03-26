@@ -150,5 +150,8 @@ jobs:
           name: Release ${{ steps.get_version.outputs.version }}
           body_path: ./CHANGELOG.md
           draft: false
+          # タグ以外のpushはprereleaseとなる。
           prerelease: ${{ steps.get_version.outputs.is_prerelease }}
+          # prerelease が falseの場合はtrueになる
+          make_latest: ${{ steps.get_version.outputs.is_prerelease == 'false' }}
           files: artifacts/**/*.zip

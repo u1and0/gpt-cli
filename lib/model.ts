@@ -85,6 +85,6 @@ export const modelMap: ModelMap = {
   "^gpt": createOpenAIInstance,
   "^o[0-9]": createOpenAIOModelInstance,
   "^claude": createAnthropicInstance,
-  "^gemini": createGoogleGenerativeAIInstance,
+  "^gem": createGoogleGenerativeAIInstance,
   "^grok": createXAIInstance,
 } as const;
