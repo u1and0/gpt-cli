@@ -92,19 +92,11 @@ jobs:
 
       - name: Create ZIP package (Unix/MacOS)
         if: runner.os != 'Windows'
-        run: |
-          mkdir -p release-package
-          cp gpt release-package/gpt
-          zip -r gpt-cli-${{ matrix.name }}.zip release-package/
-          rm -rf release-package
+        run: zip -r gpt-cli-${{ matrix.name }}.zip gpt
 
       - name: Create ZIP package (Windows)
         if: runner.os == 'Windows'
-        run: |
-          mkdir release-package
-          copy gpt.exe release-package\gpt.exe
-          Compress-Archive -Path release-package\* -DestinationPath gpt-cli-${{ matrix.name }}.zip
-          Remove-Item -Recurse -Force release-package
+        run: Compress-Archive -Path gpt.exe -DestinationPath gpt-cli-${{ matrix.name }}.zip
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
