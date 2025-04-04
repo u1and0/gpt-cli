@@ -93,7 +93,7 @@ jobs:
 
       - name: Create ZIP package (Unix/MacOS)
         if: runner.os != 'Windows'
-        run: zip -r gpt-cli-${{ matrix.name }}.zip gpt
+        run: zip gpt-cli-${{ matrix.name }}.zip gpt
 
       - name: Create ZIP package (Windows)
         if: runner.os == 'Windows'
