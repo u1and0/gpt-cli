@@ -102,7 +102,7 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: gpt-cli-${{ matrix.name }}
+          name: gpt-cli-${{ matrix.name }}.zip
           path: gpt-cli-${{ matrix.name }}.zip
           overwrite: true
 
