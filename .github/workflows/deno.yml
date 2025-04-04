@@ -102,7 +102,7 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: gpt-cli-${{ matrix.name }}.zip
+          name: gpt-cli-${{ matrix.name }}
           path: gpt-cli-${{ matrix.name }}.zip
           overwrite: true
 
@@ -147,4 +147,4 @@ jobs:
           prerelease: ${{ steps.get_version.outputs.is_prerelease }}
           # prerelease が falseの場合はtrueになる
           make_latest: ${{ steps.get_version.outputs.is_prerelease == 'false' }}
-          files: artifacts/**/*.zip
+          files: ${{ steps.find_artifacts.outputs.artifact_file }}
