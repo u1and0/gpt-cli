@@ -140,11 +140,12 @@ jobs:
       - name: Find artifact files
         id: find_artifacts
         run: |
+          artifact_files=""
           find artifacts -name "*.zip" -print0 | while IFS= read -r -d $'\0' file; do
-            echo "artifact_file=$file" >> $GITHUB_OUTPUT
+            artifact_files+="$file "
           done
-          #artifact_files=$(find artifacts -name "*.zip" -print0 | tr '\0' ' ')
-          #echo "artifact_files=$artifact_files" >> $GITHUB_OUTPUT
+          echo "artifact_files=${artifact_files}" >> $GITHUB_OUTPUT
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
@@ -152,10 +153,6 @@ jobs:
           name: Release ${{ steps.get_version.outputs.version }}
           body_path: ./CHANGELOG.md
           draft: false
-          # タグ以外のpushはprereleaseとなる。
           prerelease: ${{ steps.get_version.outputs.is_prerelease }}
-          # prerelease が falseの場合はtrueになる
           make_latest: ${{ steps.get_version.outputs.is_prerelease == 'false' }}
-          # artifacts/**/*.zip を artifacts/gpt-cli-linux-x64.zip のように具体的なパスに変更する。
-          # download_artifacts ステップでダウンロードした zip ファイルを指定する。
-          files: ${{ steps.find_artifacts.outputs.artifact_file }}
+          files: ${{ steps.find_artifacts.outputs.artifact_files }}
