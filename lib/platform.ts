@@ -155,8 +155,13 @@ const createReplicateInstance = (params: Params): Replicate => {
 };
 
 const createHfInstance = (): HfInference => {
-  const apiKey = Deno.env.get("HUGGINGFACE_ACCESS_TOKEN");
-  return new HfInference(apiKey);
+  const token = Deno.env.get("HUGGINGFACE_ACCESS_TOKEN");
+  if (!token) {
+    throw new Error(
+      "HugginFace requires HUGGINGFACE_ACCESS_TOKEN environment variable",
+    );
+  }
+  return new HfInference(token);
 };
 
 /** １つ目の"/"で引数を分割して、

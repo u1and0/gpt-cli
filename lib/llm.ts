@@ -1,8 +1,10 @@
 import Replicate from "npm:replicate";
+import { HfInference } from "npm:@huggingface/inference";
 
 import ServerSentEvent from "npm:replicate";
 import {
   AIMessage,
+  AIMessageChunk,
   HumanMessage,
   SystemMessage,
 } from "npm:@langchain/core/messages";
@@ -108,12 +110,86 @@ export class LLM {
       return this.transrator.stream(model, { input }) as AsyncGenerator<
         ServerSentEvent
       >;
+    } else if (this.transrator instanceof HfInference) { // HuggingFace のみ別処理
+      return this.huggingFaceStream(messages);
     } else { // Replicate 以外の場合
       // @ts-ignore: exportされていない型だからasが使えないため
       return await this.transrator.stream(messages) as AsyncGenerator<
         BaseMessageChunk
       >;
     }
+  }
+
+  /**
+   * HugginFace stream
+   */
+  private async *huggingFaceStream(
+    messages: Message[],
+  ): AsyncGenerator<BaseMessageChunk> {
+    const { platform: _, model } = openModel.split(this.params.model);
+    const inputs = this.formatHuggingFacePrompt(messages);
+    const parameters = {
+      max_new_tokens: this.params.maxTokens,
+      temperature: this.params.temperature,
+      return_full_text: false,
+    };
+
+    console.log("Huggingface model:", model);
+    console.log("Huggingface inputs:", inputs);
+    console.log("Huggingface parameters:", parameters);
+
+    try {
+      const response = await (this.transrator as HfInference).textGeneration(
+        { model, inputs, parameters },
+        /* { useCache: false }*/
+      );
+
+      // Create a message chunk with the response
+      const content = response.generated_text || "";
+      yield new AIMessageChunk({ content });
+    } catch (error) {
+      console.error("Error in HuggingFace text generation:", error);
+      yield new AIMessageChunk({
+        content: `Error: ${(error as Error).message}`,
+      });
+    }
+  }
+
+  private formatHuggingFacePrompt(messages: Message[]): string {
+    const systemMessage = messages.find((m) => m instanceof SystemMessage);
+    const systemPrompt = systemMessage
+      ? systemMessage.content
+      : "You are a helpful assistant";
+
+    const conversationMessages = messages.filter((m) =>
+      !(m instanceof SystemMessage)
+    );
+
+    let prompt = "";
+    if (conversationMessages.length > 0) {
+      prompt = "<s>[INST] ";
+
+      if (systemPrompt) {
+        prompt += `<<SYS>>\n${systemPrompt}\n<</SYS>>\n\n`;
+      }
+
+      for (let i = 0; i < conversationMessages.length; i++) {
+        const message = conversationMessages[i];
+
+        if (message instanceof HumanMessage) {
+          if (i > 0 && conversationMessages[i - 1] instanceof AIMessage) {
+            prompt += `[/INST]\n\n${
+              conversationMessages[i - 1].content
+            }\n\n[INST] ${message.content}`;
+          } else {
+            prompt += `${message.content}`;
+          }
+        }
+      }
+      prompt += "[/INST]";
+    }
+
+    return prompt;
   }
 
   /** Replicate.stream()へ渡すinputの作成 */
