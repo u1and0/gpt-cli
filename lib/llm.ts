@@ -54,21 +54,31 @@ export class LLM {
 
   /** AI へ対話形式に質問し、回答を得る */
   async ask(messages: Message[]): Promise<AIMessage> {
-    const spinner = new Spinner([".", "..", "..."], 100, 30000);
+    const interval = 100;
+    const timeup = 30000;
+    const spinner = new Spinner([".", "..", "..."], interval, timeup);
+    let aiMessage: string;
     // LLM に回答を考えさせる
-    spinner.start();
-    const stream = await this.streamGenerator(messages);
-    spinner.stop();
-    console.log(); // スピナーと回答の間の改行
-    const chunks: string[] = [];
-    const modelName = `${this.params.model}: `;
-    Deno.stdout.writeSync(new TextEncoder().encode(modelName)); // PS1
-    // 標準出力後にchunksへ格納
-    for await (const chunk of streamEncoder(stream)) {
-      chunks.push(chunk);
+    try {
+      spinner.start();
+      const stream = await this.streamGenerator(messages);
+      console.log(); // スピナーと回答の間の改行
+      const chunks: string[] = [];
+      const modelName = `${this.params.model}: `;
+      Deno.stdout.writeSync(new TextEncoder().encode(modelName)); // PS1
+      // 標準出力後にchunksへ格納
+      for await (const chunk of streamEncoder(stream)) {
+        chunks.push(chunk);
+      }
+      console.log(); // 回答とプロンプトの間の改行
+      aiMessage = chunks.join("");
+    } catch (error) {
+      console.error(`Error in llm.ask(): ${error}`);
+      aiMessage = "申し訳ありません。質問に回答できませんでした。";
+    } finally {
+      spinner.stop();
     }
-    console.log(); // 回答とプロンプトの間の改行
-    return new AIMessage(chunks.join(""));
+    return new AIMessage(aiMessage);
   }
 
   /** メッセージのストリームを生成する。

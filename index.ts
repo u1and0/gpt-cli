@@ -106,7 +106,7 @@ async function userSession(
     return { llm, messages };
   } catch (error) {
     console.error("Error in userSession:", error);
-    return { llm, messages };
+    return undefined;
   }
 }
 
@@ -155,8 +155,9 @@ const llmAsk = async (params: Params) => {
     CommandLineInterface.showCommandMessage();
     while (true) {
       const result = await userSession(llm, params, messages);
+      // userSession でエラーが発生しても次の対話へ続く
       if (result === undefined) continue;
-      params.debug && console.debug(result.messages);
+      params.debug && console.debug("result:", result);
       ({ llm, messages } = result);
     }
   } catch (error) {

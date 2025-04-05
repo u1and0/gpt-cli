@@ -23,6 +23,7 @@ import { ChatTogetherAI } from "npm:@langchain/community/chat_models/togetherai"
 import { ChatFireworks } from "npm:@langchain/community/chat_models/fireworks";
 import { ChatMistralAI } from "npm:@langchain/mistralai";
 import Replicate from "npm:replicate";
+import { HfInference } from "npm:@huggingface/inference";
 
 Deno.test("Should create a ChatOpenAI instance for a GPT model", () => {
   Deno.env.set("OPENAI_API_KEY", "sk-11111");
@@ -230,6 +231,26 @@ Deno.test("Should create a MistralAI instance for an TogetherAI model", () => {
     `Expected LLM instance to be ChatMistralAI, but got ${llm.constructor.name}`,
   );
   assertEquals(llm.transrator.model, "mistral-large-latest");
+});
+
+Deno.test("Should create a Gemma3 instance for an Huggingface model", () => {
+  Deno.env.set("HUGGINGFACE_ACCESS_TOKEN", "sk-11111");
+  const params = {
+    version: false,
+    help: false,
+    noChat: false,
+    debug: false,
+    model: "huggingface/google/gemma-3-4b-it",
+    url: undefined,
+    temperature: 0.7,
+    maxTokens: 2048,
+  };
+  const llm = new LLM(params);
+  assert(
+    llm.transrator instanceof HfInference,
+    `Expected LLM instance to be HfInference, but got ${llm.constructor.name}`,
+  );
+  assertEquals(llm.transrator.model, "google/gemma-3-4b-it");
 });
 
 Deno.test("Should throw an error for an unknown model", () => {
