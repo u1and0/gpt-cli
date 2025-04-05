@@ -31,6 +31,7 @@ import { ChatFireworks } from "npm:@langchain/community/chat_models/fireworks";
 import { ChatMistralAI } from "npm:@langchain/mistralai";
 import { ChatOllama } from "npm:@langchain/community/chat_models/ollama";
 import Replicate from "npm:replicate";
+import { HfInference } from "npm:@huggingface/inference";
 
 import { Params } from "./params.ts";
 
@@ -47,6 +48,7 @@ export const platforms = [
   "mistralai",
   "ollama",
   "replicate",
+  "huggingface",
 ];
 
 /**
@@ -65,7 +67,8 @@ export type OpenModel =
   | ChatFireworks
   | ChatMistralAI
   | ChatOllama
-  | Replicate;
+  | Replicate
+  | HfInference;
 
 /** Platformごとに返すモデルのインスタンスを返す関数 */
 type PlatformMap = { [key in Platform]: (params: Params) => OpenModel };
@@ -151,6 +154,10 @@ const createReplicateInstance = (params: Params): Replicate => {
   }
 };
 
+const createHfInstance = (): HfInference => {
+  return new HfInference();
+};
+
 /** １つ目の"/"で引数を分割して、
  * １つ目をplatformとして、
  * 2つめ移行をmodelとして返す
@@ -179,4 +186,5 @@ export const modelMap: PlatformMap = {
   "mistralai": createMistralAIInstance,
   "ollama": createOllamaInstance,
   "replicate": createReplicateInstance,
+  "huggingface": createHfInstance,
 } as const;
