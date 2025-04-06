@@ -1,17 +1,16 @@
-import Replicate from "npm:replicate";
-import {
-  HfInference,
-  TextGenerationStreamOutput,
-} from "npm:@huggingface/inference";
-
-import ServerSentEvent from "npm:replicate";
 import {
   AIMessage,
   AIMessageChunk,
   HumanMessage,
   SystemMessage,
 } from "npm:@langchain/core/messages";
-import { BaseMessageChunk } from "npm:@langchain/core/messages";
+import type { BaseMessageChunk } from "npm:@langchain/core/messages";
+
+import Replicate from "npm:replicate";
+import ServerSentEvent from "npm:replicate";
+
+import type { ChatCompletionStreamOutput } from "npm:@huggingface/tasks";
+import { HfInference } from "npm:@huggingface/inference";
 
 import { Spinner } from "./spinner.ts";
 import { Params } from "./params.ts";
@@ -103,7 +102,7 @@ export class LLM {
     messages: Message[],
   ): Promise<
     AsyncGenerator<
-      BaseMessageChunk | ServerSentEvent | TextGenerationStreamOutput
+      BaseMessageChunk | ServerSentEvent | ChatCompletionStreamOutput
     >
   > {
     if (!this.transrator) {
@@ -122,24 +121,29 @@ export class LLM {
       >;
     } else if (this.transrator instanceof HfInference) { // HuggingFace のみ別処理
       const { platform: _, model } = openModel.split(this.params.model);
-      const inputs = this.formatHuggingFacePrompt(messages);
-      const parameters = {
-        max_new_tokens: this.params.maxTokens,
-        temperature: this.params.temperature,
-        return_full_text: false,
-      };
+      // const inputs = LLM.formatHuggingFacePrompt(messages);
+      // const parameters = {
+      //   max_new_tokens: this.params.maxTokens,
+      //   temperature: this.params.temperature,
+      //   return_full_text: false,
+      // };
 
-      this.params.debug && console.debug(
-        "\nHuggingface model:",
-        model,
-        "\nHuggingface inputs:",
-        inputs,
-        "\nHuggingface parameters:",
-        parameters,
-      );
+      // this.params.debug && console.debug(
+      //   "\nHuggingface model:",
+      //   model,
+      //   "\nHuggingface inputs:",
+      //   inputs,
+      //   "\nHuggingface parameters:",
+      //   parameters,
+      // );
 
-      return this.transrator.textGenerationStream(
-        { model, inputs, parameters },
+      return this.transrator.chatCompletionStream(
+        {
+          model,
+          messages,
+          max_tokens: this.params.maxTokens,
+          temperature: this.params.temperature,
+        },
       );
     } else { // Replicate 以外の場合
       // @ts-ignore: exportされていない型だからasが使えないため
@@ -193,6 +197,35 @@ export class LLM {
       // prompt_template:
       // `<s>[INST] <<SYS>> ${systemPrompt} <</SYS>> {prompt} [/INST]`,
     };
+  }
+
+  /**
+   * Huggingfaceモデルへのプロンプトの組み立て
+   */
+  static formatHuggingFacePrompt(messages: Message[]): string {
+    // システムプロンプトの追加
+    const systemMessage = messages.find((m) => m instanceof SystemMessage);
+    const systemPrompt = systemMessage?.content ??
+      "You are a helpful assistant";
+    const conversationMessages = messages.filter((m) =>
+      !(m instanceof SystemMessage)
+    );
+
+    let prompt = "<s>[INST] ";
+    if (systemPrompt) {
+      prompt += `<<SYS>>\n${systemPrompt}\n<</SYS>>\n\n`;
+    }
+
+    // ユーザープロンプトの整形
+    conversationMessages.forEach((message, index) => {
+      if (message instanceof HumanMessage) {
+        prompt += `${index === 0 ? "" : "\n[INST] "}${message.content} [/INST]`;
+      } else if (message instanceof AIMessage) {
+        prompt += `\n${message.content}`;
+      }
+    });
+
+    return prompt;
   }
 }
 
@@ -251,43 +284,24 @@ ${sys?.content ?? "You are helpful assistant."}
   return `<s>[INST] ${systemPrompt}${humanAIPrompt}`;
 }
 
-/**
- * Huggingfaceモデルへのプロンプトの組み立て
- */
-export function formatHuggingFacePrompt(messages: Message[]): string {
-  // システムプロンプトの追加
-  const systemMessage = messages.find((m) => m instanceof SystemMessage);
-  const systemPrompt = systemMessage?.content ?? "You are a helpful assistant";
-  const conversationMessages = messages.filter((m) =>
-    !(m instanceof SystemMessage)
-  );
-
-  // ユーザープロンプトの整形
-  let prompt = "<s>[INST] ";
-  if (systemPrompt) {
-    prompt += `<<SYS>>\n${systemPrompt}\n<</SYS>>\n\n`;
-  }
-
-  conversationMessages.forEach((message, index) => {
-    if (message instanceof HumanMessage) {
-      prompt += `${index === 0 ? "" : "\n[INST] "}${message.content} [/INST]`;
-    } else if (message instanceof AIMessage) {
-      prompt += `\n${message.content}`;
-    }
-  });
-
-  return prompt;
-}
-
 /** メッセージストリームを標準出力に表示して文字列として結合して返す。
  * @param : AsyncGenerator<BaseMessageChunk | ServerSentEvent> - streamGenerator()で生成されたstream
  * @returns : AsyncGenerator<string> - 文字列が非同期にyieldされる
  */
 async function* streamEncoder(
-  stream: AsyncGenerator<BaseMessageChunk | ServerSentEvent>,
+  stream: AsyncGenerator<
+    BaseMessageChunk | ServerSentEvent | ChatCompletionStreamOutput
+  >,
 ): AsyncGenerator<string> {
   for await (const chunk of stream) {
-    const str = String(("content" in chunk) ? chunk.content : chunk); // 文字列化
+    const str = String(
+      ("content" in chunk)
+        ? chunk.content
+        // for huggingface select chunk from stream
+        : ("choices" in chunk)
+        ? chunk.choices[0].delta.content
+        : chunk,
+    ); // 文字列化
     Deno.stdout.writeSync(new TextEncoder().encode(str)); // チャンクごとに標準出力へ表示
     yield str;
   }

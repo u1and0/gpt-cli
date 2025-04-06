@@ -7,7 +7,7 @@ import {
   HumanMessage,
   SystemMessage,
 } from "npm:@langchain/core/messages";
-import { formatHuggingFacePrompt, generatePrompt, LLM } from "../lib/llm.ts";
+import { generatePrompt, LLM } from "../lib/llm.ts";
 import * as openModel from "../lib/platform.ts";
 
 // from model.ts
@@ -316,7 +316,7 @@ Deno.test("Huggingface prompt generator includes system prompt", () => {
     new HumanMessage("what is your name?"),
     new AIMessage("I have no name, just an AI"),
   ];
-  const prompt = formatHuggingFacePrompt(messages);
+  const prompt = LLM.formatHuggingFacePrompt(messages);
   assertEquals(
     prompt,
     `<s>[INST] <<SYS>>
