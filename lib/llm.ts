@@ -129,7 +129,7 @@ export class LLM {
         return_full_text: false,
       };
 
-      console.debug(
+      this.params.debug && console.debug(
         "\nHuggingface model:",
         model,
         "\nHuggingface inputs:",
@@ -137,6 +137,7 @@ export class LLM {
         "\nHuggingface parameters:",
         parameters,
       );
+
       return this.transrator.textGenerationStream(
         { model, inputs, parameters },
       );
@@ -170,43 +171,6 @@ export class LLM {
         content: `Error: ${(error as Error).message}`,
       });
     }
-  }
-
-  private formatHuggingFacePrompt(messages: Message[]): string {
-    const systemMessage = messages.find((m) => m instanceof SystemMessage);
-    const systemPrompt = systemMessage
-      ? systemMessage.content
-      : "You are a helpful assistant";
-
-    const conversationMessages = messages.filter((m) =>
-      !(m instanceof SystemMessage)
-    );
-
-    let prompt = "";
-    if (conversationMessages.length > 0) {
-      prompt = "<s>[INST] ";
-
-      if (systemPrompt) {
-        prompt += `<<SYS>>\n${systemPrompt}\n<</SYS>>\n\n`;
-      }
-
-      for (let i = 0; i < conversationMessages.length; i++) {
-        const message = conversationMessages[i];
-
-        if (message instanceof HumanMessage) {
-          if (i > 0 && conversationMessages[i - 1] instanceof AIMessage) {
-            prompt += `[/INST]\n\n${
-              conversationMessages[i - 1].content
-            }\n\n[INST] ${message.content}`;
-          } else {
-            prompt += `${message.content}`;
-          }
-        }
-      }
-      prompt += "[/INST]";
-    }
-
-    return prompt;
   }
 
   /** Replicate.stream()へ渡すinputの作成 */
@@ -285,6 +249,43 @@ ${sys?.content ?? "You are helpful assistant."}
   };
   const humanAIPrompt = surroundINST(humanAIMessages);
   return `<s>[INST] ${systemPrompt}${humanAIPrompt}`;
+}
+
+/**
+ * Huggingfaceモデルへのプロンプトの組み立て
+ */
+export function formatHuggingFacePrompt(messages: Message[]): string {
+  // システムプロンプトの追加
+  const systemMessage = messages.find((m) => m instanceof SystemMessage);
+  const systemPrompt = systemMessage
+    ? systemMessage.content
+    : "You are a helpful assistant";
+  const conversationMessages = messages.filter((m) =>
+    !(m instanceof SystemMessage)
+  );
+
+  // ユーザープロンプトの整形
+  let prompt = "";
+  if (conversationMessages.length > 0) {
+    prompt = "<s>[INST] ";
+    if (systemPrompt) {
+      prompt += `<<SYS>>\n${systemPrompt}\n<</SYS>>\n\n`;
+    }
+    for (let i = 0; i < conversationMessages.length; i++) {
+      const message = conversationMessages[i];
+      if (message instanceof HumanMessage) {
+        if (i === 0) {
+          prompt += `${message.content} [/INST]`;
+        } else {
+          prompt += `\n[INST] ${message.content} [/INST]`;
+        }
+      } else if (message instanceof AIMessage) {
+        prompt += `\n${message.content}`;
+      }
+    }
+  }
+
+  return prompt;
 }
 
 /** メッセージストリームを標準出力に表示して文字列として結合して返す。

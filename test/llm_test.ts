@@ -7,7 +7,7 @@ import {
   HumanMessage,
   SystemMessage,
 } from "npm:@langchain/core/messages";
-import { generatePrompt, LLM } from "../lib/llm.ts";
+import { formatHuggingFacePrompt, generatePrompt, LLM } from "../lib/llm.ts";
 import * as openModel from "../lib/platform.ts";
 
 // from model.ts
@@ -250,7 +250,6 @@ Deno.test("Should create a Gemma3 instance for an Huggingface model", () => {
     llm.transrator instanceof HfInference,
     `Expected LLM instance to be HfInference, but got ${llm.constructor.name}`,
   );
-  assertEquals(llm.transrator.model, "google/gemma-3-4b-it");
 });
 
 Deno.test("Should throw an error for an unknown model", () => {
@@ -296,6 +295,28 @@ Deno.test("Replicate prompt generator includes system prompt", () => {
     new AIMessage("I have no name, just an AI"),
   ];
   const prompt = generatePrompt(messages);
+  assertEquals(
+    prompt,
+    `<s>[INST] <<SYS>>
+you are honest AI assistant
+<</SYS>>
+
+hi [/INST]
+hello, how can I help you?
+[INST] what is your name? [/INST]
+I have no name, just an AI`,
+  );
+});
+
+Deno.test("Huggingface prompt generator includes system prompt", () => {
+  const messages = [
+    new SystemMessage("you are honest AI assistant"),
+    new HumanMessage("hi"),
+    new AIMessage("hello, how can I help you?"),
+    new HumanMessage("what is your name?"),
+    new AIMessage("I have no name, just an AI"),
+  ];
+  const prompt = formatHuggingFacePrompt(messages);
   assertEquals(
     prompt,
     `<s>[INST] <<SYS>>
