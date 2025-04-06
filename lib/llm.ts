@@ -62,8 +62,12 @@ export class LLM {
     let aiMessage: string;
     // LLM に回答を考えさせる
     try {
+      // 回答が出るまでスピナー出力
       spinner.start();
       const stream = await this.streamGenerator(messages);
+      spinner.stop();
+
+      // 回答の出力
       console.log(); // スピナーと回答の間の改行
       const chunks: string[] = [];
       const modelName = `${this.params.model}: `;
@@ -77,8 +81,6 @@ export class LLM {
     } catch (error) {
       console.error(`Error in llm.ask(): ${error}`);
       aiMessage = "申し訳ありません。質問に回答できませんでした。";
-    } finally {
-      spinner.stop();
     }
     return new AIMessage(aiMessage);
   }
@@ -288,7 +290,8 @@ async function* streamEncoder(
  * LLM インスタンスを生成して返す。
  * @param{Params} params - command line arguments parsed by parseArgs()
  * @return : LLM model
- * @throws{Error} model not found "${params.model}"
+ * @throws {Error} model not found "params.model"
+ * @throws {Error} unknown platform
  */
 function llmConstructor(params: Params): Model {
   // Closed modelがインスタンス化できるか
@@ -299,12 +302,14 @@ function llmConstructor(params: Params): Model {
 
   // Closed modelが見つかればそれをインスタンス化して返す
   if (createInstance !== undefined) {
-    return closedModel.modelMap[createInstance](params);
+    // LLM インスタンスを返すアロー関数をclosedModelのマップから選択する
+    const llmInstance: (params: Params) => closedModel.CloseModel =
+      closedModel.modelMap[createInstance];
+    return llmInstance(params);
   }
 
   // Closed modelでマッチするモデルが見つからなかった場合、
-  // Open model がインスタンス化できるか。
-  //
+  // Open model がインスタンス化できるか検証する。
   // llamaなどのオープンモデルはモデル名ではなく、
   // platform名で判定する
 
@@ -320,10 +325,12 @@ function llmConstructor(params: Params): Model {
   }
 
   // platformMap からオプションに指定したものがなければエラー
-  const createInstanceFromPlatform = openModel.modelMap[platform];
-  if (createInstanceFromPlatform === undefined) {
+  // LLM インスタンスを返すアロー関数をopenModelのマップから選択する
+  const llmInstance: (params: Params) => openModel.OpenModel =
+    openModel.modelMap[platform];
+  if (llmInstance === undefined) {
     throw new Error(`unknown model ${model}`);
   }
 
-  return createInstanceFromPlatform(params);
+  return llmInstance(params);
 }
