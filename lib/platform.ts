@@ -168,16 +168,14 @@ const createHfInstance = (): HfInference => {
  * １つ目をplatformとして、
  * 2つめ移行をmodelとして返す
  */
-export function split(
-  model: string,
-): { platform: string; model: string } {
-  const parts = model.split("/");
+export function split(modelName: string): { platform: string; model: string } {
+  const parts = modelName.split("/");
   if (parts.length < 2) {
-    return { platform: "", model: model };
+    return { platform: "", model: modelName };
   }
   const platform = parts[0];
-  const modelName = parts.slice(1).join("/");
-  return { platform, model: modelName };
+  const model = parts.slice(1).join("/");
+  return { platform, model };
 }
 
 /** 各プラットフォーム毎にインスタンス化する関数を定義したマップ
