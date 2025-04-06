@@ -257,33 +257,24 @@ ${sys?.content ?? "You are helpful assistant."}
 export function formatHuggingFacePrompt(messages: Message[]): string {
   // システムプロンプトの追加
   const systemMessage = messages.find((m) => m instanceof SystemMessage);
-  const systemPrompt = systemMessage
-    ? systemMessage.content
-    : "You are a helpful assistant";
+  const systemPrompt = systemMessage?.content ?? "You are a helpful assistant";
   const conversationMessages = messages.filter((m) =>
     !(m instanceof SystemMessage)
   );
 
   // ユーザープロンプトの整形
-  let prompt = "";
-  if (conversationMessages.length > 0) {
-    prompt = "<s>[INST] ";
-    if (systemPrompt) {
-      prompt += `<<SYS>>\n${systemPrompt}\n<</SYS>>\n\n`;
-    }
-    for (let i = 0; i < conversationMessages.length; i++) {
-      const message = conversationMessages[i];
-      if (message instanceof HumanMessage) {
-        if (i === 0) {
-          prompt += `${message.content} [/INST]`;
-        } else {
-          prompt += `\n[INST] ${message.content} [/INST]`;
-        }
-      } else if (message instanceof AIMessage) {
-        prompt += `\n${message.content}`;
-      }
-    }
+  let prompt = "<s>[INST] ";
+  if (systemPrompt) {
+    prompt += `<<SYS>>\n${systemPrompt}\n<</SYS>>\n\n`;
   }
+
+  conversationMessages.forEach((message, index) => {
+    if (message instanceof HumanMessage) {
+      prompt += `${index === 0 ? "" : "\n[INST] "}${message.content} [/INST]`;
+    } else if (message instanceof AIMessage) {
+      prompt += `\n${message.content}`;
+    }
+  });
 
   return prompt;
 }
