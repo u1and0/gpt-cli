@@ -1,10 +1,13 @@
 import {
   AIMessage,
-  AIMessageChunk,
   HumanMessage,
   SystemMessage,
 } from "npm:@langchain/core/messages";
-import type { BaseMessageChunk } from "npm:@langchain/core/messages";
+import type {
+  BaseMessage,
+  BaseMessageChunk,
+  MessageFieldWithRole,
+} from "npm:@langchain/core/messages";
 
 import Replicate from "npm:replicate";
 import ServerSentEvent from "npm:replicate";
@@ -21,9 +24,6 @@ import { Params } from "./params.ts";
 import * as openModel from "./platform.ts";
 import * as closedModel from "./model.ts";
 
-/** AIMessage */
-export type Message = AIMessage | HumanMessage | SystemMessage; //{ role: Role; content: string };
-
 /** 定義されているすべてのLLM モデルインスタンスの型 */
 type Model = openModel.OpenModel | closedModel.CloseModel;
 
@@ -39,6 +39,13 @@ export type LLMParam = {
   maxTokens: number;
 };
 
+function toRoleContent(message: BaseMessage): MessageFieldWithRole {
+  return {
+    role: message.getType(),
+    content: message.content,
+  };
+}
+
 /** Chatインスタンスを作成する
  * @param: Params - LLMのパラメータ、モデル */
 export class LLM {
@@ -49,7 +56,7 @@ export class LLM {
   }
 
   /** AI へ一回限りの質問をし、回答を出力して終了する */
-  async query(messages: Message[]) {
+  async query(messages: BaseMessage[]) {
     const stream = await this.streamGenerator(messages);
     for await (const _ of streamEncoder(stream)) {
       // 出力のために何もしない
@@ -57,7 +64,7 @@ export class LLM {
   }
 
   /** AI へ対話形式に質問し、回答を得る */
-  async ask(messages: Message[]): Promise<AIMessage> {
+  async ask(messages: BaseMessage[]): Promise<AIMessage> {
     const interval = 100;
     const timeup = 30000;
     const spinner = new Spinner([".", "..", "..."], interval, timeup);
@@ -90,7 +97,7 @@ export class LLM {
   /** メッセージのストリームを生成する。
    * AIからのメッセージストリームを非同期的に返します。
    *
-   * @param : Message[] - 対話の流れの配列
+   * @param : BaseMessage[] - 対話の流れの配列
    * @returns : Promise<IterableReadableStream<BaseMessageChunk>> AIからのメッセージストリーム
    * @throws : Invalid reference to model version: "${model}". Expected format: owner/name or owner/name:version
    *
@@ -99,7 +106,7 @@ export class LLM {
    * HuggingFaceクラスである場合は、TODO
    */
   private async streamGenerator(
-    messages: Message[],
+    messages: BaseMessage[],
   ): Promise<
     AsyncGenerator<
       BaseMessageChunk | ServerSentEvent | ChatCompletionStreamOutput
@@ -140,7 +147,7 @@ export class LLM {
       return this.transrator.chatCompletionStream(
         {
           model,
-          messages,
+          messages: messages.map((m: BaseMessage) => toRoleContent(m)),
           max_tokens: this.params.maxTokens,
           temperature: this.params.temperature,
         },
@@ -156,29 +163,29 @@ export class LLM {
   /**
    * HugginFace stream
    */
-  private async *huggingFaceStream(
-    messages: Message[],
-  ): AsyncGenerator<BaseMessageChunk> {
-    try {
-      const response = await (this.transrator as HfInference)
-        .textGenerationStream(
-          { model, inputs, parameters },
-          /* { useCache: false }*/
-        );
-
-      // Create a message chunk with the response
-      const content = response.generated_text || "";
-      yield new AIMessageChunk({ content });
-    } catch (error) {
-      console.error("Error in HuggingFace text generation:", error);
-      yield new AIMessageChunk({
-        content: `Error: ${(error as Error).message}`,
-      });
-    }
-  }
+  // private async *huggingFaceStream(
+  //   messages: BaseMessage[],
+  // ): AsyncGenerator<BaseMessageChunk> {
+  //   try {
+  //     const response = await (this.transrator as HfInference)
+  //       .textGenerationStream(
+  //         { model, inputs, parameters },
+  //         /* { useCache: false }*/
+  //       );
+  //
+  //     // Create a message chunk with the response
+  //     const content = response.generated_text || "";
+  //     yield new AIMessageChunk({ content });
+  //   } catch (error) {
+  //     console.error("Error in HuggingFace text generation:", error);
+  //     yield new AIMessageChunk({
+  //       content: `Error: ${(error as Error).message}`,
+  //     });
+  //   }
+  // }
 
   /** Replicate.stream()へ渡すinputの作成 */
-  private generateInput(messages: Message[]) {
+  private generateInput(messages: BaseMessage[]) {
     return {
       top_k: -1, // Integer that controls the number of top tokens to consider. Set to -1 to consider all tokens. Default: -1
       top_p: 0.7, // Samples from top_p percentage of most likely tokens during decoding Default: 0.7
@@ -202,7 +209,7 @@ export class LLM {
   /**
    * Huggingfaceモデルへのプロンプトの組み立て
    */
-  static formatHuggingFacePrompt(messages: Message[]): string {
+  static formatHuggingFacePrompt(messages: BaseMessage[]): string {
     // システムプロンプトの追加
     const systemMessage = messages.find((m) => m instanceof SystemMessage);
     const systemPrompt = systemMessage?.content ??
@@ -231,7 +238,7 @@ export class LLM {
 
 /** Replicate.stream()へ渡すメッセージを作成する。
  *
- * @param : Message[] - AIMessage | HumanMessage | SystemMessage
+ * @param : BaseMessage[] - AIMessage | HumanMessage | SystemMessage
  * @returns : string
  *
  * 次の例のようにフォーマットする。
@@ -252,9 +259,9 @@ export class LLM {
  *
  * See also test/llm_test.ts
  */
-export function generatePrompt(messages: Message[]): string {
+export function generatePrompt(messages: BaseMessage[]): string {
   // SystemMessageを取得
-  const sys = messages.find((m: Message) => m instanceof SystemMessage);
+  const sys = messages.find((m: BaseMessage) => m instanceof SystemMessage);
   const systemPrompt = `<<SYS>>
 ${sys?.content ?? "You are helpful assistant."}
 <</SYS>>
