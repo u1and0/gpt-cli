@@ -1,5 +1,8 @@
 import Replicate from "npm:replicate";
-import { HfInference } from "npm:@huggingface/inference";
+import {
+  HfInference,
+  TextGenerationStreamOutput,
+} from "npm:@huggingface/inference";
 
 import ServerSentEvent from "npm:replicate";
 import {
@@ -94,10 +97,15 @@ export class LLM {
    *
    * Replicateクラスでない場合はLLMの標準的なストリームを返します。
    * Replicateクラスである場合は、Replicate.stream()に渡すためのinputを作成してから、渡します。
+   * HuggingFaceクラスである場合は、TODO
    */
   private async streamGenerator(
     messages: Message[],
-  ): Promise<AsyncGenerator<BaseMessageChunk | ServerSentEvent>> {
+  ): Promise<
+    AsyncGenerator<
+      BaseMessageChunk | ServerSentEvent | TextGenerationStreamOutput
+    >
+  > {
     if (!this.transrator) {
       throw new Error("undefined transrator");
     } else if (this.transrator instanceof Replicate) { // Replicateのみ別処理
@@ -113,7 +121,25 @@ export class LLM {
         ServerSentEvent
       >;
     } else if (this.transrator instanceof HfInference) { // HuggingFace のみ別処理
-      return this.huggingFaceStream(messages);
+      const { platform: _, model } = openModel.split(this.params.model);
+      const inputs = this.formatHuggingFacePrompt(messages);
+      const parameters = {
+        max_new_tokens: this.params.maxTokens,
+        temperature: this.params.temperature,
+        return_full_text: false,
+      };
+
+      console.debug(
+        "\nHuggingface model:",
+        model,
+        "\nHuggingface inputs:",
+        inputs,
+        "\nHuggingface parameters:",
+        parameters,
+      );
+      return this.transrator.textGenerationStream(
+        { model, inputs, parameters },
+      );
     } else { // Replicate 以外の場合
       // @ts-ignore: exportされていない型だからasが使えないため
       return await this.transrator.stream(messages) as AsyncGenerator<
@@ -128,23 +154,12 @@ export class LLM {
   private async *huggingFaceStream(
     messages: Message[],
   ): AsyncGenerator<BaseMessageChunk> {
-    const { platform: _, model } = openModel.split(this.params.model);
-    const inputs = this.formatHuggingFacePrompt(messages);
-    const parameters = {
-      max_new_tokens: this.params.maxTokens,
-      temperature: this.params.temperature,
-      return_full_text: false,
-    };
-
-    console.log("Huggingface model:", model);
-    console.log("Huggingface inputs:", inputs);
-    console.log("Huggingface parameters:", parameters);
-
     try {
-      const response = await (this.transrator as HfInference).textGeneration(
-        { model, inputs, parameters },
-        /* { useCache: false }*/
-      );
+      const response = await (this.transrator as HfInference)
+        .textGenerationStream(
+          { model, inputs, parameters },
+          /* { useCache: false }*/
+        );
 
       // Create a message chunk with the response
       const content = response.generated_text || "";
