@@ -179,7 +179,7 @@ export REPLICATE_API_TOKEN='*****'
 
 ### Hugginface API
 
-[Get Hugginface Access token](https://replicate.com/account/api-tokens), then set environment argument.
+[Get Hugginface Access token](https://huggingface.co/settings/tokens), then set environment argument.
 
 ```
 export HUGGINGFACE_ACCESS_TOKEN='hf_*****'
@@ -266,6 +266,8 @@ Using regular expressions to match and generate the appropriate LLM instance all
     - replicate/mistralai/mixtral-8x7b-instruct-v0.1
     - replicate/snowflake/snowflake-arctic-instruct
     - replicate/replicate/flan-t5-xl...
+- [Hugginface](https://huggingface.co/models)
+    - huggingface/meta-llama/Llama-3.1-8b-Instruct
 - [Ollama](https://ollama.com/library)  **Use before `$ ollama serve` locally**
     - ollama/phi4
     - ollama/llama3.3:70b
