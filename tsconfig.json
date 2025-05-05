@@ -1,9 +1,8 @@
 {
-  // denoではcompiler optionが無効なので削除すべき
-  // "compilerOptions": {
-  //   "module":"esnext",
-  //   "target":"es2022"
-  // },
+  "compilerOptions": {
+    "module":"esnext",
+    "target":"es2022"
+  },
   "rules": {
     "no-ts-ignore":true
   }

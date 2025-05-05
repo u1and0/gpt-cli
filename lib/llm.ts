@@ -126,6 +126,7 @@ export class LLM {
       const { platform: _, model } = openModel.split(this.params.model);
       return this.transrator.chatCompletionStream({
         model,
+        //@ts-ignore: type checkが通らない {url: string} とすべき？
         messages: messages.map((m: BaseMessage) => toRoleContent(m)),
         max_tokens: this.params.maxTokens,
         temperature: this.params.temperature,
