@@ -1,20 +1,21 @@
-# v0.9.5 Release Notes
+# v0.9.6 Release Notes
+This update brings significant improvements to the project's integration with Hugging Face, along with several quality-of-life enhancements and bug fixes. Users are encouraged to review the detailed commit history for more insights into specific changes and updates.
 
-## **New Features:**
+## Changes
+- **[chore]**: Added `ts-ignore` for type checks to ensure smoother CI/CD processes.
+- **[chore]**: Updated GitHub Actions to include `tsconfig.json` and `deno.json` for better configuration management.
+- **[chore]**: Ignored tsconfig option for deno check on GitHub Actions to resolve potential conflicts.
+- **[style]**: Removed unused comment-out code for better code cleanliness.
+- **[doc]**: Updated version information for transparency and tracking.
+- **[style]**: Modified permissions for `tools/*.sh` scripts to mode 755 for better execution and security.
 
-*   **[feat] New LLM Google Gemma:** Added support for the new Google Gemma LLM.
-*   **[feat] Code execution:** Implemented code execution functionality with the following features:
-    *   **[feat] Extract code block by grep | sed, and safe execution by safe\_execution:** Extracts code blocks using `grep` and `sed`.
-    *   **[feat] tools/safe\_execution.sh:** Implemented `safe_execution.sh` to handle the execution of code blocks.  The script prompts the user for permission before execution, ensuring safer code execution.
+## Features and Fixes
+- **[refactor]**: Refactored `BaseMessage` import to utilize langchain messages, enhancing modularity.
+- **[feat]**: Introduced `toRoleContent(BaseMessage) => MessageFieldWithRole` for improved message handling.
+- **[feat]**: Integrated Hugging Face stream generator, expanding functionality.
+- **[test]**: Refactored and enhanced tests for `formatHuggingFacePrompt()` to ensure reliability.
+- **[fix]**: Addressed issues with Hugging Face stream functionality to improve performance and stability.
 
-## **Refactor:**
-
-*   **[refactor] Shortened code assuming piped input:**  The code has been refactored and shortened with the assumption that input will be provided via a pipe.
-
-## **Documentation:**
-
-*   **[doc] version info, new model 0day @README:** Updated version information and added details about the new model to the README.
-*   **[docs] fix:** Fixed documentation issues.
-*   **[docs] count s experiment:** Experimented with counting "s" in the documentation.
-*   **[docs] Add result to system prompt** Added information on how to include results in the system prompt and removed specific model names.
-*   **[docs] Code execution:** Added documentation related to the code execution feature.
+## Hotfixes
+- **[fix]**: Resolved the issue of "zip in zip" to prevent file corruption or errors during packaging.
+- **[chore]**: Implemented measures to remove release-package directories to clean up the environment.
