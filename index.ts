@@ -35,7 +35,7 @@ import {
   modelStack,
 } from "./lib/command.ts";
 
-const VERSION = "v0.9.5r";
+const VERSION = "v0.9.6";
 
 type AgentRecord = { llm: LLM; messages: BaseMessage[] };
 
