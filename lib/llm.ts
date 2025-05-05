@@ -17,10 +17,6 @@ import { HfInference } from "npm:@huggingface/inference";
 
 import { Spinner } from "./spinner.ts";
 import { Params } from "./params.ts";
-// import {
-//   isPlatform,
-//   platformMap,
-// } from "./platform.ts";
 import * as openModel from "./platform.ts";
 import * as closedModel from "./model.ts";
 
@@ -128,30 +124,13 @@ export class LLM {
       >;
     } else if (this.transrator instanceof HfInference) { // HuggingFace のみ別処理
       const { platform: _, model } = openModel.split(this.params.model);
-      // const inputs = LLM.formatHuggingFacePrompt(messages);
-      // const parameters = {
-      //   max_new_tokens: this.params.maxTokens,
-      //   temperature: this.params.temperature,
-      //   return_full_text: false,
-      // };
-
-      // this.params.debug && console.debug(
-      //   "\nHuggingface model:",
-      //   model,
-      //   "\nHuggingface inputs:",
-      //   inputs,
-      //   "\nHuggingface parameters:",
-      //   parameters,
-      // );
-
-      return this.transrator.chatCompletionStream(
-        {
-          model,
-          messages: messages.map((m: BaseMessage) => toRoleContent(m)),
-          max_tokens: this.params.maxTokens,
-          temperature: this.params.temperature,
-        },
-      );
+      return this.transrator.chatCompletionStream({
+        model,
+        //@ts-ignore: type checkが通らない {url: string} とすべき？
+        messages: messages.map((m: BaseMessage) => toRoleContent(m)),
+        max_tokens: this.params.maxTokens,
+        temperature: this.params.temperature,
+      });
     } else { // Replicate 以外の場合
       // @ts-ignore: exportされていない型だからasが使えないため
       return await this.transrator.stream(messages) as AsyncGenerator<
@@ -159,30 +138,6 @@ export class LLM {
       >;
     }
   }
-
-  /**
-   * HugginFace stream
-   */
-  // private async *huggingFaceStream(
-  //   messages: BaseMessage[],
-  // ): AsyncGenerator<BaseMessageChunk> {
-  //   try {
-  //     const response = await (this.transrator as HfInference)
-  //       .textGenerationStream(
-  //         { model, inputs, parameters },
-  //         /* { useCache: false }*/
-  //       );
-  //
-  //     // Create a message chunk with the response
-  //     const content = response.generated_text || "";
-  //     yield new AIMessageChunk({ content });
-  //   } catch (error) {
-  //     console.error("Error in HuggingFace text generation:", error);
-  //     yield new AIMessageChunk({
-  //       content: `Error: ${(error as Error).message}`,
-  //     });
-  //   }
-  // }
 
   /** Replicate.stream()へ渡すinputの作成 */
   private generateInput(messages: BaseMessage[]) {
