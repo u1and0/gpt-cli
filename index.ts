@@ -20,9 +20,10 @@ $ gpt
 */
 
 import { HumanMessage, SystemMessage } from "npm:@langchain/core/messages";
+import type { BaseMessage } from "npm:@langchain/core/messages";
 
 import { CommandLineInterface } from "./lib/cli.ts";
-import { LLM, Message } from "./lib/llm.ts";
+import { LLM } from "./lib/llm.ts";
 import { getUserInputInMessage, readStdin } from "./lib/input.ts";
 import { Params } from "./lib/params.ts";
 import { filesGenerator, InitialPrompt, parseFileContent } from "./lib/file.ts";
@@ -34,22 +35,22 @@ import {
   modelStack,
 } from "./lib/command.ts";
 
-const VERSION = "v0.9.5";
+const VERSION = "v0.9.6";
 
-type AgentRecord = { llm: LLM; messages: Message[] };
+type AgentRecord = { llm: LLM; messages: BaseMessage[] };
 
 /** ユーザーからの入力により実行を分岐する
  * while loop内の処理
  * @param {LLM} llm - AIのインスタンス
  * @param {Params} params - コマンドラインパラメータ
- * @param {Message[]} messages - User | AI | System message
- * @returns {Promise<{ llm: LLM; messages: Message[] } | undefined>}
+ * @param {BaseMessage[]} messages - User | AI | System message
+ * @returns {Promise<{ llm: LLM; messages: BaseMessage[] } | undefined>}
  * @throws {Error} - LLM can not answer your question
  */
 async function userSession(
   llm: LLM,
   params: Params,
-  messages: Message[],
+  messages: BaseMessage[],
 ): Promise<AgentRecord | undefined> {
   try {
     // ユーザーからの入力待ち
@@ -106,7 +107,7 @@ async function userSession(
     return { llm, messages };
   } catch (error) {
     console.error("Error in userSession:", error);
-    return { llm, messages };
+    return undefined;
   }
 }
 
@@ -115,7 +116,7 @@ const llmAsk = async (params: Params) => {
   // 引数に従ったLLMインスタンスを作成
   let llm = new LLM(params);
   // コマンドライン引数systemPromptとcontentがあれば
-  // システムプロンプトとユーザープロンプトを含めたMessageの生成
+  // システムプロンプトとユーザープロンプトを含めたBaseMessageの生成
   // params.content があった場合は、コンテンツからメッセージを作成
   let initialPrompt = new InitialPrompt(params.content || "");
 
@@ -141,7 +142,7 @@ const llmAsk = async (params: Params) => {
   let messages = [
     params.systemPrompt && new SystemMessage(params.systemPrompt),
     initContent && new HumanMessage(initContent),
-  ].filter(Boolean) as Message[]; // truty のものだけ残す
+  ].filter(Boolean) as BaseMessage[]; // truty のものだけ残す
 
   try {
     // --no-chat が指定された場合
@@ -155,8 +156,9 @@ const llmAsk = async (params: Params) => {
     CommandLineInterface.showCommandMessage();
     while (true) {
       const result = await userSession(llm, params, messages);
+      // userSession でエラーが発生しても次の対話へ続く
       if (result === undefined) continue;
-      params.debug && console.debug(result.messages);
+      params.debug && console.debug("result:", result);
       ({ llm, messages } = result);
     }
   } catch (error) {

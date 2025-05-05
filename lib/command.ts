@@ -1,6 +1,7 @@
 import { HumanMessage, SystemMessage } from "npm:@langchain/core/messages";
+import type { BaseMessage } from "npm:@langchain/core/messages";
+
 import { CommandLineInterface } from "./cli.ts";
-import { Message } from "./llm.ts";
 import { filesGenerator, parseFileContent } from "./file.ts";
 
 /** この会話で使用したLLM モデルの履歴 */
@@ -78,8 +79,8 @@ export const extractAtModel = (input: string): ModelMessage => {
 
 export async function handleSlashCommand(
   commandInput: Command | { command: Command; path: string },
-  messages: Message[],
-): Promise<Message[]> {
+  messages: BaseMessage[],
+): Promise<BaseMessage[]> {
   // Handle case where commandInput is a command object with path
   if (typeof commandInput === "object" && "command" in commandInput) {
     // Handle /file command
@@ -146,7 +147,7 @@ export async function handleSlashCommand(
     case Command.Clear: {
       console.log("Context clear successful");
       // SystemMessage 以外は捨てて新しい配列を返す
-      return messages.filter((message: Message) => {
+      return messages.filter((message: BaseMessage) => {
         if (message instanceof SystemMessage) {
           return message;
         }
@@ -178,7 +179,7 @@ export const isAtCommand = (humanMessage: unknown): boolean => {
 };
 
 function getMessageFromHistory(
-  messages: Message[],
+  messages: BaseMessage[],
   index: number = -2,
 ): string | null {
   return messages.length > Math.abs(index)
@@ -188,7 +189,7 @@ function getMessageFromHistory(
 
 export function handleAtCommand(
   humanMessage: HumanMessage,
-  messages: Message[],
+  messages: BaseMessage[],
   model: string,
 ): ModelMessage {
   if (!isAtCommand(humanMessage)) {

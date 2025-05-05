@@ -18,12 +18,14 @@ on:
     paths:
       - "**/*.ts"
       - ".github/workflows/deno.yml"
+      - "*.json"
   pull_request:
     branches:
       - main
     paths:
       - "**/*.ts"
       - ".github/workflows/deno.yml"
+      - "*.json"
 
 permissions:
   contents: write # to be able to publish a GitHub release
