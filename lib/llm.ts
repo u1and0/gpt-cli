@@ -1,12 +1,19 @@
-import Replicate from "npm:replicate";
-
-import ServerSentEvent from "npm:replicate";
 import {
   AIMessage,
   HumanMessage,
   SystemMessage,
 } from "npm:@langchain/core/messages";
-import { BaseMessageChunk } from "npm:@langchain/core/messages";
+import type {
+  BaseMessage,
+  BaseMessageChunk,
+  MessageFieldWithRole,
+} from "npm:@langchain/core/messages";
+
+import Replicate from "npm:replicate";
+import ServerSentEvent from "npm:replicate";
+
+import type { ChatCompletionStreamOutput } from "npm:@huggingface/tasks";
+import { HfInference } from "npm:@huggingface/inference";
 
 import { Spinner } from "./spinner.ts";
 import { Params } from "./params.ts";
@@ -16,9 +23,6 @@ import { Params } from "./params.ts";
 // } from "./platform.ts";
 import * as openModel from "./platform.ts";
 import * as closedModel from "./model.ts";
-
-/** AIMessage */
-export type Message = AIMessage | HumanMessage | SystemMessage; //{ role: Role; content: string };
 
 /** 定義されているすべてのLLM モデルインスタンスの型 */
 type Model = openModel.OpenModel | closedModel.CloseModel;
@@ -35,6 +39,13 @@ export type LLMParam = {
   maxTokens: number;
 };
 
+function toRoleContent(message: BaseMessage): MessageFieldWithRole {
+  return {
+    role: message.getType(),
+    content: message.content,
+  };
+}
+
 /** Chatインスタンスを作成する
  * @param: Params - LLMのパラメータ、モデル */
 export class LLM {
@@ -45,7 +56,7 @@ export class LLM {
   }
 
   /** AI へ一回限りの質問をし、回答を出力して終了する */
-  async query(messages: Message[]) {
+  async query(messages: BaseMessage[]) {
     const stream = await this.streamGenerator(messages);
     for await (const _ of streamEncoder(stream)) {
       // 出力のために何もしない
@@ -53,37 +64,54 @@ export class LLM {
   }
 
   /** AI へ対話形式に質問し、回答を得る */
-  async ask(messages: Message[]): Promise<AIMessage> {
-    const spinner = new Spinner([".", "..", "..."], 100, 30000);
+  async ask(messages: BaseMessage[]): Promise<AIMessage> {
+    const interval = 100;
+    const timeup = 30000;
+    const spinner = new Spinner([".", "..", "..."], interval, timeup);
+    let aiMessage: string;
     // LLM に回答を考えさせる
-    spinner.start();
-    const stream = await this.streamGenerator(messages);
-    spinner.stop();
-    console.log(); // スピナーと回答の間の改行
-    const chunks: string[] = [];
-    const modelName = `${this.params.model}: `;
-    Deno.stdout.writeSync(new TextEncoder().encode(modelName)); // PS1
-    // 標準出力後にchunksへ格納
-    for await (const chunk of streamEncoder(stream)) {
-      chunks.push(chunk);
+    try {
+      // 回答が出るまでスピナー出力
+      spinner.start();
+      const stream = await this.streamGenerator(messages);
+      spinner.stop();
+
+      // 回答の出力
+      console.log(); // スピナーと回答の間の改行
+      const chunks: string[] = [];
+      const modelName = `${this.params.model}: `;
+      Deno.stdout.writeSync(new TextEncoder().encode(modelName)); // PS1
+      // 標準出力後にchunksへ格納
+      for await (const chunk of streamEncoder(stream)) {
+        chunks.push(chunk);
+      }
+      console.log(); // 回答とプロンプトの間の改行
+      aiMessage = chunks.join("");
+    } catch (error) {
+      console.error(`Error in llm.ask(): ${error}`);
+      aiMessage = "申し訳ありません。質問に回答できませんでした。";
     }
-    console.log(); // 回答とプロンプトの間の改行
-    return new AIMessage(chunks.join(""));
+    return new AIMessage(aiMessage);
   }
 
   /** メッセージのストリームを生成する。
    * AIからのメッセージストリームを非同期的に返します。
    *
-   * @param : Message[] - 対話の流れの配列
+   * @param : BaseMessage[] - 対話の流れの配列
    * @returns : Promise<IterableReadableStream<BaseMessageChunk>> AIからのメッセージストリーム
    * @throws : Invalid reference to model version: "${model}". Expected format: owner/name or owner/name:version
    *
    * Replicateクラスでない場合はLLMの標準的なストリームを返します。
    * Replicateクラスである場合は、Replicate.stream()に渡すためのinputを作成してから、渡します。
+   * HuggingFaceクラスである場合は、TODO
    */
   private async streamGenerator(
-    messages: Message[],
-  ): Promise<AsyncGenerator<BaseMessageChunk | ServerSentEvent>> {
+    messages: BaseMessage[],
+  ): Promise<
+    AsyncGenerator<
+      BaseMessageChunk | ServerSentEvent | ChatCompletionStreamOutput
+    >
+  > {
     if (!this.transrator) {
       throw new Error("undefined transrator");
     } else if (this.transrator instanceof Replicate) { // Replicateのみ別処理
@@ -98,6 +126,32 @@ export class LLM {
       return this.transrator.stream(model, { input }) as AsyncGenerator<
         ServerSentEvent
       >;
+    } else if (this.transrator instanceof HfInference) { // HuggingFace のみ別処理
+      const { platform: _, model } = openModel.split(this.params.model);
+      // const inputs = LLM.formatHuggingFacePrompt(messages);
+      // const parameters = {
+      //   max_new_tokens: this.params.maxTokens,
+      //   temperature: this.params.temperature,
+      //   return_full_text: false,
+      // };
+
+      // this.params.debug && console.debug(
+      //   "\nHuggingface model:",
+      //   model,
+      //   "\nHuggingface inputs:",
+      //   inputs,
+      //   "\nHuggingface parameters:",
+      //   parameters,
+      // );
+
+      return this.transrator.chatCompletionStream(
+        {
+          model,
+          messages: messages.map((m: BaseMessage) => toRoleContent(m)),
+          max_tokens: this.params.maxTokens,
+          temperature: this.params.temperature,
+        },
+      );
     } else { // Replicate 以外の場合
       // @ts-ignore: exportされていない型だからasが使えないため
       return await this.transrator.stream(messages) as AsyncGenerator<
@@ -106,8 +160,32 @@ export class LLM {
     }
   }
 
+  /**
+   * HugginFace stream
+   */
+  // private async *huggingFaceStream(
+  //   messages: BaseMessage[],
+  // ): AsyncGenerator<BaseMessageChunk> {
+  //   try {
+  //     const response = await (this.transrator as HfInference)
+  //       .textGenerationStream(
+  //         { model, inputs, parameters },
+  //         /* { useCache: false }*/
+  //       );
+  //
+  //     // Create a message chunk with the response
+  //     const content = response.generated_text || "";
+  //     yield new AIMessageChunk({ content });
+  //   } catch (error) {
+  //     console.error("Error in HuggingFace text generation:", error);
+  //     yield new AIMessageChunk({
+  //       content: `Error: ${(error as Error).message}`,
+  //     });
+  //   }
+  // }
+
   /** Replicate.stream()へ渡すinputの作成 */
-  private generateInput(messages: Message[]) {
+  private generateInput(messages: BaseMessage[]) {
     return {
       top_k: -1, // Integer that controls the number of top tokens to consider. Set to -1 to consider all tokens. Default: -1
       top_p: 0.7, // Samples from top_p percentage of most likely tokens during decoding Default: 0.7
@@ -127,11 +205,40 @@ export class LLM {
       // `<s>[INST] <<SYS>> ${systemPrompt} <</SYS>> {prompt} [/INST]`,
     };
   }
+
+  /**
+   * Huggingfaceモデルへのプロンプトの組み立て
+   */
+  static formatHuggingFacePrompt(messages: BaseMessage[]): string {
+    // システムプロンプトの追加
+    const systemMessage = messages.find((m) => m instanceof SystemMessage);
+    const systemPrompt = systemMessage?.content ??
+      "You are a helpful assistant";
+    const conversationMessages = messages.filter((m) =>
+      !(m instanceof SystemMessage)
+    );
+
+    let prompt = "<s>[INST] ";
+    if (systemPrompt) {
+      prompt += `<<SYS>>\n${systemPrompt}\n<</SYS>>\n\n`;
+    }
+
+    // ユーザープロンプトの整形
+    conversationMessages.forEach((message, index) => {
+      if (message instanceof HumanMessage) {
+        prompt += `${index === 0 ? "" : "\n[INST] "}${message.content} [/INST]`;
+      } else if (message instanceof AIMessage) {
+        prompt += `\n${message.content}`;
+      }
+    });
+
+    return prompt;
+  }
 }
 
 /** Replicate.stream()へ渡すメッセージを作成する。
  *
- * @param : Message[] - AIMessage | HumanMessage | SystemMessage
+ * @param : BaseMessage[] - AIMessage | HumanMessage | SystemMessage
  * @returns : string
  *
  * 次の例のようにフォーマットする。
@@ -152,9 +259,9 @@ export class LLM {
  *
  * See also test/llm_test.ts
  */
-export function generatePrompt(messages: Message[]): string {
+export function generatePrompt(messages: BaseMessage[]): string {
   // SystemMessageを取得
-  const sys = messages.find((m: Message) => m instanceof SystemMessage);
+  const sys = messages.find((m: BaseMessage) => m instanceof SystemMessage);
   const systemPrompt = `<<SYS>>
 ${sys?.content ?? "You are helpful assistant."}
 <</SYS>>
@@ -189,10 +296,19 @@ ${sys?.content ?? "You are helpful assistant."}
  * @returns : AsyncGenerator<string> - 文字列が非同期にyieldされる
  */
 async function* streamEncoder(
-  stream: AsyncGenerator<BaseMessageChunk | ServerSentEvent>,
+  stream: AsyncGenerator<
+    BaseMessageChunk | ServerSentEvent | ChatCompletionStreamOutput
+  >,
 ): AsyncGenerator<string> {
   for await (const chunk of stream) {
-    const str = String(("content" in chunk) ? chunk.content : chunk); // 文字列化
+    const str = String(
+      ("content" in chunk)
+        ? chunk.content
+        // for huggingface select chunk from stream
+        : ("choices" in chunk)
+        ? chunk.choices[0].delta.content
+        : chunk,
+    ); // 文字列化
     Deno.stdout.writeSync(new TextEncoder().encode(str)); // チャンクごとに標準出力へ表示
     yield str;
   }
@@ -202,7 +318,8 @@ async function* streamEncoder(
  * LLM インスタンスを生成して返す。
  * @param{Params} params - command line arguments parsed by parseArgs()
  * @return : LLM model
- * @throws{Error} model not found "${params.model}"
+ * @throws {Error} model not found "params.model"
+ * @throws {Error} unknown platform
  */
 function llmConstructor(params: Params): Model {
   // Closed modelがインスタンス化できるか
@@ -213,12 +330,14 @@ function llmConstructor(params: Params): Model {
 
   // Closed modelが見つかればそれをインスタンス化して返す
   if (createInstance !== undefined) {
-    return closedModel.modelMap[createInstance](params);
+    // LLM インスタンスを返すアロー関数をclosedModelのマップから選択する
+    const llmInstance: (params: Params) => closedModel.CloseModel =
+      closedModel.modelMap[createInstance];
+    return llmInstance(params);
   }
 
   // Closed modelでマッチするモデルが見つからなかった場合、
-  // Open model がインスタンス化できるか。
-  //
+  // Open model がインスタンス化できるか検証する。
   // llamaなどのオープンモデルはモデル名ではなく、
   // platform名で判定する
 
@@ -234,10 +353,12 @@ function llmConstructor(params: Params): Model {
   }
 
   // platformMap からオプションに指定したものがなければエラー
-  const createInstanceFromPlatform = openModel.modelMap[platform];
-  if (createInstanceFromPlatform === undefined) {
+  // LLM インスタンスを返すアロー関数をopenModelのマップから選択する
+  const llmInstance: (params: Params) => openModel.OpenModel =
+    openModel.modelMap[platform];
+  if (llmInstance === undefined) {
     throw new Error(`unknown model ${model}`);
   }
 
-  return createInstanceFromPlatform(params);
+  return llmInstance(params);
 }

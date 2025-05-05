@@ -1,4 +1,5 @@
-/** 戻り値のIDがclearInterval()によって削除されるまで
+/**
+ * 戻り値のIDがclearInterval()によって削除されるまで
  * ., .., ...を繰り返しターミナルに表示するロードスピナー
  * usage:
  *  const spinner = new Spinner([".", "..", "..."], 100);
@@ -6,6 +7,9 @@
  *  // processing...
  *  // show spinner ., .., ...
  *  spinner.stop();
+ * @throw Texts array must not be empty
+ * @throw Interval must be a positive number
+ * @throw Timeup must be a positive number
  */
 export class Spinner {
   private timeout: number | undefined;
@@ -27,6 +31,9 @@ export class Spinner {
     }
   }
 
+  /**
+   * @throw Timeout error
+   */
   start(): void {
     let i = 0;
     const printSpinner = () => {

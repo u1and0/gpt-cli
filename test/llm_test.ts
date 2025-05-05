@@ -23,6 +23,7 @@ import { ChatTogetherAI } from "npm:@langchain/community/chat_models/togetherai"
 import { ChatFireworks } from "npm:@langchain/community/chat_models/fireworks";
 import { ChatMistralAI } from "npm:@langchain/mistralai";
 import Replicate from "npm:replicate";
+import { HfInference } from "npm:@huggingface/inference";
 
 Deno.test("Should create a ChatOpenAI instance for a GPT model", () => {
   Deno.env.set("OPENAI_API_KEY", "sk-11111");
@@ -232,6 +233,25 @@ Deno.test("Should create a MistralAI instance for an TogetherAI model", () => {
   assertEquals(llm.transrator.model, "mistral-large-latest");
 });
 
+Deno.test("Should create a Gemma3 instance for an Huggingface model", () => {
+  Deno.env.set("HUGGINGFACE_ACCESS_TOKEN", "sk-11111");
+  const params = {
+    version: false,
+    help: false,
+    noChat: false,
+    debug: false,
+    model: "huggingface/google/gemma-3-4b-it",
+    url: undefined,
+    temperature: 0.7,
+    maxTokens: 2048,
+  };
+  const llm = new LLM(params);
+  assert(
+    llm.transrator instanceof HfInference,
+    `Expected LLM instance to be HfInference, but got ${llm.constructor.name}`,
+  );
+});
+
 Deno.test("Should throw an error for an unknown model", () => {
   const params = {
     version: false,
@@ -275,6 +295,28 @@ Deno.test("Replicate prompt generator includes system prompt", () => {
     new AIMessage("I have no name, just an AI"),
   ];
   const prompt = generatePrompt(messages);
+  assertEquals(
+    prompt,
+    `<s>[INST] <<SYS>>
+you are honest AI assistant
+<</SYS>>
+
+hi [/INST]
+hello, how can I help you?
+[INST] what is your name? [/INST]
+I have no name, just an AI`,
+  );
+});
+
+Deno.test("Huggingface prompt generator includes system prompt", () => {
+  const messages = [
+    new SystemMessage("you are honest AI assistant"),
+    new HumanMessage("hi"),
+    new AIMessage("hello, how can I help you?"),
+    new HumanMessage("what is your name?"),
+    new AIMessage("I have no name, just an AI"),
+  ];
+  const prompt = LLM.formatHuggingFacePrompt(messages);
   assertEquals(
     prompt,
     `<s>[INST] <<SYS>>

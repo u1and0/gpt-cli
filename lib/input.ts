@@ -1,6 +1,6 @@
 import { HumanMessage } from "npm:@langchain/core/messages";
+import type { BaseMessage } from "npm:@langchain/core/messages";
 
-import { Message } from "./llm.ts";
 import { Command, newSlashCommand } from "./command.ts";
 
 /** ユーザーの入力を返す
@@ -11,15 +11,15 @@ import { Command, newSlashCommand } from "./command.ts";
  *   - 通常のメッセージの場合: HumanMessage オブジェクト
  * - 最後のメッセージがユーザーからのものの場合: そのHumanMessageを返す
  *
- * @param {Message[]}: messages - 会話履歴のメッセージ配列
+ * @param {BaseMessage[]}: messages - 会話履歴のメッセージ配列
  * @returns {HumanMessage | Command | { command: Command; path: string }} - ユーザーの入力、またはSlash Command
  */
 export async function getUserInputInMessage(
-  messages: Message[],
+  messages: BaseMessage[],
 ): Promise<HumanMessage | Command | { command: Command; path: string }> {
-  // 最後のMessageがユーザーからのメッセージではない場合、
+  // 最後のBaseMessageがユーザーからのメッセージではない場合、
   // endlessInput()でユーザーからの質問を待ち受ける
-  const lastMessage: Message | undefined = messages.at(-1);
+  const lastMessage: BaseMessage | undefined = messages.at(-1);
   // console.debug(lastMessage);
   if (lastMessage instanceof HumanMessage) {
     return lastMessage;
