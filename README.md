@@ -189,6 +189,10 @@ export HUGGINGFACE_ACCESS_TOKEN='hf_*****'
 1. Setup Ollama, see [github.com/ollama/ollama](https://github.com/ollama/ollama)
 1. Download ollama model such as `ollama pull modelName`
 1. Start ollama `ollama serve` on your server.
+1. Connect to the Ollama server using one of these methods:
+   - Default: Uses `http://localhost:11434` if no URL is specified
+   - Set the `OLLAMA_URL` environment variable (e.g., `export OLLAMA_URL='http://your.host:11434'`) (Recommended)
+   - Specify the Ollama server URL with `--url` option (e.g., `--url http://your.host:11434`) [DEPRECATED]
 
 
 # Usage
@@ -206,10 +210,11 @@ $ gpt -m gpt-4o-mini -x 8192 -t 1.0 [OPTIONS] PROMPT
 | -m | --model | string | LLM model (default gpt-4o-mini) |
 | -x | --max\_tokens | number | Number of AI answer tokens (default 8192) |
 | -t | --temperature | number | Higher number means more creative answers, lower number means more exact answers (default 1.0) |
-| -u | --url | string | URL and port number for ollama server |
+| -u | --url | string | URL and port number for ollama server (defaults to http://localhost:11434, can also be set with OLLAMA_URL environment variable) [DEPRECATED] |
 | -s | --system-prompt | string | The first instruction given to guide the AI model's response. |
 | -f | --file | string | Attachment file path. The Glob pattern can be used. (Such as `./test/*.ts`)|
 | -n | --no-chat | boolean | No chat mode. Just one time question and answer. |
+| -o | --timeout | number | Timeout in seconds for waiting for the AI response (default 30) |
 
 
 ## PROMPT

@@ -25,10 +25,11 @@ const helpMessage =
       -m, --model: string LLM model (default gpt-4o-mini)
       -x, --max-tokens: number Number of AI answer tokens (default 8192)
       -t, --temperature: number Higher number means more creative answers, lower number means more exact answers (default 1.0)
-      -u, --url: string URL and port number for ollama server
+      -u, --url: string URL and port number for ollama server (defaults to http://localhost:11434, can also be set with OLLAMA_URL environment variable) [DEPRECATED]
       -s, --system-prompt: string The first instruction given to guide the AI model's response
       -f, --file: string  Attachment file path.
       -n, --no-chat: boolean   No chat mode. Just one time question and answer.
+      -o, --timeout: number    Timeout in seconds for waiting for the AI response (default 30)
     PROMPT:
       string A Questions for Model
     Models:

@@ -6,7 +6,7 @@ import {
 import type {
   BaseMessage,
   BaseMessageChunk,
-  MessageFieldWithRole,
+  ChatMessageFieldsWithRole,
 } from "npm:@langchain/core/messages";
 
 import Replicate from "npm:replicate";
@@ -35,9 +35,9 @@ export type LLMParam = {
   maxTokens: number;
 };
 
-function toRoleContent(message: BaseMessage): MessageFieldWithRole {
+function toRoleContent(message: BaseMessage): ChatMessageFieldsWithRole {
   return {
-    role: message.getType(),
+    role: message._getType(),
     content: message.content,
   };
 }
@@ -62,8 +62,10 @@ export class LLM {
   /** AI へ対話形式に質問し、回答を得る */
   async ask(messages: BaseMessage[]): Promise<AIMessage> {
     const interval = 100;
-    const timeup = 30000;
-    const spinner = new Spinner([".", "..", "..."], interval, timeup);
+    // Convert timeout from seconds to milliseconds
+    const timeoutSeconds = this.params.timeout || 30;
+    const timeoutMS = timeoutSeconds * 1000;
+    const spinner = new Spinner([".", "..", "..."], interval, timeoutMS);
     let aiMessage: string;
     // LLM に回答を考えさせる
     try {

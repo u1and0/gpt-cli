@@ -1,3 +1,9 @@
+# Unreleased
+- **[feat]**: Added support for `OLLAMA_URL` environment variable as an alternative to the `--url` option for Ollama model connections.
+- **[feat]**: Set default Ollama URL to `http://localhost:11434` when not specified via command line or environment variable.
+- **[deprecation]**: Marked the `--url` option as deprecated in favor of using the `OLLAMA_URL` environment variable.
+- **[feat]**: Added `--timeout` / `-o` option to customize the timeout duration in seconds for waiting for AI responses (default 30s).
+
 # v0.9.6 Release Notes
 This update brings significant improvements to the project's integration with Hugging Face, along with several quality-of-life enhancements and bug fixes. Users are encouraged to review the detailed commit history for more insights into specific changes and updates.
 
