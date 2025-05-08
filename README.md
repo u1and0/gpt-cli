@@ -214,6 +214,7 @@ $ gpt -m gpt-4o-mini -x 8192 -t 1.0 [OPTIONS] PROMPT
 | -s | --system-prompt | string | The first instruction given to guide the AI model's response. |
 | -f | --file | string | Attachment file path. The Glob pattern can be used. (Such as `./test/*.ts`)|
 | -n | --no-chat | boolean | No chat mode. Just one time question and answer. |
+| -o | --timeout | number | Timeout in seconds for waiting for the AI response (default 30) |
 
 
 ## PROMPT
