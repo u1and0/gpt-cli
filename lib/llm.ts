@@ -6,7 +6,7 @@ import {
 import type {
   BaseMessage,
   BaseMessageChunk,
-  MessageFieldWithRole,
+  ChatMessageFieldsWithRole,
 } from "npm:@langchain/core/messages";
 
 import Replicate from "npm:replicate";
@@ -35,9 +35,9 @@ export type LLMParam = {
   maxTokens: number;
 };
 
-function toRoleContent(message: BaseMessage): MessageFieldWithRole {
+function toRoleContent(message: BaseMessage): ChatMessageFieldsWithRole {
   return {
-    role: message.getType(),
+    role: message._getType(),
     content: message.content,
   };
 }
