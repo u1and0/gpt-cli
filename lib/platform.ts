@@ -31,6 +31,7 @@ import { ChatFireworks } from "npm:@langchain/community/chat_models/fireworks";
 import { ChatMistralAI } from "npm:@langchain/mistralai";
 import { ChatOllama } from "npm:@langchain/community/chat_models/ollama";
 import Replicate from "npm:replicate";
+import { HfInference } from "npm:@huggingface/inference";
 
 import { Params } from "./params.ts";
 
@@ -47,6 +48,7 @@ export const platforms = [
   "mistralai",
   "ollama",
   "replicate",
+  "huggingface",
 ];
 
 /**
@@ -65,7 +67,8 @@ export type OpenModel =
   | ChatFireworks
   | ChatMistralAI
   | ChatOllama
-  | Replicate;
+  | Replicate
+  | HfInference;
 
 /** Platformごとに返すモデルのインスタンスを返す関数 */
 type PlatformMap = { [key in Platform]: (params: Params) => OpenModel };
@@ -151,20 +154,28 @@ const createReplicateInstance = (params: Params): Replicate => {
   }
 };
 
+const createHfInstance = (): HfInference => {
+  const token = Deno.env.get("HUGGINGFACE_ACCESS_TOKEN");
+  if (!token) {
+    throw new Error(
+      "HugginFace requires HUGGINGFACE_ACCESS_TOKEN environment variable",
+    );
+  }
+  return new HfInference(token);
+};
+
 /** １つ目の"/"で引数を分割して、
  * １つ目をplatformとして、
  * 2つめ移行をmodelとして返す
  */
-export function split(
-  model: string,
-): { platform: string; model: string } {
-  const parts = model.split("/");
+export function split(modelName: string): { platform: string; model: string } {
+  const parts = modelName.split("/");
   if (parts.length < 2) {
-    return { platform: "", model: model };
+    return { platform: "", model: modelName };
   }
   const platform = parts[0];
-  const modelName = parts.slice(1).join("/");
-  return { platform, model: modelName };
+  const model = parts.slice(1).join("/");
+  return { platform, model };
 }
 
 /** 各プラットフォーム毎にインスタンス化する関数を定義したマップ
@@ -179,4 +190,5 @@ export const modelMap: PlatformMap = {
   "mistralai": createMistralAIInstance,
   "ollama": createOllamaInstance,
   "replicate": createReplicateInstance,
+  "huggingface": createHfInstance,
 } as const;
