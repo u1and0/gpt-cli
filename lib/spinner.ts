@@ -27,7 +27,7 @@ export class Spinner {
       throw new Error("Interval must be a positive number");
     }
     if (timeout < 0) {
-      throw new Error("timeout must be a positive number");
+      throw new Error("Timeout must be a positive number");
     }
   }
 

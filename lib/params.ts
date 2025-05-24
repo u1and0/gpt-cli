@@ -61,7 +61,7 @@ export function parseArgs(): Params {
     noChat: args.n || args["no-chat"] || false,
     debug: args.d || args.debug || false,
     // string option
-    model: args.m || args.model || "gpt-4.1-mini-2025-04-14",
+    model: args.m || args.model || "gpt-4.1-mini",
     maxTokens: parseInt(String(args.x || args["max-tokens"])),
     temperature: parseFloat(String(args.t || args.temperature)),
     timeout: parseInt(String(args.o || args.timeout)),
