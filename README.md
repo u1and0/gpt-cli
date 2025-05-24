@@ -1,4 +1,4 @@
-<img src="https://img.shields.io/badge/version-v0.9.6-FF7777.svg"></img>
+<img src="https://img.shields.io/badge/version-v0.9.7-FF7777.svg"></img>
 <img src="https://img.shields.io/badge/LICENSE-MIT-3388FF.svg"></img>
 <img src="https://shield.deno.dev/deno/%5E1.39"></img>
 <img src="https://github.com/u1and0/gpt-cli/actions/workflows/deno.yml/badge.svg"></img>
@@ -22,7 +22,7 @@ $ gpt
 Ctrl-D to confirm input, q or exit to end chat
 You: hi
 ...
-gpt-4o-mini: Hello! How can I assist you today?
+gpt-4.1-mini: Hello! How can I assist you today?
 You:
 ```
 
@@ -66,7 +66,7 @@ $ gpt -v
 Almost same command here.
 
 ```
-$ curl -LO https://github.com/u1and0/gpt-cli/releases/download/v0.9.6/gpt-cli-linux-x64.zip
+$ curl -LO https://github.com/u1and0/gpt-cli/releases/download/v0.9.7/gpt-cli-linux-x64.zip
 $ unzip gpt-cli-linux-x64.zip
 $ sudo ln -s ./release-package/gpt /usr/bin
 $ gpt -v
@@ -198,7 +198,7 @@ export HUGGINGFACE_ACCESS_TOKEN='hf_*****'
 # Usage
 
 ```
-$ gpt -m gpt-4.1-mini-2025-04-14 -x 32768 -t 1.0 [OPTIONS] PROMPT
+$ gpt -m gpt-4.1-mini -x 32768 -t 1.0 [OPTIONS] PROMPT
 ```
 
 ## Options
@@ -207,8 +207,8 @@ $ gpt -m gpt-4.1-mini-2025-04-14 -x 32768 -t 1.0 [OPTIONS] PROMPT
 |--------------|-------------|------|----|
 | -v | --version | boolean | Show version |
 | -h | --help | boolean | Show this message |
-| -m | --model | string | LLM model (default gpt-4o-mini) |
-| -x | --max\_tokens | number | Number of AI answer tokens (default 8192) |
+| -m | --model | string | LLM model (default gpt-4.1-mini) |
+| -x | --max\_tokens | number | Number of AI answer tokens (default 32768) |
 | -t | --temperature | number | Higher number means more creative answers, lower number means more exact answers (default 1.0) |
 | -u | --url | string | URL and port number for ollama server (defaults to http://localhost:11434, can also be set with OLLAMA_URL environment variable) [DEPRECATED] |
 | -s | --system-prompt | string | The first instruction given to guide the AI model's response. |
