@@ -32,7 +32,7 @@ Deno.test("Should create a ChatOpenAI instance for a GPT model", () => {
     help: false,
     noChat: false,
     debug: false,
-    model: "gpt-4o-mini",
+    model: "gpt-4.1-mini",
     temperature: 0.7,
     maxTokens: 2048,
   };

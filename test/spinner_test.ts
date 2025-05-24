@@ -27,6 +27,6 @@ Deno.test("Spinner with negative timeout", () => {
   assertThrows(
     () => new Spinner([".", "..", "..."], 100, -1000),
     Error,
-    "Timeup must be a positive number",
+    "Timeout must be a positive number",
   );
 });

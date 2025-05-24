@@ -10,6 +10,7 @@ export type Params = {
   files?: string[];
   systemPrompt?: string;
   content?: string;
+  timeout?: number;
 } & LLMParam;
 
 /** Parse console argument */
@@ -37,13 +38,16 @@ export function parseArgs(): Params {
       "temperature",
       "x",
       "max-tokens",
+      "o",
+      "timeout",
       // parse()で解釈すると最後に指定したものに上書きされてしまう
       // "f",
       // "file",
     ],
     default: {
       temperature: 1.0,
-      "max-tokens": 8192,
+      "max-tokens": 32768,
+      timeout: 30, // in seconds (will be converted to milliseconds internally)
     },
   });
 
@@ -57,9 +61,10 @@ export function parseArgs(): Params {
     noChat: args.n || args["no-chat"] || false,
     debug: args.d || args.debug || false,
     // string option
-    model: args.m || args.model || "gpt-4o-mini",
+    model: args.m || args.model || "gpt-4.1-mini",
     maxTokens: parseInt(String(args.x || args["max-tokens"])),
     temperature: parseFloat(String(args.t || args.temperature)),
+    timeout: parseInt(String(args.o || args.timeout)),
     url: args.u || args.url || undefined,
     systemPrompt: args.s || args["system-prompt"] || undefined,
     // 残りの引数をすべてスペースで結合

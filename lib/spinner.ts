@@ -9,16 +9,16 @@
  *  spinner.stop();
  * @throw Texts array must not be empty
  * @throw Interval must be a positive number
- * @throw Timeup must be a positive number
+ * @throw timeout must be a positive number
  */
 export class Spinner {
-  private timeout: number | undefined;
+  private timer: number | undefined;
   private intervalId: number | undefined;
 
   constructor(
     private readonly texts: string[],
     private readonly interval: number,
-    private readonly timeup: number,
+    private readonly timeout: number,
   ) {
     if (texts.length < 1) {
       throw new Error("Texts array must not be empty");
@@ -26,13 +26,13 @@ export class Spinner {
     if (interval < 0) {
       throw new Error("Interval must be a positive number");
     }
-    if (timeup < 0) {
-      throw new Error("Timeup must be a positive number");
+    if (timeout < 0) {
+      throw new Error("Timeout must be a positive number");
     }
   }
 
   /**
-   * @throw Timeout error
+   * @throw timer error
    */
   start(): void {
     let i = 0;
@@ -44,10 +44,10 @@ export class Spinner {
     printSpinner();
     this.intervalId = setInterval(printSpinner, this.interval);
 
-    this.timeout = setTimeout(() => {
+    this.timer = setTimeout(() => {
       this.stop();
-      throw new Error("Timeout error");
-    }, this.timeup);
+      throw new Error("timer error");
+    }, this.timeout);
   }
 
   stop(): void {
@@ -55,9 +55,9 @@ export class Spinner {
       clearInterval(this.intervalId);
       this.intervalId = undefined;
     }
-    if (this.timeout !== undefined) {
-      clearTimeout(this.timeout);
-      this.timeout = undefined;
+    if (this.timer !== undefined) {
+      clearTimeout(this.timer);
+      this.timer = undefined;
     }
     Deno.stderr.writeSync(new TextEncoder().encode("\r"));
   }
