@@ -46,7 +46,7 @@ export function parseArgs(): Params {
     ],
     default: {
       temperature: 1.0,
-      "max-tokens": 32768,
+      "max-tokens": 8192,
       timeout: 30, // in seconds (will be converted to milliseconds internally)
     },
   });
