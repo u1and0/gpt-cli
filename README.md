@@ -177,13 +177,22 @@ export MISTRAL_API_KEY='*****'
 export REPLICATE_API_TOKEN='*****'
 ```
 
-### Hugginface API
+### Huggingface API
 
-[Get Hugginface Access token](https://huggingface.co/settings/tokens), then set environment argument.
+[Get Huggingface Access token](https://huggingface.co/settings/tokens), then set environment argument.
 
 ```
 export HUGGINGFACE_ACCESS_TOKEN='hf_*****'
 ```
+
+### Open Router API
+
+[Get Open Router Access token](https://openrouter.ai/settings/keys), then set environment argument.
+
+```
+export OPENROUTER_API_KEY='sk-*****'
+```
+
 
 ### Setup Ollama (for Local running Models)
 1. Setup Ollama, see [github.com/ollama/ollama](https://github.com/ollama/ollama)

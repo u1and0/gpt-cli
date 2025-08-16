@@ -30,6 +30,7 @@ import { ChatTogetherAI } from "npm:@langchain/community/chat_models/togetherai"
 import { ChatFireworks } from "npm:@langchain/community/chat_models/fireworks";
 import { ChatMistralAI } from "npm:@langchain/mistralai";
 import { ChatOllama } from "npm:@langchain/community/chat_models/ollama";
+import { ChatOpenAI } from "npm:@langchain/openai";
 import Replicate from "npm:replicate";
 import { HfInference } from "npm:@huggingface/inference";
 
@@ -49,6 +50,7 @@ export const platforms = [
   "ollama",
   "replicate",
   "huggingface",
+  "openrouter",
 ];
 
 /**
@@ -67,6 +69,7 @@ export type OpenModel =
   | ChatFireworks
   | ChatMistralAI
   | ChatOllama
+  | ChatOpenAI
   | Replicate
   | HfInference;
 
@@ -172,6 +175,21 @@ const createHfInstance = (): HfInference => {
   return new HfInference(token);
 };
 
+const createOpenRouterInstance = (params: Params): ChatOpenAI => {
+  const { platform: _, model } = split(params.model);
+  return new ChatOpenAI({
+    modelName: model,
+    temperature: params.temperature,
+    maxTokens: params.maxTokens,
+    apiKey: Deno.env.get("OPENROUTER_API_KEY"),
+    configuration: {
+      baseURL: "https://openrouter.ai/api/v1",
+    },
+  });
+};
+
+export { createOpenRouterInstance };
+
 /** １つ目の"/"で引数を分割して、
  * １つ目をplatformとして、
  * 2つめ移行をmodelとして返す
@@ -199,4 +217,5 @@ export const modelMap: PlatformMap = {
   "ollama": createOllamaInstance,
   "replicate": createReplicateInstance,
   "huggingface": createHfInstance,
+  "openrouter": createOpenRouterInstance,
 } as const;

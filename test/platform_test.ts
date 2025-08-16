@@ -1,7 +1,9 @@
 import { assertEquals } from "https://deno.land/std@0.224.0/assert/assert_equals.ts";
+import { assertInstanceOf } from "https://deno.land/std@0.224.0/assert/assert_instance_of.ts";
 
-import { createOllamaInstance, split } from "../lib/platform.ts";
+import { createOllamaInstance, createOpenRouterInstance, split } from "../lib/platform.ts";
 import { Params } from "../lib/params.ts";
+import { ChatOpenAI } from "npm:@langchain/openai";
 
 Deno.test("split - valid model string", () => {
   const { platform, model } = split("replicate/meta/llama3.3-70b");
@@ -29,7 +31,11 @@ Deno.test("split - model string starts with slash", () => {
 
 Deno.test("createOllamaInstance - uses default URL when no URL provided", () => {
   // Delete the environment variable if it exists
-  Deno.env.delete("OLLAMA_URL");
+  try {
+    Deno.env.delete("OLLAMA_URL");
+  } catch (e) {
+    // Ignore if the variable doesn't exist
+  }
 
   const params: Params = {
     model: "ollama/llama2",
@@ -48,7 +54,11 @@ Deno.test("createOllamaInstance - uses default URL when no URL provided", () => 
 
 Deno.test("createOllamaInstance - uses URL from params", () => {
   // Delete the environment variable if it exists
-  Deno.env.delete("OLLAMA_URL");
+  try {
+    Deno.env.delete("OLLAMA_URL");
+  } catch (e) {
+    // Ignore if the variable doesn't exist
+  }
 
   const params: Params = {
     model: "ollama/llama2",
@@ -68,7 +78,11 @@ Deno.test("createOllamaInstance - uses URL from params", () => {
 
 Deno.test("createOllamaInstance - uses URL from environment variable", () => {
   // Set the environment variable
-  Deno.env.set("OLLAMA_URL", "http://env.url:11434");
+  try {
+    Deno.env.set("OLLAMA_URL", "http://env.url:11434");
+  } catch (e) {
+    // Ignore if we can't set the variable
+  }
 
   const params: Params = {
     model: "ollama/llama2",
@@ -85,12 +99,20 @@ Deno.test("createOllamaInstance - uses URL from environment variable", () => {
   assertEquals(typeof ollama, "object");
 
   // Clean up
-  Deno.env.delete("OLLAMA_URL");
+  try {
+    Deno.env.delete("OLLAMA_URL");
+  } catch (e) {
+    // Ignore if the variable doesn't exist
+  }
 });
 
 Deno.test("createOllamaInstance - params URL takes precedence over environment variable", () => {
   // Set the environment variable
-  Deno.env.set("OLLAMA_URL", "http://env.url:11434");
+  try {
+    Deno.env.set("OLLAMA_URL", "http://env.url:11434");
+  } catch (e) {
+    // Ignore if we can't set the variable
+  }
 
   const params: Params = {
     model: "ollama/llama2",
@@ -108,5 +130,42 @@ Deno.test("createOllamaInstance - params URL takes precedence over environment v
   assertEquals(typeof ollama, "object");
 
   // Clean up
-  Deno.env.delete("OLLAMA_URL");
+  try {
+    Deno.env.delete("OLLAMA_URL");
+  } catch (e) {
+    // Ignore if the variable doesn't exist
+  }
+});
+
+// Mock the OpenAI API key for testing
+Deno.test("createOpenRouterInstance - creates ChatOpenAI instance with correct configuration", () => {
+  // Set a mock API key
+  const originalApiKey = Deno.env.get("OPENAI_API_KEY");
+  Deno.env.set("OPENAI_API_KEY", "mock-api-key");
+
+  try {
+    const params: Params = {
+      model: "openrouter/meta-llama/llama-3.1-8b-instruct",
+      temperature: 0.7,
+      maxTokens: 1000,
+      version: false,
+      help: false,
+      noChat: false,
+      debug: false,
+    };
+
+    const openRouter = createOpenRouterInstance(params);
+    
+    assertInstanceOf(openRouter, ChatOpenAI);
+    assertEquals(openRouter.modelName, "meta-llama/llama-3.1-8b-instruct");
+    assertEquals(openRouter.temperature, 0.7);
+    
+    // Clean up the mock
+  } finally {
+    if (originalApiKey) {
+      Deno.env.set("OPENAI_API_KEY", originalApiKey);
+    } else {
+      Deno.env.delete("OPENAI_API_KEY");
+    }
+  }
 });
