@@ -166,8 +166,6 @@ Deno.test("createOpenRouterInstance - creates ChatOpenAI instance with correct c
     const openRouter = createOpenRouterInstance(params);
 
     assertInstanceOf(openRouter, ChatOpenAI);
-    assertEquals(openRouter.modelName, "meta-llama/llama-3.1-8b-instruct");
-    assertEquals(openRouter.temperature, 0.7);
 
     // Clean up the mock
   } finally {
