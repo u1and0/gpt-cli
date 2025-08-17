@@ -37,7 +37,7 @@ Deno.test("createOllamaInstance - uses default URL when no URL provided", () => 
   // Delete the environment variable if it exists
   try {
     Deno.env.delete("OLLAMA_URL");
-  } catch (e) {
+  } catch (_e) {
     // Ignore if the variable doesn't exist
   }
 
@@ -61,7 +61,7 @@ Deno.test("createOllamaInstance - uses URL from params", () => {
   // Delete the environment variable if it exists
   try {
     Deno.env.delete("OLLAMA_URL");
-  } catch (e) {
+  } catch (_e) {
     // Ignore if the variable doesn't exist
   }
 
@@ -86,7 +86,7 @@ Deno.test("createOllamaInstance - uses URL from environment variable", () => {
   // Set the environment variable
   try {
     Deno.env.set("OLLAMA_URL", "http://env.url:11434");
-  } catch (e) {
+  } catch (_e) {
     // Ignore if we can't set the variable
   }
 
@@ -108,7 +108,7 @@ Deno.test("createOllamaInstance - uses URL from environment variable", () => {
   // Clean up
   try {
     Deno.env.delete("OLLAMA_URL");
-  } catch (e) {
+  } catch (_e) {
     // Ignore if the variable doesn't exist
   }
 });
@@ -117,7 +117,7 @@ Deno.test("createOllamaInstance - params URL takes precedence over environment v
   // Set the environment variable
   try {
     Deno.env.set("OLLAMA_URL", "http://env.url:11434");
-  } catch (e) {
+  } catch (_e) {
     // Ignore if we can't set the variable
   }
 
@@ -140,7 +140,7 @@ Deno.test("createOllamaInstance - params URL takes precedence over environment v
   // Clean up
   try {
     Deno.env.delete("OLLAMA_URL");
-  } catch (e) {
+  } catch (_e) {
     // Ignore if the variable doesn't exist
   }
 });
