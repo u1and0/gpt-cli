@@ -1,7 +1,13 @@
 /Session.vim
 /_plugin/
 /denops/
+/deno.lock
 /gpt
 /gpt-cli_test.ts
 /*node_modules
 /package*.json
+/release-package/
+/.qwen/
+/**/CLAUDE.md
+/coverage/
+/memo/
