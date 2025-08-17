@@ -51,7 +51,7 @@ const createOpenAIOModelInstance = (params: Params): ChatOpenAI => {
   return new ChatOpenAI({
     modelName: params.model,
     temperature: params.temperature,
-    // max_completion_tokens: params.maxTokens,
+    // maxCompletionTokens: params.maxTokens,
   });
 };
 

@@ -35,7 +35,7 @@ import {
   modelStack,
 } from "./lib/command.ts";
 
-const VERSION = "v0.9.8";
+const VERSION = "v0.9.9";
 
 type AgentRecord = { llm: LLM; messages: BaseMessage[] };
 
@@ -173,8 +173,12 @@ const main = async () => {
     CommandLineInterface.showVersion(VERSION);
     Deno.exit(0);
   }
-  if (cli.params.help) {
-    CommandLineInterface.showHelp();
+  if (cli.params.shortHelp) {
+    CommandLineInterface.showShortHelp();
+    Deno.exit(0);
+  }
+  if (cli.params.longHelp) {
+    CommandLineInterface.showLongHelp();
     Deno.exit(0);
   }
 

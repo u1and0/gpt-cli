@@ -3,7 +3,8 @@ import { LLMParam } from "./llm.ts";
 
 export type Params = {
   version: boolean;
-  help: boolean;
+  shortHelp: boolean;
+  longHelp: boolean;
   noChat: boolean;
   debug: boolean;
   url?: string;
@@ -54,10 +55,14 @@ export function parseArgs(): Params {
   // parse()で解釈する代わりにgetFilePaths()で特別なparseをする
   const files = getFilePaths(Deno.args);
 
+  // Set url from BASE_URL environment variable if not provided via args
+  const url = args.u || args.url || Deno.env.get("BASE_URL") || undefined;
+
   return {
     // boolean option
     version: args.v || args.version || false,
-    help: args.h || args.help || false,
+    shortHelp: args.h || false,
+    longHelp: args.help || false,
     noChat: args.n || args["no-chat"] || false,
     debug: args.d || args.debug || false,
     // string option
@@ -65,7 +70,7 @@ export function parseArgs(): Params {
     maxTokens: parseInt(String(args.x || args["max-tokens"])),
     temperature: parseFloat(String(args.t || args.temperature)),
     timeout: parseInt(String(args.o || args.timeout)),
-    url: args.u || args.url || undefined,
+    url: url,
     systemPrompt: args.s || args["system-prompt"] || undefined,
     // 残りの引数をすべてスペースで結合
     content: args._.length > 0 ? args._.join(" ") : undefined,
