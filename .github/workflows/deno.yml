@@ -9,6 +9,9 @@
 name: gpt-cli publisher
 
 on:
+  # 手動ビルド
+  workflow_dispatch:
+  # mainかreleaseブランチへpushされたとき
   push:
     branches:
       - main

@@ -3,7 +3,8 @@ import { LLMParam } from "./llm.ts";
 
 export type Params = {
   version: boolean;
-  help: boolean;
+  shortHelp: boolean;
+  longHelp: boolean;
   noChat: boolean;
   debug: boolean;
   url?: string;
@@ -60,7 +61,8 @@ export function parseArgs(): Params {
   return {
     // boolean option
     version: args.v || args.version || false,
-    help: args.h || args.help || false,
+    shortHelp: args.h || false,
+    longHelp: args.help || false,
     noChat: args.n || args["no-chat"] || false,
     debug: args.d || args.debug || false,
     // string option

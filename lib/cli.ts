@@ -13,7 +13,7 @@ Help:
   ex)   @gemini-2.0-flash your question...
 `;
 
-const helpMessage =
+const shortHelpMessage =
   `Command-line interface  that enables interactive chat with LLMs.
 
     Usage:
@@ -29,7 +29,10 @@ const helpMessage =
       -s, --system-prompt: string The first instruction given to guide the AI model's response
       -f, --file: string  Attachment file path.
       -n, --no-chat: boolean   No chat mode. Just one time question and answer.
-      -o, --timeout: number    Timeout in seconds for waiting for the AI response (default 30)
+    -o, --timeout: number    Timeout in seconds for waiting for the AI response (default 30)
+`;
+
+const longHelpMessage = `${shortHelpMessage}
     PROMPT:
       string A Questions for Model
     Models:
@@ -114,8 +117,12 @@ export class CommandLineInterface {
     console.log(`gpt ${version}`);
   }
 
-  public static showHelp(): void {
-    console.log(helpMessage);
+  public static showShortHelp(): void {
+    console.log(shortHelpMessage);
+  }
+
+  public static showLongHelp(): void {
+    console.log(longHelpMessage);
   }
 
   // 定数

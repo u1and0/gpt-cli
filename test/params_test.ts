@@ -78,10 +78,47 @@ Deno.test("getFilePaths - should handle -f and --file arguments", () => {
 Deno.test("parseArgs", () => {
   const testCases: [string[], Params][] = [
     [
+      ["-v"],
+      {
+        version: true,
+        shortHelp: false,
+        longHelp: false,
+        noChat: false,
+        debug: false,
+        model: "gpt-4.1-mini",
+        temperature: 1.0,
+        timeout: 30,
+        maxTokens: 8192,
+        url: undefined,
+        files: undefined,
+        systemPrompt: undefined,
+        content: undefined,
+      },
+    ],
+    [
       ["--version"],
       {
         version: true,
-        help: false,
+        shortHelp: false,
+        longHelp: false,
+        noChat: false,
+        debug: false,
+        model: "gpt-4.1-mini",
+        temperature: 1.0,
+        timeout: 30,
+        maxTokens: 8192,
+        url: undefined,
+        files: undefined,
+        systemPrompt: undefined,
+        content: undefined,
+      },
+    ],
+    [
+      ["-h"],
+      {
+        version: false,
+        shortHelp: true,
+        longHelp: false,
         noChat: false,
         debug: false,
         model: "gpt-4.1-mini",
@@ -98,7 +135,8 @@ Deno.test("parseArgs", () => {
       ["--help"],
       {
         version: false,
-        help: true,
+        shortHelp: false,
+        longHelp: true,
         noChat: false,
         debug: false,
         model: "gpt-4.1-mini",
@@ -146,7 +184,8 @@ Deno.test("parseArgs", () => {
       ],
       {
         version: false,
-        help: false,
+        shortHelp: false,
+        longHelp: false,
         noChat: true,
         debug: true,
         model: "gpt-4",

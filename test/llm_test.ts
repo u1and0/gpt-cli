@@ -29,7 +29,8 @@ Deno.test("Should create a ChatOpenAI instance for a GPT model", () => {
   Deno.env.set("OPENAI_API_KEY", "sk-11111");
   const params = {
     version: false,
-    help: false,
+    shortHelp: false,
+    longHelp: false,
     noChat: false,
     debug: false,
     model: "gpt-4.1-mini",
@@ -47,7 +48,8 @@ Deno.test("Should create a ChatAnthropic instance for a Claude model", () => {
   Deno.env.set("ANTHROPIC_API_KEY", "sk-ant-11111");
   const params = {
     version: false,
-    help: false,
+    shortHelp: false,
+    longHelp: false,
     noChat: false,
     debug: false,
     model: "claude-v1",
@@ -65,7 +67,8 @@ Deno.test("Should create a ChatGoogleGenerativeAI instance for a Claude model", 
   Deno.env.set("GOOGLE_API_KEY", "11111");
   const params = {
     version: false,
-    help: false,
+    shortHelp: false,
+    longHelp: false,
     noChat: false,
     debug: false,
     model: "gemini-1.5-Pro",
@@ -83,7 +86,8 @@ Deno.test("Should create a ChatGoogleGenerativeAI instance for a Claude model", 
   Deno.env.set("GOOGLE_API_KEY", "11111");
   const params = {
     version: false,
-    help: false,
+    shortHelp: false,
+    longHelp: false,
     noChat: false,
     debug: false,
     model: "gemma-3-27b-it",
@@ -101,7 +105,8 @@ Deno.test("Should create a ChatXAI instance for a X model", () => {
   Deno.env.set("XAI_API_KEY", "11111");
   const params = {
     version: false,
-    help: false,
+    shortHelp: false,
+    longHelp: false,
     noChat: false,
     debug: false,
     model: "grok-3-latest",
@@ -118,7 +123,8 @@ Deno.test("Should create a ChatXAI instance for a X model", () => {
 Deno.test("Should create a ChatOllama instance for an Ollama model", () => {
   const params = {
     version: false,
-    help: false,
+    shortHelp: false,
+    longHelp: false,
     noChat: false,
     debug: false,
     model: "ollama/llama:7b-chat",
@@ -137,7 +143,8 @@ Deno.test("Should create a ChatOllama instance for an Ollama model", () => {
 Deno.test("Should create a Replicate instance for an Replicate model", () => {
   const params = {
     version: false,
-    help: false,
+    shortHelp: false,
+    longHelp: false,
     noChat: false,
     debug: false,
     model: "replicate/meta/llama2:7b-chat",
@@ -156,7 +163,8 @@ Deno.test("Should create a Groq instance for an Groq model", () => {
   Deno.env.set("GROQ_API_KEY", "sk-11111");
   const params = {
     version: false,
-    help: false,
+    shortHelp: false,
+    longHelp: false,
     noChat: false,
     debug: false,
     model: "groq/llama-3.3-70b-versatile",
@@ -177,7 +185,8 @@ Deno.test("Should create a TogetherAI instance for an TogetherAI model", () => {
   Deno.env.set("TOGETHER_AI_API_KEY", "sk-11111");
   const params = {
     version: false,
-    help: false,
+    shortHelp: false,
+    longHelp: false,
     noChat: false,
     debug: false,
     model: "togetherai/google/gemma-2-27b-it",
@@ -197,7 +206,8 @@ Deno.test("Should create a Fireworks instance for an TogetherAI model", () => {
   Deno.env.set("FIREWORKS_API_KEY", "sk-11111");
   const params = {
     version: false,
-    help: false,
+    shortHelp: false,
+    longHelp: false,
     noChat: false,
     debug: false,
     model: "fireworks/deepseek-r1",
@@ -217,7 +227,8 @@ Deno.test("Should create a MistralAI instance for an TogetherAI model", () => {
   Deno.env.set("MISTRAL_API_KEY", "sk-11111");
   const params = {
     version: false,
-    help: false,
+    shortHelp: false,
+    longHelp: false,
     noChat: false,
     debug: false,
     model: "mistralai/mistral-large-latest",
@@ -237,7 +248,8 @@ Deno.test("Should create a Gemma3 instance for an Huggingface model", () => {
   Deno.env.set("HUGGINGFACE_ACCESS_TOKEN", "sk-11111");
   const params = {
     version: false,
-    help: false,
+    shortHelp: false,
+    longHelp: false,
     noChat: false,
     debug: false,
     model: "huggingface/google/gemma-3-4b-it",
@@ -255,7 +267,8 @@ Deno.test("Should create a Gemma3 instance for an Huggingface model", () => {
 Deno.test("Should throw an error for an unknown model", () => {
   const params = {
     version: false,
-    help: false,
+    shortHelp: false,
+    longHelp: false,
     noChat: false,
     debug: false,
     model: "unknown-model",

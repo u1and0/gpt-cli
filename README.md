@@ -1,4 +1,4 @@
-<img src="https://img.shields.io/badge/version-v0.9.8-FF7777.svg"></img>
+<img src="https://img.shields.io/badge/version-v0.9.9-FF7777.svg"></img>
 <img src="https://img.shields.io/badge/LICENSE-MIT-3388FF.svg"></img>
 <img src="https://shield.deno.dev/deno/%5E1.39"></img>
 <img src="https://github.com/u1and0/gpt-cli/actions/workflows/deno.yml/badge.svg"></img>
@@ -66,7 +66,7 @@ $ gpt -v
 Almost same command here.
 
 ```
-$ curl -LO https://github.com/u1and0/gpt-cli/releases/download/v0.9.8/gpt-cli-linux-x64.zip
+$ curl -LO https://github.com/u1and0/gpt-cli/releases/download/v0.9.9/gpt-cli-linux-x64.zip
 $ unzip gpt-cli-linux-x64.zip
 $ sudo ln -s ./release-package/gpt /usr/bin
 $ gpt -v
@@ -284,10 +284,18 @@ Using regular expressions to match and generate the appropriate LLM instance all
     - replicate/replicate/flan-t5-xl...
 - [Hugginface](https://huggingface.co/models)
     - huggingface/meta-llama/Llama-3.1-8b-Instruct
+- [OpenRouter](https://openrouter.ai/models)
+    - openrouter/openai/gpt-5-chat
+    - openrouter/openai/gpt-oss-120b
+    - openrouter/google/gemma-3n-e2b-it:free
+    - openrouter/anthropic/claude-opus-4.1
+    - openrouter/qwen/qwen3-coder:free
+    - openrouter/moonshotai/kimi-k2:free
+    - openrouter/perplexity/sonar-deep-research
 - [Ollama](https://ollama.com/library)  **Use before `$ ollama serve` locally**
     - ollama/phi4
     - ollama/llama3.3:70b
-    - ollama/mixtral:8x7b-text-v0.1-q5_K_M...
+    - ollama/mixtral:8x7b-text-v0.1-q5\_K\_M...
 
 ## / command
 Help (/commands):
@@ -325,7 +333,7 @@ For example, if you want to manage plug-ins with dein, write a toml file like th
 repo = 'u1and0/gpt-cli'
 if = '''executable('gpt')'''
 hook_add = '''
-    let s:model = 'gemini-2.0-flash' "'claude-3-5-haiku-20241022'
+    let s:model = 'groq/openai/gpt-oss-120b'
     let s:code_model = 'claude-3-5-haiku-latest' " 'claude-3-5-sonnet-20241022'
     let s:pro_model = 'groq/deepseek-r1-distill-qwen-32b' " 'groq/deepseek-r1-distill-llama-70b' 'claude-3-5-sonnet-20241022'  gemini-2.0-flash
     let s:llama = 'groq/llama-3.3-70b-versatile'
