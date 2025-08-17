@@ -1,7 +1,11 @@
 import { assertEquals } from "https://deno.land/std@0.224.0/assert/assert_equals.ts";
 import { assertInstanceOf } from "https://deno.land/std@0.224.0/assert/assert_instance_of.ts";
 
-import { createOllamaInstance, createOpenRouterInstance, split } from "../lib/platform.ts";
+import {
+  createOllamaInstance,
+  createOpenRouterInstance,
+  split,
+} from "../lib/platform.ts";
 import { Params } from "../lib/params.ts";
 import { ChatOpenAI } from "npm:@langchain/openai";
 
@@ -42,7 +46,8 @@ Deno.test("createOllamaInstance - uses default URL when no URL provided", () => 
     temperature: 0.7,
     maxTokens: 1000,
     version: false,
-    help: false,
+    shortHelp: false,
+    longHelp: false,
     noChat: false,
     debug: false,
   };
@@ -65,7 +70,8 @@ Deno.test("createOllamaInstance - uses URL from params", () => {
     temperature: 0.7,
     maxTokens: 1000,
     version: false,
-    help: false,
+    shortHelp: false,
+    longHelp: false,
     noChat: false,
     debug: false,
     url: "http://test.url:11434",
@@ -89,7 +95,8 @@ Deno.test("createOllamaInstance - uses URL from environment variable", () => {
     temperature: 0.7,
     maxTokens: 1000,
     version: false,
-    help: false,
+    shortHelp: false,
+    longHelp: false,
     noChat: false,
     debug: false,
   };
@@ -119,7 +126,8 @@ Deno.test("createOllamaInstance - params URL takes precedence over environment v
     temperature: 0.7,
     maxTokens: 1000,
     version: false,
-    help: false,
+    shortHelp: false,
+    longHelp: false,
     noChat: false,
     debug: false,
     url: "http://params.url:11434",
@@ -149,17 +157,18 @@ Deno.test("createOpenRouterInstance - creates ChatOpenAI instance with correct c
       temperature: 0.7,
       maxTokens: 1000,
       version: false,
-      help: false,
+      shortHelp: false,
+      longHelp: false,
       noChat: false,
       debug: false,
     };
 
     const openRouter = createOpenRouterInstance(params);
-    
+
     assertInstanceOf(openRouter, ChatOpenAI);
     assertEquals(openRouter.modelName, "meta-llama/llama-3.1-8b-instruct");
     assertEquals(openRouter.temperature, 0.7);
-    
+
     // Clean up the mock
   } finally {
     if (originalApiKey) {
