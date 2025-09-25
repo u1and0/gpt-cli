@@ -16,6 +16,7 @@ function! gptcli#GPT(system_prompt, kwargs={}) range
         elseif key == "max_tokens" | call add(l:args, "-x")
         elseif key == "temperature" | call add(l:args, "-t")
         elseif key == "url" | call add(l:args, "-u")
+        elseif key == "timeout" | call add(l:args, "-o")
         elseif key == "file" | call add(l:args, "-f")
         endif
         if key != "file"
@@ -82,6 +83,7 @@ function! gptcli#GPTWindow(...)
         elseif key == "max_tokens" | call add(l:gpt_command, "-x")
         elseif key == "temperature" | call add(l:gpt_command, "-t")
         elseif key == "url" | call add(l:gpt_command, "-u")
+        elseif key == "timeout" | call add(l:gpt_command, "-o")
         endif
         call add(l:gpt_command, val)
     endfor
