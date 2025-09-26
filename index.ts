@@ -27,6 +27,7 @@ import { LLM } from "./lib/llm.ts";
 import { getUserInputInMessage, readStdin } from "./lib/input.ts";
 import { Params } from "./lib/params.ts";
 import { filesGenerator, InitialPrompt, parseFileContent } from "./lib/file.ts";
+import { MCPManager } from "./lib/mcp.ts";
 import {
   handleAtCommand,
   handleSlashCommand,
@@ -111,10 +112,15 @@ async function userSession(
   }
 }
 
-const llmAsk = async (params: Params) => {
+const llmAsk = async (params: Params, mcpManager?: MCPManager) => {
   params.debug && console.debug(params);
   // 引数に従ったLLMインスタンスを作成
   let llm = new LLM(params);
+  
+  // MCP Manager が利用可能な場合は設定
+  if (mcpManager?.isReady()) {
+    llm.setMCPManager(mcpManager);
+  }
   // コマンドライン引数systemPromptとcontentがあれば
   // システムプロンプトとユーザープロンプトを含めたBaseMessageの生成
   // params.content があった場合は、コンテンツからメッセージを作成
@@ -168,31 +174,49 @@ const llmAsk = async (params: Params) => {
 
 const main = async () => {
   const cli = CommandLineInterface.getInstance();
-  // help, version flagが指定されていればinitで終了
-  if (cli.params.version) {
-    CommandLineInterface.showVersion(VERSION);
-    Deno.exit(0);
-  }
-  if (cli.params.shortHelp) {
-    CommandLineInterface.showShortHelp();
-    Deno.exit(0);
-  }
-  if (cli.params.longHelp) {
-    CommandLineInterface.showLongHelp();
-    Deno.exit(0);
-  }
+  let mcpManager: MCPManager | undefined;
 
-  // modelStackに使用した最初のモデルを追加
-  modelStack.add(cli.params.model);
-  // 標準入力をチェック
-  const stdinContent: string | null = await readStdin();
-  if (stdinContent) {
-    cli.params.content = stdinContent;
-    cli.params.noChat = true; // 標準入力がある場合は対話モードに入らない
-  }
+  try {
+    // help, version flagが指定されていればinitで終了
+    if (cli.params.version) {
+      CommandLineInterface.showVersion(VERSION);
+      Deno.exit(0);
+    }
+    if (cli.params.shortHelp) {
+      CommandLineInterface.showShortHelp();
+      Deno.exit(0);
+    }
+    if (cli.params.longHelp) {
+      CommandLineInterface.showLongHelp();
+      Deno.exit(0);
+    }
 
-  // llm へ質問し回答を得る。
-  await llmAsk(cli.params);
+    // modelStackに使用した最初のモデルを追加
+    modelStack.add(cli.params.model);
+    // 標準入力をチェック
+    const stdinContent: string | null = await readStdin();
+    if (stdinContent) {
+      cli.params.content = stdinContent;
+      cli.params.noChat = true; // 標準入力がある場合は対話モードに入らない
+    }
+
+    // MCP Manager の初期化（設定ファイルが指定されている場合）
+    if (cli.params.mcpConfig) {
+      mcpManager = new MCPManager();
+      await mcpManager.initialize(cli.params.mcpConfig);
+    }
+
+    // llm へ質問し回答を得る。
+    await llmAsk(cli.params, mcpManager);
+  } catch (error) {
+    console.error("An error occurred:", error);
+    Deno.exit(1);
+  } finally {
+    // クリーンアップ処理
+    if (mcpManager) {
+      await mcpManager.close();
+    }
+  }
 };
 
 await main();

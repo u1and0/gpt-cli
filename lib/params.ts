@@ -12,6 +12,7 @@ export type Params = {
   systemPrompt?: string;
   content?: string;
   timeout?: number;
+  mcpConfig?: string;
 } & LLMParam;
 
 /** Parse console argument */
@@ -41,6 +42,8 @@ export function parseArgs(): Params {
       "max-tokens",
       "o",
       "timeout",
+      "c", // MCP config file path
+      "mcp-config", // MCP config file path
       // parse()で解釈すると最後に指定したものに上書きされてしまう
       // "f",
       // "file",
@@ -72,6 +75,7 @@ export function parseArgs(): Params {
     timeout: parseInt(String(args.o || args.timeout)),
     url: url,
     systemPrompt: args.s || args["system-prompt"] || undefined,
+    mcpConfig: args.c || args["mcp-config"] || undefined,
     // 残りの引数をすべてスペースで結合
     content: args._.length > 0 ? args._.join(" ") : undefined,
     // string array option

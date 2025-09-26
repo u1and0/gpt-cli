@@ -29,6 +29,7 @@ const shortHelpMessage =
       -s, --system-prompt: string The first instruction given to guide the AI model's response
       -f, --file: string  Attachment file path.
       -n, --no-chat: boolean   No chat mode. Just one time question and answer.
+      -c, --mcp-config: string MCP (Model Context Protocol) server configuration file path
     -o, --timeout: number    Timeout in seconds for waiting for the AI response (default 30)
 `;
 

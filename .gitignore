@@ -1,3 +1,4 @@
+/tags
 /Session.vim
 /_plugin/
 /denops/
@@ -11,3 +12,5 @@
 /**/CLAUDE.md
 /coverage/
 /memo/
+/.claude/
+/mcp*.json
