@@ -19,8 +19,8 @@ import { ChatXAI } from "npm:@langchain/xai";
 // from platform.ts
 import { ChatOllama } from "npm:@langchain/ollama";
 import { ChatGroq } from "npm:@langchain/groq";
-import { ChatTogetherAI } from "npm:@langchain/community/chat_models/togetherai";
-import { ChatFireworks } from "npm:@langchain/community/chat_models/fireworks";
+import { ChatTogetherAI } from "npm:@langchain/together-ai";
+import { ChatFireworks } from "npm:@langchain/fireworks";
 import { ChatMistralAI } from "npm:@langchain/mistralai";
 import Replicate from "npm:replicate";
 import { HfInference } from "npm:@huggingface/inference";

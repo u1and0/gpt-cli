@@ -26,8 +26,8 @@
  */
 
 import { ChatGroq } from "npm:@langchain/groq";
-import { ChatTogetherAI } from "npm:@langchain/community/chat_models/togetherai";
-import { ChatFireworks } from "npm:@langchain/community/chat_models/fireworks";
+import { ChatTogetherAI } from "npm:@langchain/together-ai";
+import { ChatFireworks } from "npm:@langchain/fireworks";
 import { ChatMistralAI } from "npm:@langchain/mistralai";
 import { ChatOllama } from "npm:@langchain/ollama";
 import { ChatOpenAI } from "npm:@langchain/openai";

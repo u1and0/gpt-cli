@@ -1,6 +1,9 @@
 {
   "lint": {
-    "exclude": ["node_modules/"]
+    "exclude": ["node_modules/"],
+    "rules": {
+      "exclude": ["no-import-prefix"]
+    }
   },
   "test": {
     "exclude": ["node_modules/"]
