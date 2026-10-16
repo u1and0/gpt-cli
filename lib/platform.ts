@@ -29,7 +29,7 @@ import { ChatGroq } from "npm:@langchain/groq";
 import { ChatTogetherAI } from "npm:@langchain/community/chat_models/togetherai";
 import { ChatFireworks } from "npm:@langchain/community/chat_models/fireworks";
 import { ChatMistralAI } from "npm:@langchain/mistralai";
-import { ChatOllama } from "npm:@langchain/community/chat_models/ollama";
+import { ChatOllama } from "npm:@langchain/ollama";
 import { ChatOpenAI } from "npm:@langchain/openai";
 import Replicate from "npm:replicate";
 import { HfInference } from "npm:@huggingface/inference";

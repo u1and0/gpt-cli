@@ -36,7 +36,7 @@ import {
   modelStack,
 } from "./lib/command.ts";
 
-const VERSION = "v0.9.9";
+const VERSION = "v0.9.9r";
 
 type AgentRecord = { llm: LLM; messages: BaseMessage[] };
 
@@ -116,7 +116,7 @@ const llmAsk = async (params: Params, mcpManager?: MCPManager) => {
   params.debug && console.debug(params);
   // 引数に従ったLLMインスタンスを作成
   let llm = new LLM(params);
-  
+
   // MCP Manager が利用可能な場合は設定
   if (mcpManager?.isReady()) {
     llm.setMCPManager(mcpManager);

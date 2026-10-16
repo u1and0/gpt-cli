@@ -6,10 +6,8 @@
     "exclude": ["node_modules/"]
   },
   "dependencies": {
-    "@langchain/groq": "^0.1.2",
-    "@langchain/mcp-adapters": "^0.6.0",
-    "@langchain/langgraph": "^0.4.6",
-    "langchain": "^0.3.2"
+    "@langchain/langgraph": "^1.2.15",
+    "langchain": "^1.5.18"
   },
   "nodeModulesDir": "auto"
 }
