@@ -219,7 +219,6 @@ $ gpt -m gpt-4.1-mini -x 32768 -t 1.0 [OPTIONS] PROMPT
 | -m | --model | string | LLM model (default gpt-4.1-mini) |
 | -x | --max\_tokens | number | Number of AI answer tokens (default 32768) |
 | -t | --temperature | number | Higher number means more creative answers, lower number means more exact answers (default 1.0) |
-| -u | --url | string | URL and port number for ollama server (defaults to http://localhost:11434, can also be set with OLLAMA_URL environment variable) [DEPRECATED] |
 | -s | --system-prompt | string | The first instruction given to guide the AI model's response. |
 | -f | --file | string | Attachment file path. The Glob pattern can be used. (Such as `./test/*.ts`)|
 | -n | --no-chat | boolean | No chat mode. Just one time question and answer. |

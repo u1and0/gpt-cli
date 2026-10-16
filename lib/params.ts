@@ -7,7 +7,6 @@ export type Params = {
   longHelp: boolean;
   noChat: boolean;
   debug: boolean;
-  url?: string;
   files?: string[];
   systemPrompt?: string;
   content?: string;
@@ -31,8 +30,6 @@ export function parseArgs(): Params {
     string: [
       "m",
       "model",
-      "u",
-      "url",
       "s",
       "system-prompt",
       "content",
@@ -58,9 +55,6 @@ export function parseArgs(): Params {
   // parse()で解釈する代わりにgetFilePaths()で特別なparseをする
   const files = getFilePaths(Deno.args);
 
-  // Set url from BASE_URL environment variable if not provided via args
-  const url = args.u || args.url || Deno.env.get("BASE_URL") || undefined;
-
   return {
     // boolean option
     version: args.v || args.version || false,
@@ -73,7 +67,6 @@ export function parseArgs(): Params {
     maxTokens: parseInt(String(args.x || args["max-tokens"])),
     temperature: parseFloat(String(args.t || args.temperature)),
     timeout: parseInt(String(args.o || args.timeout)),
-    url: url,
     systemPrompt: args.s || args["system-prompt"] || undefined,
     mcpConfig: args.c || args["mcp-config"] || undefined,
     // 残りの引数をすべてスペースで結合

@@ -135,15 +135,7 @@ export const createOllamaInstance = (params: Params): ChatOllama => {
   // Use OLLAMA_URL environment variable as an alternative to --url option
   // Default to http://localhost:11434 if neither is provided
 
-  // Show deprecation warning if --url is used
-  if (params.url) {
-    console.warn(
-      "\x1b[33mWarning: The --url option is deprecated and will be removed in a future version. Please use the OLLAMA_URL environment variable instead.\x1b[0m",
-    );
-  }
-
-  const ollamaUrl = params.url || Deno.env.get("OLLAMA_URL") ||
-    "http://localhost:11434";
+  const ollamaUrl = Deno.env.get("OLLAMA_URL") || "http://localhost:11434";
 
   const { platform: _, model } = split(params.model);
   return new ChatOllama({
