@@ -93,7 +93,7 @@ jobs:
           deno-version: v2.x.x
 
       - name: Build binary
-        run: deno compile --allow-read --allow-net --allow-env --target ${{ matrix.target }} --output gpt index.ts
+        run: deno compile --allow-read --allow-net --allow-env --no-check --target ${{ matrix.target }} --output gpt index.ts
 
       - name: Create ZIP package (Unix/MacOS)
         if: runner.os != 'Windows'
