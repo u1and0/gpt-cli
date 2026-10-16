@@ -17,7 +17,7 @@ import { ChatGoogleGenerativeAI } from "npm:@langchain/google-genai";
 import { ChatXAI } from "npm:@langchain/xai";
 
 // from platform.ts
-import { ChatOllama } from "npm:@langchain/community/chat_models/ollama";
+import { ChatOllama } from "npm:@langchain/ollama";
 import { ChatGroq } from "npm:@langchain/groq";
 import { ChatTogetherAI } from "npm:@langchain/community/chat_models/togetherai";
 import { ChatFireworks } from "npm:@langchain/community/chat_models/fireworks";
