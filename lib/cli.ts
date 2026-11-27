@@ -17,12 +17,12 @@ const shortHelpMessage =
   `Command-line interface  that enables interactive chat with LLMs.
 
     Usage:
-      $ gpt -m gpt-4.1-mini -x 32768 -t 1.0 [OPTIONS] PROMPT
+      $ gpt -m gpt-6-luna -x 32768 -t 1.0 [OPTIONS] PROMPT
 
     Options:
       -v, --version: boolean   Show version
       -h, --help: boolean   Show this message
-      -m, --model: string LLM model (default gpt-4.1-mini)
+      -m, --model: string LLM model (default gpt-6-luna)
       -x, --max-tokens: number Number of AI answer tokens (default 32768)
       -t, --temperature: number Higher number means more creative answers, lower number means more exact answers (default 1.0)
       -u, --url: string URL and port number for ollama server (defaults to http://localhost:11434, can also be set with OLLAMA_URL environment variable) [DEPRECATED]

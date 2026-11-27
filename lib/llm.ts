@@ -6,9 +6,8 @@ import {
 import type {
   BaseMessage,
   BaseMessageChunk,
-  ChatMessageFieldsWithRole,
+  MessageFieldWithRole,
 } from "npm:@langchain/core/messages";
-
 
 import Replicate from "npm:replicate";
 import ServerSentEvent from "npm:replicate";
@@ -37,7 +36,7 @@ export type LLMParam = {
   maxTokens: number;
 };
 
-function toRoleContent(message: BaseMessage): ChatMessageFieldsWithRole {
+function toRoleContent(message: BaseMessage): MessageFieldWithRole {
   return {
     role: message._getType(),
     content: message.content,
@@ -65,7 +64,9 @@ export class LLM {
    * @returns {boolean} MCP ツールが利用可能な場合 true
    */
   private hasMCPTools(): boolean {
-    return Boolean(this.mcpManager?.isReady() && this.mcpManager?.getToolCount() > 0);
+    return Boolean(
+      this.mcpManager?.isReady() && this.mcpManager?.getToolCount() > 0,
+    );
   }
 
   /** AI へ一回限りの質問をし、回答を出力して終了する */
@@ -119,15 +120,19 @@ export class LLM {
   private async askWithMCPTools(messages: BaseMessage[]): Promise<AIMessage> {
     try {
       // 動的に LangChain agents をインポート
-      const { createReactAgent, AgentExecutor } = await import("npm:langchain/agents");
+      const { createReactAgent, AgentExecutor } = await import(
+        "npm:langchain/agents"
+      );
       const { pull } = await import("npm:langchain/hub");
 
       if (!this.mcpManager || !this.transrator) {
-        throw new Error("MCP Manager または LLM Transrator が初期化されていません");
+        throw new Error(
+          "MCP Manager または LLM Transrator が初期化されていません",
+        );
       }
 
       console.log("MCP ツールを使用して質問に回答しています...");
-      
+
       // MCP ツールを取得
       const tools = await this.mcpManager.getTools();
       console.log(`利用可能な MCP ツール: ${tools.length} 個`);
@@ -152,7 +157,7 @@ export class LLM {
       // 最新のユーザーメッセージを input として抽出
       const lastMessage = messages[messages.length - 1];
       const input = lastMessage?.content?.toString() || "";
-      
+
       // チャット履歴を抽出（最新メッセージを除く）
       const chatHistory = messages.slice(0, -1);
 
@@ -165,17 +170,17 @@ export class LLM {
         chat_history: chatHistory,
       });
 
-      const aiMessage = result.output || "申し訳ありません。回答を生成できませんでした。";
-      
+      const aiMessage = result.output ||
+        "申し訳ありません。回答を生成できませんでした。";
+
       // 結果を出力
       Deno.stdout.writeSync(new TextEncoder().encode(aiMessage));
       console.log(); // 改行
 
       return new AIMessage(aiMessage);
-
     } catch (error) {
       console.error(`Error in askWithMCPTools(): ${error}`);
-      
+
       // MCP エラーの場合は従来の方法にフォールバック
       console.log("MCP ツール使用に失敗しました。従来の方法で回答します...");
       return await this.askWithoutMCPTools(messages);
@@ -183,13 +188,15 @@ export class LLM {
   }
 
   /** MCP ツールを使用しない従来の AI 対話 */
-  private async askWithoutMCPTools(messages: BaseMessage[]): Promise<AIMessage> {
+  private async askWithoutMCPTools(
+    messages: BaseMessage[],
+  ): Promise<AIMessage> {
     const interval = 100;
     const timeoutSeconds = this.params.timeout || 30;
     const timeoutMS = timeoutSeconds * 1000;
     const spinner = new Spinner([".", "..", "..."], interval, timeoutMS);
     let aiMessage: string;
-    
+
     try {
       spinner.start();
       const stream = await this.streamGenerator(messages);
@@ -199,7 +206,7 @@ export class LLM {
       const chunks: string[] = [];
       const modelName = `${this.params.model}: `;
       Deno.stdout.writeSync(new TextEncoder().encode(modelName));
-      
+
       for await (const chunk of streamEncoder(stream)) {
         chunks.push(chunk);
       }
@@ -209,7 +216,7 @@ export class LLM {
       console.error(`Error in askWithoutMCPTools(): ${error}`);
       aiMessage = "申し訳ありません。質問に回答できませんでした。";
     }
-    
+
     return new AIMessage(aiMessage);
   }
 
