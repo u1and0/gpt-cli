@@ -7,11 +7,11 @@ export type Params = {
   longHelp: boolean;
   noChat: boolean;
   debug: boolean;
-  url?: string;
   files?: string[];
   systemPrompt?: string;
   content?: string;
   timeout?: number;
+  mcpConfig?: string;
 } & LLMParam;
 
 /** Parse console argument */
@@ -30,8 +30,6 @@ export function parseArgs(): Params {
     string: [
       "m",
       "model",
-      "u",
-      "url",
       "s",
       "system-prompt",
       "content",
@@ -41,22 +39,21 @@ export function parseArgs(): Params {
       "max-tokens",
       "o",
       "timeout",
+      "c", // MCP config file path
+      "mcp-config", // MCP config file path
       // parse()で解釈すると最後に指定したものに上書きされてしまう
       // "f",
       // "file",
     ],
     default: {
       temperature: 1.0,
-      "max-tokens": 8192,
+      "max-tokens": 32768,
       timeout: 30, // in seconds (will be converted to milliseconds internally)
     },
   });
 
   // parse()で解釈する代わりにgetFilePaths()で特別なparseをする
   const files = getFilePaths(Deno.args);
-
-  // Set url from BASE_URL environment variable if not provided via args
-  const url = args.u || args.url || Deno.env.get("BASE_URL") || undefined;
 
   return {
     // boolean option
@@ -66,12 +63,12 @@ export function parseArgs(): Params {
     noChat: args.n || args["no-chat"] || false,
     debug: args.d || args.debug || false,
     // string option
-    model: args.m || args.model || "gpt-4.1-mini",
+    model: args.m || args.model || "gpt-6-luna",
     maxTokens: parseInt(String(args.x || args["max-tokens"])),
     temperature: parseFloat(String(args.t || args.temperature)),
     timeout: parseInt(String(args.o || args.timeout)),
-    url: url,
     systemPrompt: args.s || args["system-prompt"] || undefined,
+    mcpConfig: args.c || args["mcp-config"] || undefined,
     // 残りの引数をすべてスペースで結合
     content: args._.length > 0 ? args._.join(" ") : undefined,
     // string array option

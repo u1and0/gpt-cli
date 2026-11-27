@@ -1,12 +1,16 @@
 {
   "lint": {
-    "exclude": ["node_modules/"]
+    "exclude": ["node_modules/"],
+    "rules": {
+      "exclude": ["no-import-prefix"]
+    }
   },
   "test": {
     "exclude": ["node_modules/"]
   },
   "dependencies": {
-      "@langchain/groq": "^0.1.2"
+    "@langchain/langgraph": "^1.2.15",
+    "langchain": "^1.5.18"
   },
   "nodeModulesDir": "auto"
 }
