@@ -1,4 +1,4 @@
-v0.9.10: Fix Anthropic model topP error, vim plugin timeout option with -o
+v0.9.10: Fix Anthropic model topP error, vim plugin timeout option with -o, remove --url option.
 ---
 
 # Feature
@@ -7,3 +7,6 @@ v0.9.10: Fix Anthropic model topP error, vim plugin timeout option with -o
 # Fix
 * anthropic model topP set to -1
 * default model openai gpt-6-luna
+
+# Modify
+* remove --url option. Use OLLAMA_URL env instead.
